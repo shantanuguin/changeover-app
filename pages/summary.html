@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSLR Summary | Smart QCO System</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.1.2/dist/lenis.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], heading: ['Poppins', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 2rem;
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.05);
+        }
+
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #0ea5e9;
+            position: fixed;
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            position: fixed;
+            border-radius: 50%;
+            z-index: 9998;
+            pointer-events: none;
+            transition: 0.2s;
+        }
+
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.8);
+            color: #0ea5e9;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="relative min-h-screen">
+    <div class="cursor-dot hidden md:block"></div>
+    <div class="cursor-outline hidden md:block"></div>
+
+    <div class="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
+        <div
+            class="absolute top-[10%] right-[20%] w-[40vw] h-[40vw] bg-violet-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-pulse">
+        </div>
+        <div
+            class="absolute bottom-[10%] left-[20%] w-[40vw] h-[40vw] bg-indigo-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-pulse">
+        </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="fixed top-0 w-full z-40 glass transition-all duration-300 no-print" id="navbar">
+        <div class="max-w-[1600px] mx-auto px-6">
+            <div class="flex justify-between h-24 items-center relative">
+
+                <!-- Centered Navigation -->
+                <div class="hidden xl:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                    <div
+                        class="flex items-center gap-1 bg-white/50 p-1.5 rounded-full border border-white/20 shadow-sm backdrop-blur-md">
+                        <a href="../index.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Home</a>
+                        <a href="dashboard.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Dashboard</a>
+                        <a href="creation.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Creation</a>
+                        <a href="schedule.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Schedule</a>
+                        <a href="checklist.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Checklist</a>
+                        <a href="recorder.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Recorder</a>
+                        <a href="summary.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-blue-900 bg-blue-100 shadow-sm transition-all">Reports</a>
+                    </div>
+                </div>
+
+                <a href="../index.html" class="flex items-center gap-4 group cursor-pointer">
+                    <div
+                        class="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:rotate-12 transition-transform duration-500 ease-out">
+                        <i data-lucide="layers" class="w-6 h-6"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-heading font-bold text-slate-900 text-xl tracking-tight">QCO Portal</span>
+                        <span class="text-xs text-slate-500 font-medium tracking-wide">Manufacturing Excellence</span>
+                    </div>
+                </a>
+                <div class="flex gap-4 items-center">
+                    <div class="flex gap-2">
+
+                        <button onclick="window.print()"
+                            class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition-colors flex items-center gap-2">
+                            <i data-lucide="printer" class="w-4 h-4"></i> Print
+                        </button>
+                    </div>
+
+                    <!-- User Profile Dropdown -->
+                    <div class="relative">
+                        <button onclick="document.getElementById('userDropdown').classList.toggle('hidden')"
+                            class="flex items-center gap-3 focus:outline-none group p-1.5 pr-3 rounded-full hover:bg-white/60 transition-all border border-transparent hover:border-slate-200">
+                            <div
+                                class="w-9 h-9 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border border-white shadow-sm flex items-center justify-center overflow-hidden">
+                                <i data-lucide="user" class="w-4 h-4 text-slate-500"></i>
+                            </div>
+                            <div class="text-left hidden sm:block">
+                                <p class="text-xs font-bold text-slate-900 leading-tight" id="userName">User</p>
+                                <p class="text-[10px] text-slate-500 leading-tight" id="userRole">Member</p>
+                            </div>
+                            <i data-lucide="chevron-down"
+                                class="w-3 h-3 text-slate-400 ml-1 group-hover:text-slate-600 transition-colors"></i>
+                        </button>
+
+                        <div id="userDropdown"
+                            class="hidden absolute right-0 mt-3 w-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 ring-1 ring-black/5 divide-y divide-slate-100 transform origin-top-right transition-all z-50">
+                            <div class="p-2">
+                                <button onclick="handleLogout()"
+                                    class="w-full group flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left">
+                                    <i data-lucide="log-out"
+                                        class="w-4 h-4 text-red-400 group-hover:text-red-600 transition-colors mr-3"></i>
+                                    Sign Out
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        </div>
+    </nav>
+
+    <!-- Main -->
+    <div id="mainApp" class="pt-32 pb-12 px-6 opacity-0">
+        <div class="max-w-[1400px] mx-auto">
+
+            <div class="flex items-end justify-between mb-8">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-heading font-bold text-slate-900 tracking-tight mb-2">Startup
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600">Loss
+                            Summary</span>
+                    </h1>
+                    <p class="text-slate-500 font-medium">Detailed breakdown for <span id="activeQCOName"
+                            class="font-bold text-slate-800">...</span></p>
+                </div>
+                <div class="text-right hidden md:block">
+                    <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Report Date</p>
+                    <p class="text-lg font-bold text-slate-900" id="reportDate">...</p>
+                </div>
+            </div>
+
+            <!-- Filter Panel -->
+            <div class="glass-card p-6 mb-8">
+                <!-- Search Bar -->
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Quick
+                        Search</label>
+                    <div class="relative">
+                        <input type="text" id="qcoSearch" placeholder="Type QCO Number (e.g., QVJCO10008)"
+                            onkeyup="handleSearch(event)"
+                            class="w-full px-4 py-3 pl-10 pr-10 rounded-xl border-2 border-slate-200 focus:border-sky-400 focus:ring-2 focus:ring-sky-200 transition-all font-semibold text-slate-900 placeholder:text-slate-400">
+                        <i data-lucide="search"
+                            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none"></i>
+                        <button onclick="clearSearch()"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <p id="searchStatus" class="text-xs text-slate-500 mt-1 hidden"></p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Line
+                            Number</label>
+                        <div class="relative">
+                            <select id="lineSelector" onchange="handleLineChange(this.value)"
+                                class="w-full appearance-none bg-white border-2 border-slate-200 text-slate-900 font-semibold py-3 pl-4 pr-10 rounded-xl hover:border-emerald-300 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer">
+                                <option value="ALL">All Lines</option>
+                            </select>
+                            <i data-lucide="chevron-down"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Select
+                            QCO</label>
+                        <div class="relative">
+                            <select id="qcoSelector" onchange="handleQCOChange(this.value)"
+                                class="w-full appearance-none bg-white border-2 border-slate-200 text-slate-900 font-semibold py-3 pl-4 pr-10 rounded-xl hover:border-violet-300 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 cursor-pointer">
+                                <option value="">Select Changeover...</option>
+                            </select>
+                            <i data-lucide="chevron-down"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Time
+                            Period</label>
+                        <div class="relative">
+                            <select id="timePeriodSelector" onchange="handleTimePeriodChange(this.value)"
+                                class="w-full appearance-none bg-white border-2 border-slate-200 text-slate-900 font-semibold py-3 pl-4 pr-10 rounded-xl hover:border-indigo-300 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer">
+                                <option value="single">Single QCO</option>
+                                <option value="daily">Daily</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                            <i data-lucide="chevron-down"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Header Summary Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Style Info -->
+                <div class="glass-card p-6 border-l-4 border-l-violet-500 relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <i data-lucide="shirt" class="w-16 h-16 text-violet-600"></i>
+                    </div>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Style Name</p>
+                    <p class="text-xl font-heading font-bold text-slate-900 truncate" id="styleName">---</p>
+                    <p class="text-xs text-slate-500 mt-2 font-medium" id="coDate">---</p>
+                </div>
+
+                <!-- Total Time -->
+                <div class="glass-card p-6 border-l-4 border-l-blue-500 relative overflow-hidden group">
+                    <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <i data-lucide="clock" class="w-16 h-16 text-blue-600"></i>
+                    </div>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Time Taken</p>
+                    <div class="flex items-baseline gap-2">
+                        <p class="text-3xl font-heading font-bold text-slate-900" id="totalTimeMin">0</p>
+                        <span class="text-sm font-bold text-slate-500">min</span>
+                    </div>
+                    <p class="text-sm text-blue-600 font-bold mt-1"><span id="totalTimeHours">0</span> Hours</p>
+                </div>
+
+                <!-- Manpower & Cost Input -->
+                <div class="glass-card p-6 border-l-4 border-l-amber-500 relative overflow-hidden group">
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Cost Parameters</p>
+                    <div class="flex flex-col gap-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-bold text-slate-600">Manpower</span>
+                            <input type="number" id="inputManpower" value="0" onchange="recalculateCosts()"
+                                class="w-20 text-right font-bold text-slate-900 bg-amber-50 border border-amber-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-bold text-slate-600">Cost / Min ($)</span>
+                            <input type="number" id="inputCostRate" value="0.11" step="0.01"
+                                onchange="recalculateCosts()"
+                                class="w-20 text-right font-bold text-slate-900 bg-amber-50 border border-amber-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Cost Impact -->
+                <div
+                    class="glass-card p-6 border-l-4 border-l-rose-500 flex flex-col justify-center relative overflow-hidden">
+                    <div class="absolute right-0 top-0 p-4 opacity-10">
+                        <i data-lucide="dollar-sign" class="w-16 h-16 text-rose-600"></i>
+                    </div>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Cost Impact</p>
+                    <p class="text-3xl font-heading font-bold text-rose-600" id="totalCostDisplay">$0.00</p>
+                    <p class="text-xs text-rose-400/80 mt-2 font-medium">Based on duration & manpower</p>
+                </div>
+            </div>
+
+            <!-- Start/End Times -->
+            <div
+                class="glass-card p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900 text-white shadow-xl shadow-slate-900/10">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-white/10 rounded-lg"><i data-lucide="play-circle"
+                            class="w-5 h-5 text-emerald-400"></i></div>
+                    <div>
+                        <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Changeover Start</p>
+                        <p class="font-mono font-bold text-lg" id="startTimeDisplay">--/--/-- --:--</p>
+                    </div>
+                </div>
+                <div class="h-px w-full md:w-px md:h-12 bg-white/10"></div>
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-white/10 rounded-lg"><i data-lucide="stop-circle"
+                            class="w-5 h-5 text-rose-400"></i></div>
+                    <div>
+                        <p
+                            class="text-[10px] uppercase tracking-wider text-slate-400 font-bold text-right md:text-left">
+                            Changeover End</p>
+                        <p class="font-mono font-bold text-lg" id="endTimeDisplay">--/--/-- --:--</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <!-- Loss Breakdown Chart -->
+                <div class="glass-card p-8">
+                    <h3 class="text-lg font-heading font-bold text-slate-900 mb-6">Loss Time Breakdown (Chart)</h3>
+                    <div class="relative h-[300px]">
+                        <canvas id="lossChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top 5 Loss Times -->
+                <div class="glass-card p-8">
+                    <h3 class="text-lg font-heading font-bold text-slate-900 mb-6 flex items-center gap-2">
+                        <i data-lucide="bar-chart-2" class="w-5 h-5 text-rose-500"></i>
+                        Top 5 Loss Times
+                    </h3>
+                    <div class="relative h-[300px]">
+                        <canvas id="topLossChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <!-- Loss Time Breakdown Table -->
+            <div class="glass-card p-8 overflow-hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-heading font-bold text-slate-900">Loss Time Breakdown</h3>
+                    <span
+                        class="px-3 py-1 bg-slate-100 text-slate-500 text-xs font-bold rounded-full uppercase tracking-wider">Detailed
+                        Statement</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead>
+                            <tr class="border-b-2 border-slate-100">
+                                <th class="py-4 pl-4 font-bold text-slate-500 uppercase tracking-wider">Department</th>
+                                <th class="py-4 font-bold text-slate-500 uppercase tracking-wider text-right">Time (Min)
+                                </th>
+                                <th class="py-4 font-bold text-slate-500 uppercase tracking-wider text-right">Cost ($)
+                                </th>
+                                <th
+                                    class="py-4 pr-4 font-bold text-slate-500 uppercase tracking-wider text-right whitespace-nowrap">
+                                    % Share</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="text-slate-700 font-medium">
+                            <!-- Injected -->
+                        </tbody>
+                        <tfoot id="tableFoot" class="bg-slate-50 font-bold text-slate-900 border-t-2 border-slate-200">
+                            <!-- Total Row -->
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCayfWGQP1t3oBU9eFj-3Ww0uu7nSl3Q4g",
+            authDomain: "sidneymailer.firebaseapp.com",
+            projectId: "sidneymailer",
+            storageBucket: "sidneymailer.firebasestorage.app",
+            messagingSenderId: "911316068119",
+            appId: "1:911316068119:web:ce23dbe663dc385a81f952",
+            measurementId: "G-NJ0QH6DEXG"
+        };
+
+        let currentQCOId = null;
+        let currentActivityData = [];
+        let allQCOs = []; // Store all QCOs for filtering
+
+        // Filter state memory
+        let filterState = {
+            lastSingleQCO: null,
+            lastTimePeriod: 'single',
+            lastLine: 'ALL'
+        };
+
+        // --- Global State ---
+        let db, auth;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Strict Auth Check (Immediate)
+            const user = JSON.parse(localStorage.getItem('qcoCurrentUser'));
+            if (!user) {
+                window.location.href = '../index.html';
+                return;
+            }
+
+            const lenis = new Lenis();
+            function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+            requestAnimationFrame(raf);
+
+            const dot = document.querySelector('.cursor-dot');
+            const outline = document.querySelector('.cursor-outline');
+            window.addEventListener('mousemove', e => {
+                gsap.to(dot, { x: e.clientX, y: e.clientY, duration: 0.1 });
+                gsap.to(outline, { x: e.clientX, y: e.clientY, duration: 0.5 });
+            });
+
+            document.getElementById('reportDate').textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+            // Firebase Init
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            auth = firebase.auth();
+            checkAuth();
+
+            // Load QCO List and set initial state
+            await loadChangeoverList();
+            await populateLineNumbers();
+
+            lucide.createIcons();
+            gsap.to("#mainApp", { opacity: 1, duration: 0.5 });
+        });
+
+        function checkAuth() {
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    localStorage.setItem('qcoCurrentUser', JSON.stringify({
+                        uid: user.uid,
+                        name: user.displayName || 'User',
+                        email: user.email,
+                        role: 'Member'
+                    }));
+                } else {
+                    if (!localStorage.getItem('qcoCurrentUser')) {
+                        window.location.href = '../index.html';
+                    }
+                }
+                updateUserUI();
+            });
+        }
+
+        function updateUserUI() {
+            let user = {};
+            try {
+                user = JSON.parse(localStorage.getItem('qcoCurrentUser')) || {};
+            } catch (e) { console.warn(e); }
+            const name = user.displayName || user.name || 'User';
+            const role = user.role || 'Member';
+            const nameEl = document.getElementById('userName');
+            const roleEl = document.getElementById('userRole');
+            if (nameEl) nameEl.textContent = name;
+            if (roleEl) roleEl.textContent = role;
+        }
+
+        function handleLogout() {
+            auth.signOut().then(() => {
+                localStorage.removeItem('qcoCurrentUser');
+                localStorage.removeItem('qcoSessionActive');
+                window.location.href = '../index.html';
+            });
+        }
+
+        // --- Data Logic: Selection & Loading ---
+
+        async function populateLineNumbers() {
+            try {
+                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(100).get();
+                const lineSelector = document.getElementById('lineSelector');
+                const lines = new Set();
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.lineNumber) {
+                        lines.add(data.lineNumber);
+                    }
+                });
+
+                const sortedLines = Array.from(lines).sort((a, b) => {
+                    // Natural sort for line numbers (e.g., "1", "1A", "2", "10")
+                    const numA = parseInt(a) || 0;
+                    const numB = parseInt(b) || 0;
+                    if (numA !== numB) return numA - numB;
+                    return a.localeCompare(b);
+                });
+
+                sortedLines.forEach(line => {
+                    const opt = document.createElement('option');
+                    opt.value = line;
+                    opt.textContent = `Line ${line}`;
+                    lineSelector.appendChild(opt);
+                });
+
+                lucide.createIcons();
+            } catch (e) {
+                console.error("Error loading line numbers:", e);
+            }
+        }
+
+        async function loadChangeoverList(selectedLine = 'ALL') {
+            try {
+                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(100).get();
+                allQCOs = [];
+
+                snapshot.forEach(doc => {
+                    allQCOs.push({ id: doc.id, data: doc.data() });
+                });
+
+                updateQCOSelector(selectedLine);
+
+                // Auto-load if there's a saved QCO
+                const currentSaved = localStorage.getItem('currentQCOId');
+                if (currentSaved && allQCOs.find(q => q.id === currentSaved)) {
+                    currentQCOId = currentSaved;
+                    filterState.lastSingleQCO = currentSaved;
+                    document.getElementById('qcoSelector').value = currentSaved;
+                    await generateReport();
+                }
+
+            } catch (e) {
+                console.error("Error loading Changeover list:", e);
+            }
+        }
+
+        function updateQCOSelector(selectedLine = 'ALL') {
+            const selector = document.getElementById('qcoSelector');
+            const currentValue = selector.value;
+
+            selector.innerHTML = '<option value="">Select Changeover...</option>';
+            selector.innerHTML += '<option value="ALL_STYLES">All Styles</option>';
+
+            // Filter QCOs by line
+            const filteredQCOs = selectedLine === 'ALL'
+                ? allQCOs
+                : allQCOs.filter(q => q.data.lineNumber === selectedLine);
+
+            filteredQCOs.forEach(qco => {
+                const opt = document.createElement('option');
+                opt.value = qco.id;
+                const upcomingStyle = qco.data.upcomingStyle || 'Unknown';
+                const last4Digits = upcomingStyle.length >= 4 ? upcomingStyle.slice(-4) : upcomingStyle;
+                const lineInfo = qco.data.lineNumber ? `L${qco.data.lineNumber} - ` : '';
+                opt.textContent = `${lineInfo}${qco.data.qcoNumber || 'QCO'} - ${last4Digits}`;
+                selector.appendChild(opt);
+            });
+
+            // Restore previous selection if it exists in filtered list
+            if (currentValue && Array.from(selector.options).some(opt => opt.value === currentValue)) {
+                selector.value = currentValue;
+            }
+
+            lucide.createIcons();
+        }
+
+        function handleLineChange(line) {
+            filterState.lastLine = line;
+            updateQCOSelector(line);
+            applyFilters();
+        }
+
+        function handleQCOChange(qcoId) {
+            if (!qcoId) return;
+
+            const timePeriod = document.getElementById('timePeriodSelector').value;
+
+            if (qcoId === 'ALL_STYLES') {
+                // Switch to aggregated mode, remember last time period for "All Styles"
+                if (timePeriod === 'single') {
+                    document.getElementById('timePeriodSelector').value = filterState.lastTimePeriod || 'monthly';
+                }
+                currentQCOId = null;
+            } else {
+                // Switch to single QCO mode
+                filterState.lastSingleQCO = qcoId;
+                if (timePeriod !== 'single') {
+                    document.getElementById('timePeriodSelector').value = 'single';
+                }
+                currentQCOId = qcoId;
+                localStorage.setItem('currentQCOId', qcoId);
+            }
+
+            applyFilters();
+        }
+
+        function handleTimePeriodChange(period) {
+            const qcoSelector = document.getElementById('qcoSelector');
+
+            if (period !== 'single') {
+                // Switch to aggregated mode
+                filterState.lastTimePeriod = period;
+                qcoSelector.value = 'ALL_STYLES';
+                currentQCOId = null;
+            } else {
+                // Switch back to single QCO mode - restore last selected QCO
+                if (filterState.lastSingleQCO) {
+                    qcoSelector.value = filterState.lastSingleQCO;
+                    currentQCOId = filterState.lastSingleQCO;
+                } else {
+                    qcoSelector.value = '';
+                }
+            }
+
+            applyFilters();
+        }
+
+        async function applyFilters() {
+            const qcoId = document.getElementById('qcoSelector').value;
+            const timePeriod = document.getElementById('timePeriodSelector').value;
+            const selectedLine = document.getElementById('lineSelector').value;
+
+            if (!qcoId) {
+                // Clear report
+                return;
+            }
+
+            if (qcoId === 'ALL_STYLES' || timePeriod !== 'single') {
+                await generateAggregatedReport(timePeriod, selectedLine);
+            } else {
+                currentQCOId = qcoId;
+                localStorage.setItem('currentQCOId', qcoId);
+                await generateReport();
+            }
+        }
+
+        let searchTimeout = null;
+
+        function handleSearch(event) {
+            const searchTerm = event.target.value.trim().toUpperCase();
+            const statusEl = document.getElementById('searchStatus');
+
+            // Clear any existing timeout
+            if (searchTimeout) clearTimeout(searchTimeout);
+
+            if (!searchTerm) {
+                statusEl.classList.add('hidden');
+                return;
+            }
+
+            // Debounce search
+            searchTimeout = setTimeout(() => {
+                // Search through all QCOs
+                const matchedQCO = allQCOs.find(q => {
+                    const qcoNumber = (q.data.qcoNumber || '').toUpperCase();
+                    const upcomingStyle = (q.data.upcomingStyle || '').toUpperCase();
+                    return qcoNumber === searchTerm ||
+                        upcomingStyle === searchTerm ||
+                        qcoNumber.includes(searchTerm) ||
+                        upcomingStyle.includes(searchTerm);
+                });
+
+                if (matchedQCO) {
+                    // Found exact or partial match - auto-load it
+                    statusEl.textContent = `Found: ${matchedQCO.data.qcoNumber} - ${matchedQCO.data.upcomingStyle}`;
+                    statusEl.classList.remove('hidden', 'text-red-500');
+                    statusEl.classList.add('text-emerald-600');
+
+                    // Auto-select in dropdown
+                    document.getElementById('qcoSelector').value = matchedQCO.id;
+                    document.getElementById('timePeriodSelector').value = 'single';
+
+                    // Update line selector to match
+                    if (matchedQCO.data.lineNumber) {
+                        document.getElementById('lineSelector').value = matchedQCO.data.lineNumber;
+                        filterState.lastLine = matchedQCO.data.lineNumber;
+                        updateQCOSelector(matchedQCO.data.lineNumber);
+                    }
+
+                    // Auto-load the QCO
+                    currentQCOId = matchedQCO.id;
+                    filterState.lastSingleQCO = matchedQCO.id;
+                    localStorage.setItem('currentQCOId', matchedQCO.id);
+                    generateReport();
+
+                } else {
+                    statusEl.textContent = `No QCO found matching "${searchTerm}"`;
+                    statusEl.classList.remove('hidden', 'text-emerald-600');
+                    statusEl.classList.add('text-red-500');
+                }
+
+                lucide.createIcons();
+            }, 500); // Wait 500ms after last keystroke
+        }
+
+        function clearSearch() {
+            document.getElementById('qcoSearch').value = '';
+            document.getElementById('searchStatus').classList.add('hidden');
+            lucide.createIcons();
+        }
+
+        // --- Global State for Calculation ---
+        let currentReportData = {
+            metadata: {},
+            operations: [],
+            manpower: 0,
+            costRate: 0.11
+        };
+        let saveTimer; // Timer for debounced saving
+
+        async function generateReport() {
+            if (!currentQCOId) return;
+
+            try {
+                const doc = await db.collection('changeovers').doc(currentQCOId).get();
+                if (!doc.exists) return;
+
+                const data = doc.data();
+
+                // Store raw data & Load Saved Parameters
+                currentReportData.metadata = data;
+                currentReportData.operations = [];
+
+                // Prioritize saved manpower, fallback to allotted, default to 0
+                currentReportData.manpower = data.savedManpower !== undefined
+                    ? parseInt(data.savedManpower)
+                    : (data.allotedWP ? parseInt(data.allotedWP) : 0);
+
+                // Prioritize saved cost rate, default to 0.11
+                currentReportData.costRate = data.savedCostRate !== undefined
+                    ? parseFloat(data.savedCostRate)
+                    : 0.11;
+
+                // Update Inputs
+                document.getElementById('inputManpower').value = currentReportData.manpower;
+                document.getElementById('inputCostRate').value = currentReportData.costRate;
+
+                // Use upcoming style since this is the changeover TO that style
+                const styleName = data.upcomingStyle || data.styleName || 'Unknown Style';
+                document.getElementById('styleName').textContent = styleName;
+                document.getElementById('activeQCOName').textContent = data.qcoNumber || 'QCO';
+
+                // Format Date
+                const dateObj = data.date && data.date.toDate ? data.date.toDate() : (data.date ? new Date(data.date) : new Date());
+                document.getElementById('coDate').textContent = dateObj.toLocaleDateString('en-GB');
+
+                // Log for debugging
+                console.log('📊 Summary Report Loaded:', {
+                    qcoNumber: data.qcoNumber,
+                    style: styleName,
+                    manpower: currentReportData.manpower,
+                    allotedWP: data.allotedWP
+                });
+
+                // Process Operations
+                if (data.operationTimings) {
+                    Object.entries(data.operationTimings).forEach(([name, details]) => {
+                        if (details.actualTime) {
+                            currentReportData.operations.push({
+                                name: name,
+                                dept: details.department || 'MAINTENANCE', // Default to Maintenance if unassigned
+                                duration: parseFloat(details.actualTime),
+                                start: details.start,
+                                end: details.end
+                            });
+                        }
+                    });
+                }
+
+                // Determine Start & End of Changeover (Min Start, Max End)
+                if (currentReportData.operations.length > 0) {
+                    const starts = currentReportData.operations.map(o => new Date(o.start).getTime()).filter(t => !isNaN(t));
+                    const ends = currentReportData.operations.map(o => new Date(o.end).getTime()).filter(t => !isNaN(t));
+
+                    if (starts.length) {
+                        const minStart = new Date(Math.min(...starts));
+                        document.getElementById('startTimeDisplay').textContent = minStart.toLocaleString('en-GB');
+                    }
+                    if (ends.length) {
+                        const maxEnd = new Date(Math.max(...ends));
+                        document.getElementById('endTimeDisplay').textContent = maxEnd.toLocaleString('en-GB');
+                    }
+                }
+
+                recalculateCosts();
+
+            } catch (e) {
+                console.error("Error generating report", e);
+            }
+        }
+
+        async function generateAggregatedReport(timePeriod, selectedLine = 'ALL') {
+            try {
+                // Calculate date range based on period
+                const now = new Date();
+                let startDate, endDate = now;
+
+                switch (timePeriod) {
+                    case 'daily':
+                        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+                        break;
+                    case 'weekly':
+                        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                        break;
+                    case 'monthly':
+                        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                        break;
+                    default:
+                        startDate = new Date(0); // All time
+                }
+
+                console.log('Fetching QCOs from', startDate, 'to', endDate, 'for line:', selectedLine);
+
+                // Fetch all QCOs in date range
+                const snapshot = await db.collection('changeovers')
+                    .where('createdAt', '>=', startDate.toISOString())
+                    .where('createdAt', '<=', endDate.toISOString())
+                    .get();
+
+                if (snapshot.empty) {
+                    alert('No changeovers found in the selected time period');
+                    return;
+                }
+
+                // Aggregate data with line filtering
+                currentReportData.operations = [];
+                let totalManpower = 0;
+                let qcoCount = 0;
+                const styles = new Set();
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+
+                    // Filter by line if not "ALL"
+                    if (selectedLine !== 'ALL' && data.lineNumber !== selectedLine) {
+                        return;
+                    }
+
+                    qcoCount++;
+
+                    if (data.upcomingStyle) styles.add(data.upcomingStyle);
+                    if (data.allotedWP) totalManpower += parseInt(data.allotedWP);
+
+                    // Aggregate operations
+                    if (data.operationTimings) {
+                        Object.entries(data.operationTimings).forEach(([name, details]) => {
+                            if (details.actualTime) {
+                                currentReportData.operations.push({
+                                    name: name,
+                                    dept: details.department || 'MAINTENANCE',
+                                    duration: parseFloat(details.actualTime),
+                                    start: details.start,
+                                    end: details.end,
+                                    qco: data.qcoNumber,
+                                    line: data.lineNumber
+                                });
+                            }
+                        });
+                    }
+                });
+
+                if (qcoCount === 0) {
+                    alert('No changeovers found for the selected filters');
+                    return;
+                }
+
+                // Calculate average manpower
+                currentReportData.manpower = qcoCount > 0 ? Math.round(totalManpower / qcoCount) : 0;
+
+                // Update UI
+                document.getElementById('inputManpower').value = currentReportData.manpower;
+
+                const periodLabel = {
+                    'daily': 'Today',
+                    'weekly': 'This Week',
+                    'monthly': 'This Month',
+                    'single': 'All Time'
+                }[timePeriod] || 'All Time';
+
+                const lineLabel = selectedLine === 'ALL' ? 'All Lines' : `Line ${selectedLine}`;
+
+                document.getElementById('styleName').textContent = `${styles.size} Styles`;
+                document.getElementById('activeQCOName').textContent = `${qcoCount} QCOs - ${periodLabel} - ${lineLabel}`;
+                document.getElementById('coDate').textContent = `${startDate.toLocaleDateString('en-GB')} to ${endDate.toLocaleDateString('en-GB')}`;
+
+                // Determine overall Start & End
+                if (currentReportData.operations.length > 0) {
+                    const starts = currentReportData.operations.map(o => new Date(o.start).getTime()).filter(t => !isNaN(t));
+                    const ends = currentReportData.operations.map(o => new Date(o.end).getTime()).filter(t => !isNaN(t));
+
+                    if (starts.length) {
+                        const minStart = new Date(Math.min(...starts));
+                        document.getElementById('startTimeDisplay').textContent = minStart.toLocaleString('en-GB');
+                    }
+                    if (ends.length) {
+                        const maxEnd = new Date(Math.max(...ends));
+                        document.getElementById('endTimeDisplay').textContent = maxEnd.toLocaleString('en-GB');
+                    }
+                }
+
+                console.log(`Aggregated ${qcoCount} QCOs with ${currentReportData.operations.length} operations`);
+
+                recalculateCosts();
+
+            } catch (e) {
+                console.error("Error generating aggregated report:", e);
+                alert('Failed to generate aggregated report: ' + e.message);
+            }
+        }
+
+        /**
+         * Calculate elapsed time in minutes between two timestamps,
+         * accounting for working hours only (7:30 AM - 5:30 PM).
+         * Any time outside working hours is excluded.
+         */
+        function calculateWorkingHoursOnly(startTimestamp, endTimestamp) {
+            const SHIFT_START_HOUR = 7;
+            const SHIFT_START_MINUTE = 30;
+            const SHIFT_END_HOUR = 17;
+            const SHIFT_END_MINUTE = 30;
+
+            let start = new Date(startTimestamp);
+            let end = new Date(endTimestamp);
+
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                return 0;
+            }
+
+            if (start >= end) {
+                return 0;
+            }
+
+            let totalMinutes = 0;
+
+            // Process day by day
+            let currentDay = new Date(start);
+            currentDay.setHours(0, 0, 0, 0);
+
+            while (currentDay <= end) {
+                // Define shift boundaries for this day
+                const shiftStart = new Date(currentDay);
+                shiftStart.setHours(SHIFT_START_HOUR, SHIFT_START_MINUTE, 0, 0);
+
+                const shiftEnd = new Date(currentDay);
+                shiftEnd.setHours(SHIFT_END_HOUR, SHIFT_END_MINUTE, 0, 0);
+
+                // Find overlap between [start, end] and [shiftStart, shiftEnd]
+                const overlapStart = start > shiftStart ? start : shiftStart;
+                const overlapEnd = end < shiftEnd ? end : shiftEnd;
+
+                // If there's an overlap, add it
+                if (overlapStart < overlapEnd) {
+                    const minutesThisShift = (overlapEnd - overlapStart) / (1000 * 60);
+                    totalMinutes += minutesThisShift;
+                }
+
+                // Move to next day
+                currentDay.setDate(currentDay.getDate() + 1);
+            }
+
+            return totalMinutes;
+        }
+
+        function recalculateCosts() {
+            // Get inputs
+            const manpower = parseFloat(document.getElementById('inputManpower').value) || 0;
+            const costRate = parseFloat(document.getElementById('inputCostRate').value) || 0.11;
+
+            const ops = currentReportData.operations;
+
+            // NEW: Calculate total time from overall start/end using working hours only
+            let totalTime = 0;
+
+            if (ops.length > 0) {
+                const starts = ops.map(o => new Date(o.start).getTime()).filter(t => !isNaN(t));
+                const ends = ops.map(o => new Date(o.end).getTime()).filter(t => !isNaN(t));
+
+                if (starts.length > 0 && ends.length > 0) {
+                    const overallStart = Math.min(...starts);
+                    const overallEnd = Math.max(...ends);
+
+                    // Calculate time accounting for working hours only (7:30 AM - 5:30 PM)
+                    totalTime = calculateWorkingHoursOnly(overallStart, overallEnd);
+
+                    console.log('⏱️ Time Calculation:', {
+                        overallStart: new Date(overallStart).toLocaleString('en-GB'),
+                        overallEnd: new Date(overallEnd).toLocaleString('en-GB'),
+                        totalWorkingMinutes: totalTime.toFixed(2),
+                        totalWorkingHours: (totalTime / 60).toFixed(2)
+                    });
+                }
+            }
+
+            // Formula: Duration * CostPerMinute * Manpower
+            const totalCost = totalTime * costRate * manpower;
+
+            // Update Header Stats
+            document.getElementById('totalTimeMin').textContent = totalTime.toFixed(0);
+            document.getElementById('totalTimeHours').textContent = (totalTime / 60).toFixed(1);
+            document.getElementById('totalCostDisplay').textContent = '$' + totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            // --- PERSISTENCE (Debounced) ---
+            if (currentQCOId) {
+                clearTimeout(saveTimer);
+                saveTimer = setTimeout(async () => {
+                    try {
+                        await db.collection('changeovers').doc(currentQCOId).update({
+                            savedManpower: manpower,
+                            savedCostRate: costRate
+                        });
+                        console.log('💾 Cost parameters saved to Firebase:', { manpower, costRate });
+                    } catch (e) {
+                        console.error('Error saving cost parameters:', e);
+                    }
+                }, 1000); // 1-second delay
+            }
+
+            // --- DEPT BREAKDOWN ---
+            const depts = {};
+            // Initialize known departments
+            ['TRIMS', 'CUTTING', 'PRODUCTION', 'MERCHANDISER', 'IE', 'TECHNICAL', 'MAINTENANCE'].forEach(d => depts[d] = 0);
+
+            // Sum durations
+            ops.forEach(op => {
+                const d = (op.dept || 'MAINTENANCE').toUpperCase();
+                // Map known deviations if any, or just use raw
+                depts[d] = (depts[d] || 0) + op.duration;
+            });
+
+            // Calculate Grid Data
+            const gridData = Object.entries(depts).map(([dept, time]) => {
+                const cost = time * costRate * manpower;
+                const share = totalTime > 0 ? (time / totalTime) * 100 : 0;
+                return { dept, time, cost, share };
+            });
+
+            // Render Table (Sorted by defined order or magnitude? Excel has fixed order. Let's filter useful ones first)
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = gridData.map(row => `
+                <tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
+                    <td class="py-4 pl-4 font-bold text-slate-700">${row.dept}</td>
+                    <td class="py-4 font-mono text-slate-600 text-right">${row.time.toFixed(2)}</td>
+                    <td class="py-4 font-mono ${row.cost > 0 ? 'text-rose-600 font-bold' : 'text-slate-400'} text-right">$${row.cost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td class="py-4 pr-4 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            <span class="text-xs font-bold text-slate-500">${row.share.toFixed(0)}%</span>
+                            <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div class="h-full ${getDeptColor(row.dept)}" style="width: ${row.share}%"></div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Totals Row
+            document.getElementById('tableFoot').innerHTML = `
+                <tr>
+                    <td class="py-4 pl-4 uppercase tracking-wider">Total</td>
+                    <td class="py-4 text-right font-mono text-lg">${totalTime.toFixed(0)}</td>
+                    <td class="py-4 text-right font-mono text-lg text-rose-600">$${totalCost.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                    <td class="py-4 pr-4 text-right">100%</td>
+                </tr>
+            `;
+
+            renderCharts(gridData, ops);
+        }
+
+        let lossChartInstance = null;
+        let topLossChartInstance = null;
+
+        function renderCharts(deptData, allOps) {
+            // 1. Loss Time Breakdown (Pie)
+            const ctxLoss = document.getElementById('lossChart').getContext('2d');
+
+            // Filter non-zero for cleaner chart
+            const activeDepts = deptData.filter(d => d.time > 0);
+
+            if (lossChartInstance) lossChartInstance.destroy();
+
+            lossChartInstance = new Chart(ctxLoss, {
+                type: 'doughnut',
+                data: {
+                    labels: activeDepts.map(d => d.dept),
+                    datasets: [{
+                        data: activeDepts.map(d => d.time),
+                        backgroundColor: activeDepts.map(d => getDeptColorHex(d.dept)),
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { usePointStyle: true, font: { family: 'Inter', size: 11 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const val = context.raw || 0;
+                                    const percentage = ((val / activeDepts.reduce((s, i) => s + i.time, 0)) * 100).toFixed(0) + '%';
+                                    return ` ${context.label}: ${val.toFixed(1)}m (${percentage})`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+
+            // 2. Top 5 Loss Times (Bar)
+            const ctxTop = document.getElementById('topLossChart').getContext('2d');
+
+            const top5 = [...allOps].sort((a, b) => b.duration - a.duration).slice(0, 5);
+
+            if (topLossChartInstance) topLossChartInstance.destroy();
+
+            topLossChartInstance = new Chart(ctxTop, {
+                type: 'bar',
+                data: {
+                    labels: top5.map(o => o.name.length > 20 ? o.name.substring(0, 20) + '...' : o.name),
+                    datasets: [{
+                        label: 'Duration (Min)',
+                        data: top5.map(o => o.duration),
+                        backgroundColor: '#f43f5e',
+                        borderRadius: 6,
+                        barThickness: 24
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y', // Horizontal Layout
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                title: (items) => top5[items[0].dataIndex].name // Full name
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, beginAtZero: true },
+                        y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function getDeptColor(dept) {
+            const map = {
+                'MAINTENANCE': 'bg-rose-500',
+                'PRODUCTION': 'bg-emerald-500',
+                'CUTTING': 'bg-blue-500',
+                'TRIMS': 'bg-violet-500',
+                'QUALITY': 'bg-amber-500'
+            };
+            return map[dept] || 'bg-slate-400';
+        }
+
+        function getDeptColorHex(dept) {
+            const map = {
+                'MAINTENANCE': '#f43f5e',
+                'PRODUCTION': '#10b981',
+                'CUTTING': '#3b82f6',
+                'TRIMS': '#8b5cf6',
+                'QUALITY': '#f59e0b',
+                'IE': '#6366f1',
+                'TECHNICAL': '#a855f7'
+            };
+            return map[dept] || '#94a3b8';
+        }
+
+        function exportExcel() {
+            const ws = XLSX.utils.json_to_sheet(currentActivityData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Report");
+            XLSX.writeFile(wb, `SSLR_Report_${currentQCOId || 'Generic'}.xlsx`);
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QCO Schedule | Smart Changeover System</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <!-- Lenis Smooth Scroll -->
+    <script src="https://unpkg.com/lenis@1.1.2/dist/lenis.min.js"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Poppins', 'sans-serif']
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'fade-in': 'fadeIn 0.6s ease-out',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(30px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #f8fafc;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            color: #1e293b;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.08);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.12);
+        }
+
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.9);
+            color: #7c3aed;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #7c3aed;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Custom DateTime Input Styling */
+        input[type="datetime-local"] {
+            color-scheme: light;
+        }
+
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 0.6;
+            transition: 0.2s;
+        }
+
+        input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(124, 58, 237, 0.3);
+        }
+
+        .live-dot {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+    </style>
+</head>
+
+<body class="relative min-h-screen">
+
+    <!-- Background Blobs -->
+    <div class="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
+        <div
+            class="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-violet-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob">
+        </div>
+        <div
+            class="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-fuchsia-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-4000">
+        </div>
+        <div
+            class="absolute top-[40%] left-[40%] w-[40vw] h-[40vw] bg-blue-200/20 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-2000">
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-40 glass transition-all duration-300" id="navbar">
+        <div class="max-w-[1600px] mx-auto px-6">
+            <div class="flex justify-between h-24 items-center relative">
+
+                <!-- Centered Navigation -->
+                <div class="hidden xl:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                    <div
+                        class="flex items-center gap-1 bg-white/50 p-1.5 rounded-full border border-white/20 shadow-sm backdrop-blur-md">
+                        <a href="../index.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Home</a>
+                        <a href="dashboard.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Dashboard</a>
+                        <a href="creation.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Creation</a>
+                        <a href="schedule.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-blue-900 bg-blue-100 shadow-sm transition-all">Schedule</a>
+                        <a href="checklist.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Checklist</a>
+                        <a href="recorder.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Recorder</a>
+                        <a href="summary.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Reports</a>
+                    </div>
+                </div>
+
+                <a href="../index.html" class="flex items-center gap-3 group cursor-pointer">
+                    <div
+                        class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:rotate-12 transition-transform duration-500">
+                        <i data-lucide="calendar-check-2" class="w-5 h-5"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-heading font-bold text-slate-900 text-lg tracking-tight">QCO Portal</span>
+                        <span class="text-xs text-slate-500 font-medium tracking-wider">Manufacturing
+                            Excellence</span>
+                    </div>
+                </a>
+
+                <div class="flex items-center gap-6">
+                    <div id="saveStatus"
+                        class="hidden items-center gap-2 text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
+                        <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full live-dot"></div>
+                        Saved
+                    </div>
+
+                    <!-- User Profile Dropdown -->
+                    <div class="relative">
+                        <button onclick="document.getElementById('userDropdown').classList.toggle('hidden')"
+                            class="flex items-center gap-3 focus:outline-none group p-1.5 pr-3 rounded-full hover:bg-white/60 transition-all border border-transparent hover:border-slate-200">
+                            <div
+                                class="w-9 h-9 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border border-white shadow-sm flex items-center justify-center overflow-hidden">
+                                <i data-lucide="user" class="w-4 h-4 text-slate-500"></i>
+                            </div>
+                            <div class="text-left hidden sm:block">
+                                <p class="text-xs font-bold text-slate-900 leading-tight" id="userName">User</p>
+                                <p class="text-[10px] text-slate-500 leading-tight" id="userRole">Member</p>
+                            </div>
+                            <i data-lucide="chevron-down"
+                                class="w-3 h-3 text-slate-400 ml-1 group-hover:text-slate-600 transition-colors"></i>
+                        </button>
+
+                        <div id="userDropdown"
+                            class="hidden absolute right-0 mt-3 w-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 ring-1 ring-black/5 divide-y divide-slate-100 transform origin-top-right transition-all z-50">
+                            <div class="p-2">
+                                <button onclick="handleLogout()"
+                                    class="w-full group flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left">
+                                    <i data-lucide="log-out"
+                                        class="w-4 h-4 text-red-400 group-hover:text-red-600 transition-colors mr-3"></i>
+                                    Sign Out
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div id="mainApp" class="pt-28 pb-12 px-6 opacity-0 min-h-screen">
+        <div class="max-w-3xl mx-auto">
+
+            <!-- Header Section -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
+                <div class="flex-1">
+                    <h1 class="text-4xl md:text-5xl font-heading font-bold text-slate-900 tracking-tight mb-2">
+                        Changeover <span class="gradient-text">Scheduler</span>
+                    </h1>
+                    <p class="text-slate-500 text-lg">Plan and manage QCO execution timelines</p>
+                </div>
+
+                <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                    <div class="relative flex-1 md:flex-none">
+                        <i data-lucide="search"
+                            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                        <input type="text" id="qcoSearch" onkeyup="handleSearch(event)" placeholder="Search QCO..."
+                            class="pl-10 pr-10 py-3 rounded-xl bg-white/80 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 w-full md:w-64 transition-all">
+                        <button onclick="clearSearch()" id="clearSearchBtn"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors hidden">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                        </button>
+                        <p id="searchStatus"
+                            class="absolute top-full right-0 mt-1 text-xs text-slate-500 hidden z-10 bg-white/90 p-1 rounded shadow-sm">
+                        </p>
+                    </div>
+                    <div class="relative flex-1 md:flex-none">
+                        <select id="qcoSelector" onchange="handleQCOChange(this.value)"
+                            class="appearance-none w-full bg-white/80 border border-slate-200 text-slate-700 font-semibold py-3 pl-4 pr-10 rounded-xl hover:border-violet-400 transition-all focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer shadow-sm min-w-[280px]">
+                            <option value="">Select Changeover...</option>
+                        </select>
+                        <i data-lucide="chevron-down"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-3 h-3 pointer-events-none"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div id="contentArea" class="relative">
+
+                <!-- Empty State -->
+                <div id="emptyState" class="glass-card p-12 text-center animate-fade-in">
+                    <div
+                        class="w-20 h-20 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-6 text-violet-500 text-3xl">
+                        <i data-lucide="calendar" class="w-10 h-10"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-slate-800 mb-2">Select a Changeover</h3>
+                    <p class="text-slate-500 max-w-md mx-auto">Choose a QCO number from the dropdown to view or edit its
+                        schedule. The selected date will be visible to all departments.</p>
+                </div>
+
+                <!-- Schedule Form -->
+                <div id="scheduleForm" class="hidden space-y-6">
+                    <!-- QCO Info Card -->
+                    <div
+                        class="glass-card p-6 bg-gradient-to-br from-white/90 to-violet-50/50 border-l-4 border-violet-500">
+                        <div class="flex items-center gap-4">
+                            <div
+                                class="w-12 h-12 rounded-xl bg-violet-500 text-white flex items-center justify-center shadow-lg">
+                                <i data-lucide="hash" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-violet-600 uppercase tracking-wider mb-0.5">Selected
+                                    QCO</p>
+                                <h2 class="text-2xl font-heading font-bold text-slate-900" id="displayQCONumber">-</h2>
+                                <p class="text-sm text-slate-500" id="displayStyleName">-</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Schedule Card -->
+                    <div class="glass-card p-8 relative overflow-hidden">
+                        <div
+                            class="absolute top-0 right-0 w-64 h-64 bg-violet-500/5 rounded-bl-full -mr-16 -mt-16 pointer-events-none">
+                        </div>
+
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-3 mb-6">
+                                <div
+                                    class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
+                                    <i data-lucide="clock" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-heading font-bold text-slate-900 text-lg">Execution Schedule</h3>
+                                    <p class="text-sm text-slate-500">Set the planned changeover date and time</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Changeover Date &
+                                        Time</label>
+                                    <div class="relative">
+                                        <input type="datetime-local" id="scheduleDate"
+                                            class="w-full bg-white border border-slate-200 text-slate-900 font-semibold rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent shadow-sm transition-all text-lg">
+                                    </div>
+                                    <p class="text-xs text-slate-400 mt-2 ml-1 flex items-center gap-1">
+                                        <i data-lucide="info" class="w-3 h-3"></i>
+                                        This will be visible on the Dashboard and Checklist pages
+                                    </p>
+                                </div>
+
+                                <!-- Changeover Category -->
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Changeover
+                                        Category</label>
+                                    <div class="relative">
+                                        <select id="changeoverCategory"
+                                            class="w-full bg-white border border-slate-200 text-slate-900 font-semibold rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent shadow-sm transition-all text-lg appearance-none cursor-pointer">
+                                            <option value="C">Category C (Low Complexity - 3x SMV)</option>
+                                            <option value="B">Category B (Medium Complexity - 5x SMV)</option>
+                                            <option value="A">Category A (High Complexity - 7x SMV)</option>
+                                        </select>
+                                        <i data-lucide="chevron-down"
+                                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
+                                    </div>
+                                    <p class="text-xs text-slate-400 mt-2 ml-1 flex items-center gap-1">
+                                        <i data-lucide="info" class="w-3 h-3"></i>
+                                        Category determines Target COPT multiplier
+                                    </p>
+                                </div>
+
+                                <div class="bg-amber-50/80 border border-amber-100 rounded-xl p-4 flex gap-3">
+                                    <i data-lucide="lightbulb" class="w-5 h-5 text-amber-500 mt-0.5"></i>
+                                    <div>
+                                        <h4 class="font-semibold text-amber-800 text-sm mb-1">Scheduling Tip</h4>
+                                        <p class="text-sm text-amber-700 leading-relaxed">
+                                            Ensure all departments have completed their pre-checks before the scheduled
+                                            time.
+                                            The system will track actual vs planned start times.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row gap-3 mt-8 pt-6 border-t border-slate-200/60">
+                                <button onclick="clearSchedule()"
+                                    class="px-6 py-3 rounded-xl text-red-600 font-semibold hover:bg-red-50 border border-transparent hover:border-red-200 transition-all flex items-center justify-center gap-2 order-2 sm:order-1">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    Clear Date
+                                </button>
+                                <button onclick="saveSchedule()" id="saveBtn"
+                                    class="flex-1 px-6 py-3 rounded-xl btn-primary text-white font-bold shadow-lg flex items-center justify-center gap-2 order-1 sm:order-2">
+                                    <i data-lucide="save" class="w-4 h-4"></i>
+                                    Save Schedule
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="glass-card p-4 flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                                <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-500 font-medium uppercase">Status</p>
+                                <p class="font-bold text-slate-900" id="statusText">Not Scheduled</p>
+                            </div>
+                        </div>
+                        <div class="glass-card p-4 flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
+                                <i data-lucide="history" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-slate-500 font-medium uppercase">Last Updated</p>
+                                <p class="font-bold text-slate-900" id="lastUpdatedText">Never</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCayfWGQP1t3oBU9eFj-3Ww0uu7nSl3Q4g",
+            authDomain: "sidneymailer.firebaseapp.com",
+            projectId: "sidneymailer",
+            storageBucket: "sidneymailer.firebasestorage.app",
+            messagingSenderId: "911316068119",
+            appId: "1:911316068119:web:ce23dbe663dc385a81f952",
+            measurementId: "G-NJ0QH6DEXG"
+        };
+
+        // --- Global State ---
+        let db, auth;
+        let currentQCOId = null;
+        let currentQCOData = null;
+        let allChangeovers = [];
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Strict Auth Check (Immediate)
+            const user = JSON.parse(localStorage.getItem('qcoCurrentUser'));
+            if (!user) {
+                window.location.href = '../index.html';
+                return;
+            }
+
+            initLenis();
+            initFirebase();
+            checkAuth(); // Verify session validity
+
+            // Animate in
+            gsap.to("#mainApp", { opacity: 1, duration: 0.6, delay: 0.1 });
+
+            // Load data
+            await loadChangeoverList();
+            lucide.createIcons();
+        });
+
+        function initLenis() {
+            const lenis = new Lenis({ duration: 1.2, smooth: true });
+            function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+            requestAnimationFrame(raf);
+        }
+
+        function initFirebase() {
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                db = firebase.firestore();
+                auth = firebase.auth();
+                console.log("Firebase initialized successfully");
+            } catch (error) {
+                console.error("Firebase initialization error:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Connection Error',
+                    text: 'Failed to connect to database. Please check your internet connection.',
+                    confirmButtonColor: '#7c3aed'
+                });
+            }
+        }
+
+        function checkAuth() {
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // Update local storage just in case
+                    localStorage.setItem('qcoCurrentUser', JSON.stringify({
+                        uid: user.uid,
+                        name: user.displayName || 'User',
+                        email: user.email,
+                        role: 'Member'
+                    }));
+                } else {
+                    if (!localStorage.getItem('qcoCurrentUser')) {
+                        window.location.href = '../index.html';
+                    }
+                }
+                updateUserUI();
+            });
+        }
+
+        function updateUserUI() {
+            let user = {};
+            try {
+                // Try from local storage since currentUser var is not global here
+                user = JSON.parse(localStorage.getItem('qcoCurrentUser')) || {};
+            } catch (e) {
+                console.warn('User parse error', e);
+            }
+            const name = user.displayName || user.name || 'User';
+            const role = user.role || 'Member';
+
+            const nameEl = document.getElementById('userName');
+            const roleEl = document.getElementById('userRole');
+
+            if (nameEl) nameEl.textContent = name;
+            if (roleEl) roleEl.textContent = role;
+        }
+
+        function handleLogout() {
+            auth.signOut().then(() => {
+                localStorage.removeItem('qcoCurrentUser');
+                localStorage.removeItem('qcoSessionActive');
+                window.location.href = '../index.html';
+            });
+        }
+
+        // --- Data Loading ---
+
+        async function loadChangeoverList() {
+            const selector = document.getElementById('qcoSelector');
+
+            if (!db) {
+                console.error("Database not initialized");
+                return;
+            }
+
+            try {
+                const snapshot = await db.collection('changeovers')
+                    .orderBy('createdAt', 'desc')
+                    .limit(50)
+                    .get();
+
+                // Clear existing options except first
+                while (selector.options.length > 1) {
+                    selector.remove(1);
+                }
+
+                if (snapshot.empty) {
+                    const option = document.createElement('option');
+                    option.text = "No changeovers found";
+                    option.disabled = true;
+                    selector.add(option);
+                    return;
+                }
+
+                const savedId = localStorage.getItem('scheduleQCOId');
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+
+                    const qcoNum = data.qcoNumber || data.qcoId || doc.id.substring(0, 8);
+                    const upcomingStyle = data.upcomingStyle || 'Unknown';
+                    const last4Digits = upcomingStyle.length >= 4 ? upcomingStyle.slice(-4) : upcomingStyle;
+
+                    option.textContent = `${qcoNum} - ${last4Digits}`;
+                    option.dataset.qcoNumber = qcoNum;
+                    option.dataset.style = last4Digits;
+
+                    if (doc.id === savedId) {
+                        option.selected = true;
+                    }
+
+                    selector.appendChild(option);
+                    allChangeovers.push({ id: doc.id, ...data });
+                });
+
+                // Auto-select if saved
+                if (savedId) {
+                    await handleQCOChange(savedId, false);
+                }
+
+            } catch (error) {
+                console.error("Error loading changeovers:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Load Error',
+                    text: 'Failed to load changeover list',
+                    confirmButtonColor: '#7c3aed'
+                });
+            }
+        }
+
+        async function handleQCOChange(qcoId, saveToStorage = true) {
+            if (!qcoId) {
+                currentQCOId = null;
+                currentQCOData = null;
+                showEmptyState();
+                return;
+            }
+
+            if (saveToStorage) {
+                localStorage.setItem('scheduleQCOId', qcoId);
+            }
+
+            currentQCOId = qcoId;
+
+            // Get selected option data
+            const selector = document.getElementById('qcoSelector');
+            const option = selector.options[selector.selectedIndex];
+
+            // Update display
+            document.getElementById('displayQCONumber').textContent = option.dataset.qcoNumber || qcoId.substring(0, 8);
+            document.getElementById('displayStyleName').textContent = option.dataset.style || 'Unknown Style';
+
+            // Show loading state
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('scheduleForm').classList.add('hidden');
+
+            // Create loading skeleton
+            const loadingDiv = document.createElement('div');
+            loadingDiv.id = 'tempLoading';
+            loadingDiv.className = 'glass-card p-8 flex flex-col items-center justify-center py-20';
+            loadingDiv.innerHTML = `
+                <div class="spinner mb-4"></div>
+                <p class="text-slate-500 font-medium">Loading schedule data...</p>
+            `;
+            document.getElementById('contentArea').appendChild(loadingDiv);
+
+            await loadScheduleData(qcoId);
+
+            // Remove loading
+            const tempLoading = document.getElementById('tempLoading');
+            if (tempLoading) tempLoading.remove();
+
+            showScheduleForm();
+        }
+
+        async function loadScheduleData(qcoId) {
+            try {
+                const doc = await db.collection('changeovers').doc(qcoId).get();
+
+                if (doc.exists) {
+                    currentQCOData = doc.data();
+
+                    // Set date if exists
+                    const dateInput = document.getElementById('scheduleDate');
+                    if (currentQCOData.scheduledDate) {
+                        // Handle both Firestore timestamps and ISO strings
+                        let dateValue;
+                        if (currentQCOData.scheduledDate.toDate) {
+                            // It's a Firestore Timestamp
+                            dateValue = currentQCOData.scheduledDate.toDate();
+                            // Format for datetime-local input: YYYY-MM-DDTHH:mm
+                            const pad = (n) => n < 10 ? '0' + n : n;
+                            dateInput.value = `${dateValue.getFullYear()}-${pad(dateValue.getMonth() + 1)}-${pad(dateValue.getDate())}T${pad(dateValue.getHours())}:${pad(dateValue.getMinutes())}`;
+                        } else {
+                            // It's already a string (ISO format)
+                            dateInput.value = currentQCOData.scheduledDate;
+                        }
+                        updateStatusText('Scheduled');
+                    } else {
+                        dateInput.value = '';
+                        updateStatusText('Not Scheduled');
+                    }
+
+                    // Set category if exists (default to C)
+                    const categoryInput = document.getElementById('changeoverCategory');
+                    categoryInput.value = currentQCOData.changeoverCategory || 'C';
+
+                    // Update last updated
+                    if (currentQCOData.updatedAt) {
+                        const date = currentQCOData.updatedAt.toDate ? currentQCOData.updatedAt.toDate() : new Date(currentQCOData.updatedAt);
+                        document.getElementById('lastUpdatedText').textContent = date.toLocaleString();
+                    } else {
+                        document.getElementById('lastUpdatedText').textContent = 'Never';
+                    }
+                } else {
+                    // New document
+                    document.getElementById('scheduleDate').value = '';
+                    document.getElementById('changeoverCategory').value = 'C'; // Default to Category C
+                    updateStatusText('New');
+                    document.getElementById('lastUpdatedText').textContent = 'Never';
+                }
+            } catch (error) {
+                console.error("Error loading schedule:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to load schedule data',
+                    confirmButtonColor: '#7c3aed'
+                });
+            }
+        }
+
+        // --- UI Management ---
+
+        function showEmptyState() {
+            document.getElementById('emptyState').classList.remove('hidden');
+            document.getElementById('scheduleForm').classList.add('hidden');
+        }
+
+        function showScheduleForm() {
+            document.getElementById('emptyState').classList.add('hidden');
+            document.getElementById('scheduleForm').classList.remove('hidden');
+
+            // Animate in
+            gsap.fromTo("#scheduleForm",
+                { opacity: 0, y: 20 },
+                { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }
+            );
+        }
+
+        function updateStatusText(status) {
+            const el = document.getElementById('statusText');
+            el.textContent = status;
+
+            // Color coding
+            if (status === 'Scheduled') {
+                el.className = 'font-bold text-emerald-600';
+            } else if (status === 'Not Scheduled') {
+                el.className = 'font-bold text-slate-400';
+            } else {
+                el.className = 'font-bold text-blue-600';
+            }
+        }
+
+        // --- Save / Clear Operations ---
+
+        async function saveSchedule() {
+            if (!currentQCOId) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No QCO Selected',
+                    text: 'Please select a changeover first',
+                    confirmButtonColor: '#7c3aed'
+                });
+                return;
+            }
+
+            const dateVal = document.getElementById('scheduleDate').value;
+
+            if (!dateVal) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Date Required',
+                    text: 'Please select a date and time',
+                    confirmButtonColor: '#7c3aed'
+                });
+                return;
+            }
+
+            // Show loading on button
+            const btn = document.getElementById('saveBtn');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<div class="spinner border-white border-t-transparent w-5 h-5 mr-2"></div> Saving...';
+            btn.disabled = true;
+
+            try {
+                const categoryVal = document.getElementById('changeoverCategory').value;
+
+                await db.collection('changeovers').doc(currentQCOId).set({
+                    scheduledDate: dateVal, // Save as ISO string
+                    changeoverCategory: categoryVal, // Save category (A, B, or C)
+                    hasSchedule: true,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: 'schedule_system'
+                }, { merge: true });
+
+                // Update UI
+                updateStatusText('Scheduled');
+                document.getElementById('lastUpdatedText').textContent = new Date().toLocaleString();
+
+                showSaveStatus();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Schedule Saved!',
+                    text: 'The changeover date has been updated',
+                    timer: 2000,
+                    showConfirmButton: false,
+                    position: 'top-end',
+                    toast: true
+                });
+
+            } catch (error) {
+                document.getElementById('saveBtn').innerHTML = `<i data-lucide="save" class="w-4 h-4 mr-2"></i> Save Schedule`;
+                document.getElementById('saveBtn').disabled = false;
+                console.error("Error saving schedule:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while saving: ' + error.message,
+                    confirmButtonColor: '#7c3aed'
+                });
+            } finally {
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
+        }
+
+        async function clearSchedule() {
+            if (!currentQCOId) return;
+
+            const result = await Swal.fire({
+                title: 'Clear Schedule?',
+                text: "This will remove the planned date for this changeover",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Yes, clear it',
+                cancelButtonText: 'Cancel'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    await db.collection('changeovers').doc(currentQCOId).update({
+                        scheduledDate: firebase.firestore.FieldValue.delete(),
+                        hasSchedule: false,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    document.getElementById('scheduleDate').value = '';
+                    document.getElementById('changeoverCategory').value = 'C'; // Reset to default
+                    updateStatusText('Not Scheduled');
+                    lucide.createIcons();
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Cleared',
+                        text: 'Schedule has been removed',
+                        timer: 1500,
+                        showConfirmButton: false,
+                        position: 'top-end',
+                        toast: true
+                    });
+
+                } catch (error) {
+                    console.error("Clear error:", error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to clear schedule',
+                        confirmButtonColor: '#7c3aed'
+                    });
+                }
+            }
+        }
+
+        let searchTimeout = null;
+
+        function handleSearch(event) {
+            const searchTerm = event.target.value.trim().toUpperCase();
+            const statusEl = document.getElementById('searchStatus');
+            const clearBtn = document.getElementById('clearSearchBtn');
+
+            if (searchTerm) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            if (searchTimeout) clearTimeout(searchTimeout);
+
+            if (!searchTerm) {
+                statusEl.classList.add('hidden');
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                const matchedQCO = allChangeovers.find(q => {
+                    const qcoNumber = (q.qcoNumber || '').toUpperCase();
+                    const upcomingStyle = (q.upcomingStyle || '').toUpperCase();
+                    return qcoNumber === searchTerm ||
+                        upcomingStyle === searchTerm ||
+                        qcoNumber.includes(searchTerm) ||
+                        upcomingStyle.includes(searchTerm);
+                });
+
+                if (matchedQCO) {
+                    statusEl.textContent = `Found: ${matchedQCO.qcoNumber || 'QCO'} - ${matchedQCO.upcomingStyle}`;
+                    statusEl.classList.remove('hidden', 'text-red-500');
+                    statusEl.classList.add('text-emerald-600');
+
+                    const selector = document.getElementById('qcoSelector');
+                    let optionExists = Array.from(selector.options).some(opt => opt.value === matchedQCO.id);
+
+                    if (optionExists) {
+                        selector.value = matchedQCO.id;
+                        handleQCOChange(matchedQCO.id);
+                    }
+                } else {
+                    statusEl.textContent = `No QCO found matching "${searchTerm}"`;
+                    statusEl.classList.remove('hidden', 'text-emerald-600');
+                    statusEl.classList.add('text-red-500');
+                }
+            }, 500);
+        }
+
+        function clearSearch() {
+            document.getElementById('qcoSearch').value = '';
+            document.getElementById('searchStatus').classList.add('hidden');
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+        }
+        function showSaveStatus() {
+            const status = document.getElementById('saveStatus');
+            status.classList.remove('hidden');
+            status.classList.add('flex');
+
+            setTimeout(() => {
+                status.classList.add('hidden');
+                status.classList.remove('flex');
+            }, 2000);
+        }
+    </script>
+</body>
+
+</html>

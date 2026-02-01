@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Recorder | Smart QCO System</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.1.2/dist/lenis.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], heading: ['Poppins', 'sans-serif'] },
+                    colors: { brand: { 50: '#f0f9ff', 500: '#0ea5e9', 900: '#0c4a6e' } },
+                    animation: { 'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 2rem;
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.05);
+        }
+
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #0ea5e9;
+            position: fixed;
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            position: fixed;
+            border-radius: 50%;
+            z-index: 9998;
+            pointer-events: none;
+            transition: 0.2s;
+        }
+
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.8);
+            color: #0ea5e9;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+        }
+
+        input,
+        select,
+        textarea {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            background: #fff;
+            outline: none;
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+        }
+    </style>
+</head>
+
+<body class="relative min-h-screen">
+
+    <div class="cursor-dot hidden md:block"></div>
+    <div class="cursor-outline hidden md:block"></div>
+
+    <div class="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
+        <div
+            class="absolute top-[-20%] right-[-10%] w-[50vw] h-[50vw] bg-amber-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-pulse-slow">
+        </div>
+        <div
+            class="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-rose-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-pulse-slow">
+        </div>
+    </div>
+
+    <!-- Nav -->
+    <nav class="fixed top-0 w-full z-40 glass transition-all duration-300" id="navbar">
+        <div class="max-w-[1600px] mx-auto px-6">
+            <div class="flex justify-between h-24 items-center relative">
+
+                <!-- Centered Navigation -->
+                <div class="hidden xl:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                    <div
+                        class="flex items-center gap-1 bg-white/50 p-1.5 rounded-full border border-white/20 shadow-sm backdrop-blur-md">
+                        <a href="../index.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Home</a>
+                        <a href="dashboard.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Dashboard</a>
+                        <a href="creation.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Creation</a>
+                        <a href="schedule.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Schedule</a>
+                        <a href="checklist.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Checklist</a>
+                        <a href="recorder.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-blue-900 bg-blue-100 shadow-sm transition-all">Recorder</a>
+                        <a href="summary.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Reports</a>
+                    </div>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button onclick="toggleMobileMenu()"
+                    class="xl:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-all">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+
+                <a href="../index.html" class="flex items-center gap-4 group cursor-pointer">
+                    <div
+                        class="w-10 h-10 md:w-12 md:h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:rotate-12 transition-transform duration-500 ease-out">
+                        <i data-lucide="layers" class="w-5 h-5 md:w-6 md:h-6"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-heading font-bold text-slate-900 text-lg md:text-xl tracking-tight">QCO
+                            Portal</span>
+                        <span class="text-[10px] md:text-xs text-slate-500 font-medium tracking-wide">Manufacturing
+                            Excellence</span>
+                    </div>
+                </a>
+
+                <div class="flex items-center gap-4">
+                    <!-- User Profile Dropdown -->
+                    <div class="relative">
+                        <button onclick="document.getElementById('userDropdown').classList.toggle('hidden')"
+                            class="flex items-center gap-2 focus:outline-none group p-1 pr-1 md:p-1.5 md:pr-3 rounded-full hover:bg-white/60 transition-all border border-transparent hover:border-slate-200">
+                            <div
+                                class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border border-white shadow-sm flex items-center justify-center overflow-hidden">
+                                <i data-lucide="user" class="w-4 h-4 text-slate-500"></i>
+                            </div>
+                            <div class="text-left hidden sm:block">
+                                <p class="text-xs font-bold text-slate-900 leading-tight" id="userName">User</p>
+                                <p class="text-[10px] text-slate-500 leading-tight" id="userRole">Member</p>
+                            </div>
+                            <i data-lucide="chevron-down"
+                                class="w-3 h-3 text-slate-400 ml-1 group-hover:text-slate-600 transition-colors hidden sm:block"></i>
+                        </button>
+
+                        <div id="userDropdown"
+                            class="hidden absolute right-0 mt-3 w-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 ring-1 ring-black/5 divide-y divide-slate-100 transform origin-top-right transition-all z-50">
+                            <div class="p-2">
+                                <button onclick="handleLogout()"
+                                    class="w-full group flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left">
+                                    <i data-lucide="log-out"
+                                        class="w-4 h-4 text-red-400 group-hover:text-red-600 transition-colors mr-3"></i>
+                                    Sign Out
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobileMenu"
+                class="hidden xl:hidden bg-white/90 backdrop-blur-xl border-t border-slate-100 absolute left-0 right-0 top-24 p-4 shadow-xl z-50">
+                <div class="grid grid-cols-2 gap-2">
+                    <a href="../index.html"
+                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Home</a>
+                    <a href="dashboard.html"
+                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Dashboard</a>
+                    <a href="creation.html"
+                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Creation</a>
+                    <a href="schedule.html"
+                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Schedule</a>
+                    <a href="checklist.html"
+                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Checklist</a>
+                    <a href="recorder.html"
+                        class="p-3 text-sm font-semibold text-white bg-blue-600 rounded-xl transition-colors text-center shadow-md">Recorder</a>
+                    <a href="summary.html"
+                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Reports</a>
+                </div>
+            </div>
+        </div>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div id="mainApp" class="pt-32 pb-12 px-6 opacity-0">
+        <div class="max-w-[1200px] mx-auto">
+
+            <!-- Operations Tracker Card -->
+            <div class="glass-card p-8 lg:p-10 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-400 to-rose-500"></div>
+
+                <h2
+                    class="text-3xl font-heading font-bold text-slate-900 mb-8 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <span
+                            class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center text-lg">
+                            <i data-lucide="activity"></i>
+                        </span>
+                        Operations Log
+                    </div>
+
+                    <div class="flex flex-col w-full lg:w-auto lg:flex-row items-stretch lg:items-center gap-3">
+                        <div class="flex flex-col sm:flex-row items-stretch gap-2 w-full lg:w-auto">
+                            <div class="relative w-full sm:w-auto">
+                                <i data-lucide="search"
+                                    class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                                <input type="text" id="qcoSearch" onkeyup="handleSearch(event)"
+                                    placeholder="Search QCO..."
+                                    class="pl-10 pr-10 py-2.5 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 w-full sm:w-48 transition-all">
+                                <button onclick="clearSearch()" id="clearSearchBtn"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors hidden">
+                                    <i data-lucide="x" class="w-3 h-3"></i>
+                                </button>
+                                <p id="searchStatus"
+                                    class="absolute top-full right-0 mt-1 text-xs text-slate-500 hidden z-10 bg-white p-1 rounded shadow-sm border border-slate-100 w-full">
+                                </p>
+                            </div>
+                            <div class="relative group w-full sm:w-auto">
+                                <select id="qcoSelector" onchange="handleQCOChange(this.value)"
+                                    class="appearance-none w-full sm:w-auto bg-white border border-slate-200 text-slate-700 font-bold py-2.5 pl-4 pr-10 rounded-xl hover:border-violet-400 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer text-sm min-w-[200px]">
+                                    <option value="">Select Changeover...</option>
+                                </select>
+                                <i data-lucide="chevron-down"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
+                            </div>
+                        </div>
+                        <div class="font-mono font-bold text-2xl text-slate-700 bg-slate-100/80 px-4 py-2 rounded-xl border border-slate-200 shadow-inner text-center sm:text-left"
+                            id="clock">00:00:00</div>
+                    </div>
+                </h2>
+
+                <!-- Target COPT Info -->
+                <div id="targetCOPTSection"
+                    class="mb-8 p-6 bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl border border-emerald-200">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center">
+                                <i data-lucide="target" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Target COPT</p>
+                                <p class="text-2xl font-heading font-bold text-slate-900">
+                                    <span id="recorderTargetCOPT">-</span> <span
+                                        class="text-sm text-slate-500 font-normal">min</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-slate-500 font-medium">Category</p>
+                            <p class="text-sm font-bold text-slate-900" id="recorderCategory">-</p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-3 flex items-center gap-1">
+                        <i data-lucide="info" class="w-3 h-3"></i>
+                        Based on SMV and changeover complexity
+                    </p>
+                </div>
+
+                <!-- Operations Tracking Section -->
+                <div id="operationsSection" class="hidden">
+                    <h3 class="text-xl font-heading font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <span
+                            class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm">
+                            <i data-lucide="list-checks" class="w-4 h-4"></i>
+                        </span>
+                        Operations Checklist
+                    </h3>
+                    <div id="operationsList" class="space-y-3">
+                        <!-- Operations will be injected here -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCayfWGQP1t3oBU9eFj-3Ww0uu7nSl3Q4g",
+            authDomain: "sidneymailer.firebaseapp.com",
+            projectId: "sidneymailer",
+            storageBucket: "sidneymailer.firebasestorage.app",
+            messagingSenderId: "911316068119",
+            appId: "1:911316068119:web:ce23dbe663dc385a81f952",
+            measurementId: "G-NJ0QH6DEXG"
+        };
+        // Initialize
+        let db, auth;
+        let currentQCOId = null;
+        let allChangeovers = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Strict Auth Check (Immediate)
+            const user = JSON.parse(localStorage.getItem('qcoCurrentUser'));
+            if (!user) {
+                window.location.href = '../index.html';
+                return;
+            }
+
+            // Init utils
+            const lenis = new Lenis();
+            function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+            requestAnimationFrame(raf);
+
+            // Cursor
+            const dot = document.querySelector('.cursor-dot');
+            const outline = document.querySelector('.cursor-outline');
+            window.addEventListener('mousemove', e => {
+                gsap.to(dot, { x: e.clientX, y: e.clientY, duration: 0.1 });
+                gsap.to(outline, { x: e.clientX, y: e.clientY, duration: 0.5 });
+            });
+
+            // Clock
+            setInterval(() => {
+                const el = document.getElementById('clock');
+                if (el) el.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
+            }, 1000);
+
+            // Firebase Init
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            auth = firebase.auth();
+            checkAuth();
+
+            // Load QCO List and set initial state
+            await loadChangeoverList();
+
+            lucide.createIcons();
+            gsap.to("#mainApp", { opacity: 1, duration: 0.5 });
+        });
+
+        function checkAuth() {
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    localStorage.setItem('qcoCurrentUser', JSON.stringify({
+                        uid: user.uid,
+                        name: user.displayName || 'User',
+                        email: user.email,
+                        role: 'Member'
+                    }));
+                } else {
+                    if (!localStorage.getItem('qcoCurrentUser')) {
+                        window.location.href = '../index.html';
+                    }
+                }
+                updateUserUI();
+            });
+        }
+
+        function updateUserUI() {
+            let user = {};
+            try {
+                user = JSON.parse(localStorage.getItem('qcoCurrentUser')) || {};
+            } catch (e) { console.warn(e); }
+            const name = user.displayName || user.name || 'User';
+            const role = user.role || 'Member';
+            const nameEl = document.getElementById('userName');
+            const roleEl = document.getElementById('userRole');
+            if (nameEl) nameEl.textContent = name;
+            if (roleEl) roleEl.textContent = role;
+        }
+
+        function handleLogout() {
+            auth.signOut().then(() => {
+                localStorage.removeItem('qcoCurrentUser');
+                localStorage.removeItem('qcoSessionActive');
+                window.location.href = '../index.html';
+            });
+        }
+
+        // --- Data Logic: Selection & Loading ---
+
+        async function loadChangeoverList() {
+            try {
+                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(20).get();
+                const selector = document.getElementById('qcoSelector');
+                selector.innerHTML = '<option value="">Select Changeover...</option>';
+
+                const currentSaved = localStorage.getItem('currentQCOId');
+                let foundMatch = false;
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const opt = document.createElement('option');
+                    opt.value = doc.id;
+                    const upcomingStyle = data.upcomingStyle || 'Unknown';
+                    const last4Digits = upcomingStyle.length >= 4 ? upcomingStyle.slice(-4) : upcomingStyle;
+                    opt.textContent = `${data.qcoNumber || 'QCO'} - ${last4Digits}`;
+
+                    if (doc.id === currentSaved) {
+                        opt.selected = true;
+                        foundMatch = true;
+                    }
+                    selector.appendChild(opt);
+                    allChangeovers.push({ id: doc.id, ...data });
+                });
+
+                if (foundMatch) {
+                    currentQCOId = currentSaved;
+                    await loadData();
+                } else if (snapshot.size > 0) {
+                    // document.getElementById('qcoSelector').value = ""; // Default empty to force selection or prompt
+                }
+
+            } catch (e) {
+                console.error("Error loading Changeover list:", e);
+            }
+        }
+
+        function handleQCOChange(qcoId) {
+            if (!qcoId) return;
+            localStorage.setItem('currentQCOId', qcoId);
+            currentQCOId = qcoId;
+            loadData(); // Reload operations and data for new QCO
+        }
+
+        // --- Data Loading ---
+
+        async function loadData() {
+            if (!currentQCOId) return;
+            try {
+                const doc = await db.collection('changeovers').doc(currentQCOId).get();
+                if (doc.exists) {
+                    const data = doc.data();
+
+                    // Calculate and display Target COPT
+                    updateTargetCOPTDisplay(data);
+
+                    // Load Operations List for Tracking
+                    if (data.operationsList && Array.isArray(data.operationsList)) {
+                        renderOperationsList(data.operationsList, data.operationTimings || {});
+                    } else {
+                        document.getElementById('operationsSection').classList.add('hidden');
+                    }
+                }
+            } catch (e) {
+                console.error("Error loading data:", e);
+                alert("Failed to load QCO data. Please refresh the page.");
+            }
+        }
+
+        function renderOperationsList(operations, timings) {
+            const section = document.getElementById('operationsSection');
+            const list = document.getElementById('operationsList');
+
+            if (!operations || operations.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+
+            section.classList.remove('hidden');
+            list.innerHTML = operations.map((op, index) => {
+                // Handle both old format (string) and new format (object)
+                const opName = typeof op === 'string' ? op : op.name;
+                const opSMV = typeof op === 'object' ? op.smv : null;
+
+                const safeOpName = opName.replace(/"/g, '&quot;');
+                const timing = timings && timings[opName];
+                const startTime = timing ? timing.start : null;
+                const endTime = timing ? timing.end : null;
+                const department = timing ? timing.department || '' : '';
+                const remarks = timing ? timing.remarks || '' : '';
+
+                // Calculate standard time (SMV × 10) - try from operation SMV first, then fall back to saved value
+                let standardTime = null;
+                if (opSMV !== null && opSMV !== undefined) {
+                    standardTime = (opSMV * 10).toFixed(2);
+                } else if (timing && timing.standardTime !== null && timing.standardTime !== undefined) {
+                    // Fallback: use standardTime that was saved in Firebase
+                    standardTime = parseFloat(timing.standardTime).toFixed(2);
+                }
+
+                // Calculate actual time
+                const actualTime = (startTime && endTime)
+                    ? ((new Date(endTime) - new Date(startTime)) / 60000).toFixed(2)
+                    : null;
+
+                // Debug logging
+                if (index === 0) {
+                    console.log('Operation debug:', {
+                        opName,
+                        opType: typeof op,
+                        opSMV,
+                        standardTime,
+                        actualTime,
+                        timing
+                    });
+                }
+
+                let rowHtml = '';
+
+                if (endTime && actualTime !== null) {
+                    // Completed - show all controls
+                    const isOnTime = standardTime ? parseFloat(actualTime) <= parseFloat(standardTime) : true;
+                    const comparisonColor = isOnTime ? 'text-emerald-600' : 'text-rose-600';
+                    const variance = standardTime ? (parseFloat(actualTime) - parseFloat(standardTime)).toFixed(2) : 0;
+
+                    rowHtml = `
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                            <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex-shrink-0">
+                                <i data-lucide="check" class="w-4 h-4"></i>
+                            </div>
+                            <div class="flex-1 min-w-[150px]">
+                                <p class="text-sm font-bold text-slate-900">${opName}</p>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-[10px] font-bold ${comparisonColor} bg-${isOnTime ? 'emerald' : 'rose'}-50 px-2 py-0.5 rounded">
+                                        ${actualTime}m
+                                    </span>
+                                    ${standardTime ? `<span class="text-[10px] font-medium text-slate-400">vs ${standardTime}m</span>` : ''}
+                                    ${standardTime ? `<span class="text-[10px] font-bold ${comparisonColor}">${variance > 0 ? '+' : ''}${variance}m</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:ml-auto">
+                            <select id="dept_${index}" class="flex-1 sm:flex-none px-3 py-2 text-xs rounded-lg border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all w-full sm:w-32">
+                                <option value="">Dept...</option>
+                                <option value="Production" ${department === 'Production' ? 'selected' : ''}>Production</option>
+                                <option value="Maintenance" ${department === 'Maintenance' ? 'selected' : ''}>Maintenance</option>
+                                <option value="Quality" ${department === 'Quality' ? 'selected' : ''}>Quality</option>
+                                <option value="Engineering" ${department === 'Engineering' ? 'selected' : ''}>Engineering</option>
+                            </select>
+                            <input type="text" id="remarks_${index}" placeholder="Remarks..." value="${remarks}"
+                                class="flex-1 sm:flex-none px-3 py-2 text-xs rounded-lg border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all min-w-[120px]">
+                            
+                            <div class="flex items-center gap-2 ml-auto sm:ml-0">
+                                <button onclick="saveOperationDetails('${index}', '${safeOpName}')" 
+                                    class="p-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all flex-shrink-0" title="Save Info">
+                                    <i data-lucide="save" class="w-4 h-4"></i>
+                                </button>
+                                <button onclick="openEditModal('${index}', '${safeOpName}')" 
+                                    class="px-4 py-2 rounded-lg bg-white border-2 border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 hover:border-slate-300 transition-all whitespace-nowrap">
+                                    <i data-lucide="edit-3" class="w-3 h-3 inline mr-1"></i> Edit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                } else if (startTime) {
+                    // Running - show end button and standard time
+                    rowHtml = `
+                    <div class="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex-shrink-0">
+                            <span class="w-2 h-2 bg-amber-600 rounded-full animate-ping"></span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-slate-900">${opName}</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <p class="text-[10px] font-bold text-amber-600">Running...</p>
+                                ${standardTime ? `<span class="text-[10px] font-medium text-slate-500">Allowed: ${standardTime}m</span>` : ''}
+                            </div>
+                        </div>
+                        <button onclick="endOperation('${index}', '${safeOpName}', ${opSMV})" 
+                            class="px-6 py-2 rounded-lg bg-rose-500 text-white text-xs font-bold hover:bg-rose-600 transition-all shadow-sm ml-auto">
+                            End
+                        </button>
+                    </div>
+                    `;
+                } else {
+                    // Not started - show start button and standard time
+                    rowHtml = `
+                    <div class="flex items-center gap-3 p-3 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all hover:border-emerald-300">
+                        <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 text-slate-400 flex-shrink-0">
+                            <i data-lucide="circle" class="w-4 h-4"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-slate-900">${opName}</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <p class="text-[10px] font-medium text-slate-400">Not started</p>
+                                ${standardTime ? `<span class="text-[10px] font-medium text-slate-500">Allowed: ${standardTime}m</span>` : ''}
+                            </div>
+                        </div>
+                        <button onclick="startOperation('${index}', '${safeOpName}')" 
+                            class="px-6 py-2 rounded-lg bg-emerald-500 text-white text-xs font-bold hover:bg-emerald-600 transition-all shadow-sm ml-auto">
+                            Start
+                        </button>
+                    </div>
+                    `;
+                }
+
+                return rowHtml;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        let currentEditOp = null;
+
+        async function openEditModal(index, opName) {
+            if (!currentQCOId) return;
+            currentEditOp = { index, opName };
+
+            try {
+                // Get current values from UI
+                const currentDept = document.getElementById(`dept_${index}`) ? document.getElementById(`dept_${index}`).value : '';
+                const currentRemarks = document.getElementById(`remarks_${index}`) ? document.getElementById(`remarks_${index}`).value : '';
+
+                // Get original data for timestamps
+                const doc = await db.collection('changeovers').doc(currentQCOId).get();
+                const data = doc.data();
+                const timing = data.operationTimings && data.operationTimings[opName];
+
+                if (!timing) { alert("Timing data not found"); return; }
+
+                // Populate Modal
+                document.getElementById('editOpName').textContent = opName;
+                document.getElementById('editDept').value = currentDept || timing.department || '';
+                document.getElementById('editRemarks').value = currentRemarks || timing.remarks || '';
+
+                // Format timestamps for input (YYYY-MM-DDThh:mm:ss)
+                const formatForInput = (isoString) => {
+                    if (!isoString) return '';
+                    const d = new Date(isoString);
+                    // Adjust to local ISO string (handling timezone offset simply)
+                    const offset = d.getTimezoneOffset() * 60000;
+                    const localISOTime = (new Date(d.getTime() - offset)).toISOString().slice(0, 19);
+                    return localISOTime;
+                };
+
+                document.getElementById('editStartTime').value = formatForInput(timing.start);
+                document.getElementById('editEndTime').value = formatForInput(timing.end);
+
+                // Show Modal
+                const modal = document.getElementById('editModal');
+                modal.classList.remove('hidden');
+                setTimeout(() => modal.classList.remove('opacity-0'), 10);
+                gsap.from('#editModalContent', { y: 20, opacity: 0, duration: 0.3 });
+
+            } catch (e) { console.error(e); alert("Error opening edit modal"); }
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('editModal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            currentEditOp = null;
+        }
+
+        async function saveEditModal() {
+            if (!currentQCOId || !currentEditOp) return;
+
+            try {
+                const opName = currentEditOp.opName;
+                const newStart = document.getElementById('editStartTime').value;
+                const newEnd = document.getElementById('editEndTime').value;
+                const newDept = document.getElementById('editDept').value;
+                const newRemarks = document.getElementById('editRemarks').value;
+
+                if (!newStart) { alert("Start time is required"); return; }
+
+                // Convert inputs back to ISO string
+                const startDate = new Date(newStart);
+                const endDate = newEnd ? new Date(newEnd) : null;
+
+                const startISO = startDate.toISOString();
+                const endISO = endDate ? endDate.toISOString() : null;
+
+                // Calculate durations if end time exists
+                let actualTime = null;
+                if (endDate) {
+                    actualTime = ((endDate - startDate) / 60000).toFixed(2);
+                }
+
+                // Get standard time to preserve or recalculate if needed? 
+                // Mostly just update what changed.
+                // Re-fetching original to be safe about preserving other fields
+                const doc = await db.collection('changeovers').doc(currentQCOId).get();
+                const data = doc.data();
+                const existing = data.operationTimings[opName] || {};
+
+                const fieldPath = new firebase.firestore.FieldPath('operationTimings', opName);
+                await db.collection('changeovers').doc(currentQCOId).update(fieldPath, {
+                    ...existing,
+                    start: startISO,
+                    end: endISO,
+                    department: newDept,
+                    remarks: newRemarks,
+                    actualTime: actualTime ? parseFloat(actualTime) : existing.actualTime
+                });
+
+                closeEditModal();
+                loadData();
+
+                // Show success toast (simple alert replacement for now or custom toast)
+                const toast = document.createElement('div');
+                toast.className = "fixed bottom-5 right-5 bg-emerald-600 text-white px-6 py-3 rounded-xl shadow-lg z-[60] animate-fade-in";
+                toast.innerHTML = '<i class="fas fa-check-circle mr-2"></i> Update Saved';
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 2000);
+
+            } catch (e) { console.error(e); alert("Failed to save changes"); }
+        }
+        async function saveOperationDetails(index, opName) {
+            if (!currentQCOId) {
+                console.warn("No QCO selected");
+                return;
+            }
+
+            // Get button reference more safely
+            let btn = null;
+            if (typeof event !== 'undefined' && event && event.target) {
+                btn = event.target.closest('button');
+            }
+
+            console.log("Save initiated for:", opName, "Index:", index, "Button found:", !!btn);
+
+            try {
+                const deptEl = document.getElementById(`dept_${index}`);
+                const remarksEl = document.getElementById(`remarks_${index}`);
+
+                if (!deptEl || !remarksEl) {
+                    throw new Error("Department or Remarks field not found in DOM");
+                }
+
+                const department = deptEl.value || '';
+                const remarks = remarksEl.value || '';
+
+                console.log("Saving - Dept:", department, "Remarks:", remarks);
+
+                // Show loading state
+                if (btn) {
+                    btn.innerHTML = '<div class="spinner w-3 h-3 border-white/30 border-t-white"></div>';
+                    btn.disabled = true;
+                }
+
+                const docRef = db.collection('changeovers').doc(currentQCOId);
+                const doc = await docRef.get();
+
+                if (!doc.exists) {
+                    throw new Error("QCO document not found");
+                }
+
+                const data = doc.data();
+                const timings = data.operationTimings || {};
+                const existing = timings[opName] || {};
+
+                console.log("Existing timing data:", existing);
+
+                const fieldPath = new firebase.firestore.FieldPath('operationTimings', opName);
+
+                await docRef.update(fieldPath, {
+                    ...existing,
+                    department: department,
+                    remarks: remarks
+                });
+
+                console.log("✅ Save successful!");
+
+                // Success feedback
+                if (btn) {
+                    btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>';
+                    btn.className = 'p-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-all flex-shrink-0';
+                    lucide.createIcons();
+
+                    setTimeout(() => {
+                        btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i>';
+                        btn.className = 'p-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all flex-shrink-0';
+                        btn.disabled = false;
+                        btn.title = 'Save Info';
+                        lucide.createIcons();
+                    }, 2000);
+                }
+
+            } catch (e) {
+                console.error("❌ Save failed:", e);
+                console.error("Error details:", e.message, e.stack);
+
+                alert("Failed to save: " + e.message);
+
+                if (btn) {
+                    btn.innerHTML = '<i data-lucide="x" class="w-4 h-4"></i>';
+                    btn.className = 'p-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-all flex-shrink-0';
+                    lucide.createIcons();
+
+                    setTimeout(() => {
+                        btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i>';
+                        btn.className = 'p-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all flex-shrink-0';
+                        btn.disabled = false;
+                        btn.title = 'Save Info';
+                        lucide.createIcons();
+                    }, 2000);
+                }
+            }
+        }
+
+        async function startOperation(index, opName) {
+            if (!currentQCOId) return;
+            try {
+                // Fetch current data to find the last operation's end time
+                const doc = await db.collection('changeovers').doc(currentQCOId).get();
+                const data = doc.data();
+                const timings = data.operationTimings || {};
+
+                let lastEndTime = null;
+                let maxEndTimeMs = 0;
+
+                // Iterate through all timings to find the latest end time
+                Object.values(timings).forEach(timing => {
+                    if (timing.end) {
+                        const endTimeMs = new Date(timing.end).getTime();
+                        if (!isNaN(endTimeMs) && endTimeMs > maxEndTimeMs) {
+                            maxEndTimeMs = endTimeMs;
+                            lastEndTime = timing.end;
+                        }
+                    }
+                });
+
+                // Use last end time if available, otherwise use current time
+                // Ideally, if there's a last end time, we start EXACTLY then to account for idle time
+                const timestamp = lastEndTime ? lastEndTime : new Date().toISOString();
+
+                console.log(`Starting operation: ${opName}`);
+                console.log(`Using start time: ${timestamp} (derived from ${lastEndTime ? 'previous operation end' : 'current time'})`);
+
+                const fieldPath = new firebase.firestore.FieldPath('operationTimings', opName);
+
+                await db.collection('changeovers').doc(currentQCOId).update(
+                    fieldPath, { start: timestamp }
+                );
+
+                // Refresh data to update status
+                loadData();
+            } catch (e) {
+                console.error("Error starting operation:", e);
+                alert("Failed to start timer. Check connection.");
+            }
+        }
+
+        async function endOperation(index, opName, opSMV) {
+            if (!currentQCOId) return;
+            try {
+                const endTimestamp = new Date().toISOString();
+
+                // Get the start time from current data
+                const doc = await db.collection('changeovers').doc(currentQCOId).get();
+                const data = doc.data();
+                const timing = data.operationTimings && data.operationTimings[opName];
+                const startTimestamp = timing ? timing.start : null;
+
+                if (!startTimestamp) {
+                    alert("No start time found for this operation!");
+                    return;
+                }
+
+                // Calculate actual time in minutes (2 decimals)
+                const actualTimeMinutes = ((new Date(endTimestamp) - new Date(startTimestamp)) / 60000).toFixed(2);
+
+                // Calculate standard time (SMV × 10, 2 decimals)
+                const standardTimeMinutes = opSMV !== null && opSMV !== undefined
+                    ? (parseFloat(opSMV) * 10).toFixed(2)
+                    : null;
+
+                // Update Firebase with all timing data
+                const fieldPath = new firebase.firestore.FieldPath('operationTimings', opName);
+                await db.collection('changeovers').doc(currentQCOId).update(
+                    fieldPath, {
+                    start: startTimestamp,
+                    end: endTimestamp,
+                    actualTime: parseFloat(actualTimeMinutes),
+                    standardTime: standardTimeMinutes ? parseFloat(standardTimeMinutes) : null
+                }
+                );
+
+                loadData();
+            } catch (e) {
+                console.error("Error ending operation:", e);
+                alert("Failed to end timer.");
+            }
+        }
+
+        async function saveOperationDetails(index, opName) {
+            if (!currentQCOId) return;
+            try {
+                const department = document.getElementById(`dept_${index}`).value;
+                const remarks = document.getElementById(`remarks_${index}`).value;
+
+                // Get existing timing data
+                const doc = await db.collection('changeovers').doc(currentQCOId).get();
+                const data = doc.data();
+                const existingTiming = data.operationTimings && data.operationTimings[opName];
+
+                if (!existingTiming) {
+                    alert("Operation timing data not found!");
+                    return;
+                }
+
+                // Update with department and remarks
+                const fieldPath = new firebase.firestore.FieldPath('operationTimings', opName);
+                await db.collection('changeovers').doc(currentQCOId).update(
+                    fieldPath, {
+                    ...existingTiming,
+                    department: department,
+                    remarks: remarks
+                }
+                );
+
+                // Show success feedback
+                const btn = event.target;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i data-lucide="check-circle" class="w-3 h-3 inline mr-1"></i> Saved!';
+                btn.classList.remove('bg-slate-900');
+                btn.classList.add('bg-emerald-600');
+
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('bg-emerald-600');
+                    btn.classList.add('bg-slate-900');
+                    lucide.createIcons();
+                }, 1500);
+
+                console.log("Operation details saved:", opName, department, remarks);
+            } catch (e) {
+                console.error("Error saving operation details:", e);
+                alert("Failed to save details.");
+            }
+        }
+
+        function updateTargetCOPTDisplay(qcoData) {
+            // Get SMV - check multiple possible field names
+            const smv = qcoData.upcomingSMV || qcoData.newStyleSMV || qcoData.upcomingStyleSMV || 0;
+
+            // Get category (default to C)
+            const category = qcoData.changeoverCategory || 'C';
+
+            // Multiplier based on category
+            const multipliers = { 'A': 7, 'B': 5, 'C': 3 };
+            const multiplier = multipliers[category] || 3;
+
+            // Calculate Target COPT
+            const targetCOPT = smv > 0 ? Math.round(smv * multiplier) : 0;
+
+            // Update UI
+            document.getElementById('recorderTargetCOPT').textContent = targetCOPT > 0 ? targetCOPT : '-';
+            document.getElementById('recorderCategory').textContent = `Category ${category}`;
+
+            // Update section visibility/styling
+            const section = document.getElementById('targetCOPTSection');
+            if (targetCOPT > 0) {
+                section.classList.remove('opacity-50');
+            } else {
+                section.classList.add('opacity-50');
+            }
+        }
+
+        function clearAll() {
+            if (confirm('Clear local view? (Database remains)')) {
+                activities = [];
+                renderList();
+            }
+        }
+
+        let searchTimeout = null;
+
+        function handleSearch(event) {
+            const searchTerm = event.target.value.trim().toUpperCase();
+            const statusEl = document.getElementById('searchStatus');
+            const clearBtn = document.getElementById('clearSearchBtn');
+
+            if (searchTerm) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            if (searchTimeout) clearTimeout(searchTimeout);
+
+            if (!searchTerm) {
+                statusEl.classList.add('hidden');
+                return;
+            }
+
+            searchTimeout = setTimeout(() => {
+                const matchedQCO = allChangeovers.find(q => {
+                    const qcoNumber = (q.qcoNumber || '').toUpperCase();
+                    const upcomingStyle = (q.upcomingStyle || '').toUpperCase();
+                    return qcoNumber === searchTerm ||
+                        upcomingStyle === searchTerm ||
+                        qcoNumber.includes(searchTerm) ||
+                        upcomingStyle.includes(searchTerm);
+                });
+
+                if (matchedQCO) {
+                    statusEl.textContent = `Found: ${matchedQCO.id || 'QCO'}`;
+                    statusEl.classList.remove('hidden', 'text-red-500');
+                    statusEl.classList.add('text-emerald-600');
+
+                    const selector = document.getElementById('qcoSelector');
+                    let optionExists = Array.from(selector.options).some(opt => opt.value === matchedQCO.id);
+
+                    if (optionExists) {
+                        selector.value = matchedQCO.id;
+                        handleQCOChange(matchedQCO.id);
+                    }
+                } else {
+                    statusEl.textContent = `No QCO found matching "${searchTerm}"`;
+                    statusEl.classList.remove('hidden', 'text-emerald-600');
+                    statusEl.classList.add('text-red-500');
+                }
+            }, 500);
+        }
+
+        function clearSearch() {
+            document.getElementById('qcoSearch').value = '';
+            document.getElementById('searchStatus').classList.add('hidden');
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+        }
+    </script>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="fixed inset-0 z-50 hidden transition-opacity duration-300 opacity-0">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeEditModal()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div id="editModalContent"
+                class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all duration-300 scale-95">
+                <div class="p-6 md:p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl md:text-2xl font-heading font-bold text-slate-900">Edit Operation</h3>
+                        <button onclick="closeEditModal()"
+                            class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                            <i data-lucide="x" class="w-5 h-5 text-slate-500"></i>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4 md:space-y-5">
+                        <div>
+                            <label
+                                class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Operation</label>
+                            <p id="editOpName"
+                                class="text-sm md:text-base font-bold text-slate-900 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Start
+                                    Time</label>
+                                <input type="datetime-local" id="editStartTime" step="1"
+                                    class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">End
+                                    Time</label>
+                                <input type="datetime-local" id="editEndTime" step="1"
+                                    class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Department</label>
+                                <select id="editDept"
+                                    class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all appearance-none">
+                                    <option value="">Select Department...</option>
+                                    <option value="Production">Production</option>
+                                    <option value="Maintenance">Maintenance</option>
+                                    <option value="Quality">Quality</option>
+                                    <option value="Engineering">Engineering</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Remarks</label>
+                                <input type="text" id="editRemarks" placeholder="Add remarks..."
+                                    class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex items-center justify-end gap-3">
+                        <button onclick="closeEditModal()"
+                            class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition-all">
+                            Cancel
+                        </button>
+                        <button onclick="saveEditModal()"
+                            class="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 shadow-lg shadow-slate-900/20 transition-all flex items-center gap-2">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

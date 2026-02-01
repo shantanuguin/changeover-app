@@ -1,0 +1,2894 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Smart QCO System</title>
+
+    <!-- Frameworks & Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <!-- Animation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.1.2/dist/lenis.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Poppins', 'sans-serif']
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Base & Typography */
+        body {
+            background-color: #f8fafc;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            color: #1e293b;
+        }
+
+        /* Lenis Smooth Scroll */
+        html.lenis,
+        html.lenis body {
+            height: auto;
+        }
+
+        .lenis.lenis-smooth {
+            scroll-behavior: auto !important;
+        }
+
+        .lenis.lenis-smooth [data-lenis-prevent] {
+            overscroll-behavior: contain;
+        }
+
+        /* Glassmorphism Utilities */
+        .glass {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 2rem;
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .glass-card:hover {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            border-color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Custom Cursor */
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #0ea5e9;
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+            mix-blend-mode: multiply;
+        }
+
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            z-index: 9998;
+            pointer-events: none;
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
+        }
+
+        /* Split Text Reveal */
+        .split-parent {
+            overflow: hidden;
+        }
+
+        .split-child {
+            display: inline-block;
+            transform-origin: 0% 100%;
+        }
+
+        /* Navigation Active State */
+        .nav-link.active {
+            background: rgba(255, 255, 255, 0.8);
+            color: #0ea5e9;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+        }
+
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.2);
+            border-left: 4px solid #0ea5e9;
+            z-index: 9999;
+            transform: translateX(150%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 400px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            border-left-color: #ef4444;
+        }
+
+        .toast.success {
+            border-left-color: #10b981;
+        }
+
+        .toast.warning {
+            border-left-color: #f59e0b;
+        }
+
+        /* Table Styles */
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 0.5rem;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 1rem;
+            color: #64748b;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .data-table td {
+            padding: 1.25rem 1rem;
+            background: rgba(255, 255, 255, 0.5);
+            border-top: 1px solid rgba(255, 255, 255, 0.6);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .data-table tr td:first-child {
+            border-top-left-radius: 1rem;
+            border-bottom-left-radius: 1rem;
+            border-left: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .data-table tr td:last-child {
+            border-top-right-radius: 1rem;
+            border-bottom-right-radius: 1rem;
+            border-right: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .data-table tbody tr {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .data-table tbody tr:hover {
+            transform: scale(1.02);
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-table tbody tr:hover td {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.375rem 0.875rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-live::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: white;
+            border-radius: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            z-index: 1001;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active+.modal,
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* Loading Skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 0.5rem;
+        }
+
+        @keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Filter Chips */
+        .filter-chip {
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-chip:hover,
+        .filter-chip.active {
+            background: white;
+            color: #0ea5e9;
+            border-color: #0ea5e9;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+        }
+
+        /* Progress Ring */
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring circle {
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        /* Chart Tabs */
+        .chart-tab {
+            color: #64748b;
+            background: transparent;
+        }
+
+        .chart-tab:hover {
+            background: rgba(255, 255, 255, 0.5);
+            color: #0ea5e9;
+        }
+
+        .chart-tab.active {
+            background: white;
+            color: #0ea5e9;
+            box-shadow: 0 2px 8px rgba(14, 165, 233, 0.15);
+        }
+
+        /* Operation Tabs */
+        .operation-tab {
+            color: #64748b;
+            background: transparent;
+        }
+
+        .operation-tab:hover {
+            background: rgba(255, 255, 255, 0.6);
+            color: #475569;
+        }
+
+        .operation-tab.active {
+            background: white;
+            color: #0ea5e9;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: #94a3b8;
+        }
+
+        /* Time Range Buttons */
+        .time-range-btn {
+            color: #64748b;
+            background: transparent;
+        }
+
+        .time-range-btn:hover {
+            background: rgba(14, 165, 233, 0.1);
+            color: #0ea5e9;
+        }
+
+        .time-range-btn.active {
+            background: white;
+            color: #0ea5e9;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body class="relative min-h-screen selection:bg-blue-100 selection:text-blue-900">
+
+    <!-- Custom Cursor -->
+    <div class="cursor-dot hidden md:block"></div>
+    <div class="cursor-outline hidden md:block"></div>
+
+    <!-- Animated Background Blobs -->
+    <div class="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
+        <div
+            class="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-blue-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob">
+        </div>
+        <div
+            class="absolute top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-indigo-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-2000">
+        </div>
+        <div
+            class="absolute bottom-[-20%] left-[20%] w-[60vw] h-[60vw] bg-pink-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-4000">
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Modal Overlay -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+
+    <!-- Detail Modal -->
+    <div class="modal" id="detailModal">
+        <div class="p-8">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-heading font-bold text-slate-900" id="modalTitle">QCO Details</h2>
+                    <p class="text-sm text-slate-500 mt-1" id="modalSubtitle">View complete changeover information</p>
+                </div>
+                <button onclick="closeModal()"
+                    class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
+                    <i data-lucide="x" class="w-5 h-5 text-slate-600"></i>
+                </button>
+            </div>
+            <div id="modalContent" class="space-y-4">
+                <!-- Content injected dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-40 glass transition-all duration-300" id="navbar">
+        <div class="max-w-[1600px] mx-auto px-6">
+            <div class="flex justify-between h-24 items-center relative">
+
+                <!-- Centered Navigation -->
+                <div class="hidden xl:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                    <div
+                        class="flex items-center gap-1 bg-white/50 p-1.5 rounded-full border border-white/20 shadow-sm backdrop-blur-md">
+                        <a href="../index.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Home</a>
+                        <a href="dashboard.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-blue-900 bg-blue-100 shadow-sm transition-all">Dashboard</a>
+                        <a href="creation.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Creation</a>
+                        <a href="schedule.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Schedule</a>
+                        <a href="checklist.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Checklist</a>
+                        <a href="recorder.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Recorder</a>
+                        <a href="summary.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Reports</a>
+                    </div>
+                </div>
+
+                <!-- Logo -->
+                <a href="../index.html" class="flex items-center gap-4 group cursor-pointer">
+                    <div
+                        class="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:rotate-12 transition-transform duration-500 ease-out">
+                        <i data-lucide="layers" class="w-6 h-6"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-heading font-bold text-slate-900 text-xl tracking-tight">QCO Portal</span>
+                        <span class="text-xs text-slate-500 font-medium tracking-wide">Manufacturing Excellence</span>
+                    </div>
+                </a>
+
+                <!-- User Profile & Actions -->
+                <div class="flex items-center gap-4">
+                    <!-- Notifications -->
+                    <div class="relative">
+                        <button onclick="toggleNotifications()" id="notificationBtn"
+                            class="relative w-10 h-10 rounded-full bg-white/60 hover:bg-white border border-white/60 flex items-center justify-center text-slate-600 transition-all">
+                            <i data-lucide="bell" class="w-5 h-5"></i>
+                            <span id="notificationBadge"
+                                class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center hidden">0</span>
+                        </button>
+
+                        <!-- Notification Dropdown -->
+                        <div id="notificationPanel"
+                            class="hidden absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 max-h-[500px] overflow-hidden">
+                            <div class="p-4 border-b border-slate-100 flex justify-between items-center">
+                                <h4 class="font-bold text-slate-900 flex items-center gap-2">
+                                    <i data-lucide="bell" class="w-4 h-4 text-blue-600"></i>
+                                    Notifications
+                                </h4>
+                                <button onclick="markAllAsRead()"
+                                    class="text-xs text-blue-600 hover:text-blue-700 font-semibold">
+                                    Mark all read
+                                </button>
+                            </div>
+                            <div id="notificationList" class="overflow-y-auto custom-scrollbar"
+                                style="max-height: 400px;">
+                                <!-- Notifications injected here -->
+                            </div>
+                            <div class="p-3 border-t border-slate-100 text-center">
+                                <button onclick="clearAllNotifications()"
+                                    class="text-xs text-slate-500 hover:text-red-600 font-semibold">
+                                    Clear all notifications
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="relative group">
+                        <button
+                            class="flex items-center gap-3 focus:outline-none p-1.5 pr-3 rounded-full hover:bg-white/60 transition-all border border-transparent hover:border-white/50">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md flex items-center justify-center text-sm font-bold"
+                                id="userInitials">
+                                JD
+                            </div>
+                            <div class="text-left hidden sm:block">
+                                <p class="text-xs font-bold text-slate-900 leading-tight" id="userName">John Doe</p>
+                                <p class="text-[10px] text-slate-500 leading-tight" id="userRole">Administrator</p>
+                            </div>
+                            <i data-lucide="chevron-down"
+                                class="w-3 h-3 text-slate-400 ml-1 group-hover:text-slate-600 transition-colors"></i>
+                        </button>
+
+                        <!-- Dropdown -->
+                        <div
+                            class="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all transform origin-top-right z-50">
+                            <div class="p-2">
+                                <button onclick="handleLogout()"
+                                    class="w-full text-left px-4 py-2 rounded-xl text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2">
+                                    <i data-lucide="log-out" class="w-4 h-4"></i> Logout
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="pt-32 pb-12 px-6 opacity-0">
+        <div class="max-w-[1600px] mx-auto">
+
+            <!-- Page Header -->
+            <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                <div>
+                    <h1
+                        class="split-header text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-slate-900 tracking-tight mb-4">
+                        Manufacturing <br />
+                        <span
+                            class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Performance
+                            Hub</span>
+                    </h1>
+                    <p class="hero-subtitle text-slate-500 text-lg max-w-2xl leading-relaxed">
+                        Real-time operational monitoring and Changeover efficiency metrics. <span id="liveClock"
+                            class="font-mono text-blue-600 ml-2"></span>
+                    </p>
+                </div>
+                <div class="flex gap-3 mb-2 opacity-0 -translate-y-4" id="headerActions">
+                    <button onclick="refreshAllData()"
+                        class="px-6 py-3 rounded-2xl bg-white/60 border border-white/60 text-slate-600 font-semibold hover:bg-white hover:text-blue-600 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex items-center gap-2">
+                        <i data-lucide="refresh-cw" class="w-4 h-4" id="refreshIcon"></i> Sync
+                    </button>
+                    <button onclick="exportData()"
+                        class="px-6 py-3 rounded-2xl bg-white/60 border border-white/60 text-slate-600 font-semibold hover:bg-white hover:text-blue-600 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex items-center gap-2">
+                        <i data-lucide="file-up" class="w-4 h-4"></i> Export CSV
+                    </button>
+                    <button onclick="window.location.href='creation.html'"
+                        class="px-6 py-3 rounded-2xl bg-slate-900 text-white font-semibold shadow-xl shadow-blue-900/20 hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center gap-2">
+                        <i data-lucide="plus" class="w-4 h-4"></i> New QCO
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="flex flex-wrap gap-3 mb-8 items-center justify-between">
+                <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" id="filterChips">
+                    <button class="filter-chip active" onclick="filterData('all')">All Changeovers</button>
+                    <button class="filter-chip" onclick="filterData('live')">Live</button>
+                    <button class="filter-chip" onclick="filterData('completed')">Completed</button>
+                    <button class="filter-chip" onclick="filterData('pending')">Pending</button>
+                </div>
+                <div class="flex flex-wrap gap-3 items-center">
+                    <!-- QCO Selection Dropdown -->
+                    <div class="relative group">
+                        <i data-lucide="hash"
+                            class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors"></i>
+                        <select id="qcoSelector" onchange="filterByQCO(this.value)"
+                            class="pl-10 pr-8 py-2 rounded-xl bg-white/60 border border-white/60 text-sm font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all appearance-none cursor-pointer hover:shadow-md min-w-[160px]">
+                            <option value="all">All Styles</option>
+                            <!-- Populated dynamically -->
+                        </select>
+                        <i data-lucide="chevron-down"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                    </div>
+
+                    <!-- Time Range Filters -->
+                    <div class="flex gap-1 bg-white/60 p-1 rounded-xl border border-white/60">
+                        <button onclick="setTimeRange('today')" id="range-today"
+                            class="time-range-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5">
+                            <i data-lucide="calendar-days" class="w-3.5 h-3.5"></i>
+                            <span>Today</span>
+                        </button>
+                        <button onclick="setTimeRange('week')" id="range-week"
+                            class="time-range-btn active px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5">
+                            <i data-lucide="calendar-range" class="w-3.5 h-3.5"></i>
+                            <span>Week</span>
+                        </button>
+                        <button onclick="setTimeRange('month')" id="range-month"
+                            class="time-range-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5">
+                            <i data-lucide="calendar" class="w-3.5 h-3.5"></i>
+                            <span>Month</span>
+                        </button>
+                        <button onclick="openCustomRangePicker()" id="range-custom"
+                            class="time-range-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5">
+                            <i data-lucide="calendar-clock" class="w-3.5 h-3.5"></i>
+                            <span>Custom</span>
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <i data-lucide="search"
+                            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                        <input type="text" id="searchInput" onkeyup="handleSearch(event)" placeholder="Search QCO..."
+                            class="pl-10 pr-10 py-2 rounded-xl bg-white/60 border border-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 transition-all">
+                        <button onclick="clearSearch()" id="clearSearchBtn"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors hidden">
+                            <i data-lucide="x" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                    <p id="searchStatus" class="absolute top-full right-0 mt-1 text-xs text-slate-500 hidden"></p>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" id="statsGrid">
+                <!-- Stat Card 1 -->
+                <div class="glass-card p-8 group relative overflow-hidden" data-tilt>
+                    <div
+                        class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-[4rem] transition-transform duration-700 group-hover:scale-125">
+                    </div>
+                    <div class="stat-card-inner relative z-10">
+                        <div class="flex justify-between items-start mb-6">
+                            <div
+                                class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm border border-slate-100 group-hover:rotate-12 transition-all duration-500">
+                                <i data-lucide="arrow-left-right" class="w-6 h-6"></i>
+                            </div>
+                            <span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold"
+                                id="totalTrend">+12%</span>
+                        </div>
+                        <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">Total Changeovers
+                        </h3>
+                        <p class="text-4xl font-heading font-bold text-slate-900" id="totalChangeovers">-</p>
+                        <p class="text-xs text-slate-400 mt-2">This week</p>
+                    </div>
+                </div>
+
+                <!-- Stat Card 2 - Target COPT -->
+                <div class="glass-card p-8 group relative overflow-hidden" data-tilt>
+                    <div
+                        class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-bl-[4rem] transition-transform duration-700 group-hover:scale-125">
+                    </div>
+                    <div class="stat-card-inner relative z-10">
+                        <div class="flex justify-between items-start mb-6">
+                            <div
+                                class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm border border-slate-100 group-hover:-rotate-12 transition-all duration-500">
+                                <i data-lucide="target" class="w-6 h-6"></i>
+                            </div>
+                            <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold"
+                                id="targetCOPTBadge">Active</span>
+                        </div>
+                        <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">Target COPT</h3>
+                        <p class="text-4xl font-heading font-bold text-slate-900"><span id="targetCOPT">-</span> <span
+                                class="text-lg text-slate-400 font-normal">min</span></p>
+                        <p class="text-xs text-slate-400 mt-2">Based on complexity & SMV</p>
+                    </div>
+                </div>
+
+                <!-- Stat Card 3 -->
+                <div class="glass-card p-8 group relative overflow-hidden" data-tilt>
+                    <div
+                        class="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-bl-[4rem] transition-transform duration-700 group-hover:scale-125">
+                    </div>
+                    <div class="stat-card-inner relative z-10">
+                        <div class="flex justify-between items-start mb-6">
+                            <div
+                                class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-violet-600 shadow-sm border border-slate-100 group-hover:rotate-12 transition-all duration-500">
+                                <i data-lucide="target" class="w-6 h-6"></i>
+                            </div>
+                            <span
+                                class="px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-xs font-bold">Target</span>
+                        </div>
+                        <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">Efficiency Score</h3>
+                        <div class="flex items-end gap-2">
+                            <p class="text-4xl font-heading font-bold text-slate-900" id="efficiencyScore">-</p>
+                            <span class="text-sm text-emerald-600 font-semibold mb-1" id="efficiencyTrend">↑ 5%</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2 mt-3 overflow-hidden">
+                            <div class="bg-gradient-to-r from-blue-500 to-violet-500 h-full rounded-full transition-all duration-1000"
+                                id="efficiencyBar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stat Card 4 -->
+                <div class="glass-card p-8 group relative overflow-hidden" data-tilt>
+                    <div
+                        class="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 rounded-bl-[4rem] transition-transform duration-700 group-hover:scale-125">
+                    </div>
+                    <div class="stat-card-inner relative z-10">
+                        <div class="flex justify-between items-start mb-6">
+                            <div
+                                class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-rose-600 shadow-sm border border-slate-100 group-hover:-rotate-12 transition-all duration-500">
+                                <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500"></i>
+                            </div>
+                            <span class="px-3 py-1 rounded-full bg-rose-100 text-rose-700 text-xs font-bold">Action
+                                Needed</span>
+                        </div>
+                        <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">Critical Issues</h3>
+                        <p class="text-4xl font-heading font-bold text-slate-900" id="pendingTasks">-</p>
+                        <p class="text-xs text-slate-400 mt-2">Require attention</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+                <!-- Chart Section -->
+                <div class="glass-card p-8 lg:col-span-2 group" data-tilt>
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 class="text-xl font-heading font-bold text-slate-900">Performance Analytics</h3>
+                            <p class="text-sm text-slate-500">Multi-dimensional insights</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <select id="chartRange" onchange="updateChartRange()"
+                                class="text-sm border border-slate-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="7">Last 7 Days</option>
+                                <option value="30" selected>Last 30 Days</option>
+                                <option value="90">Last 90 Days</option>
+                            </select>
+                            <div
+                                class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm">
+                                <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                                <span class="text-xs font-bold text-slate-600">Live</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart Tabs -->
+                    <div class="flex gap-2 mb-6 border-b border-slate-200 pb-2 overflow-x-auto">
+                        <button onclick="switchChartTab('copt')" id="tab-copt"
+                            class="chart-tab active flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                            <i data-lucide="trending-up" class="w-4 h-4"></i>
+                            <span>COPT Trend</span>
+                        </button>
+                        <button onclick="switchChartTab('daily')" id="tab-daily"
+                            class="chart-tab flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                            <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                            <span>Daily Count</span>
+                        </button>
+                        <button onclick="switchChartTab('efficiency')" id="tab-efficiency"
+                            class="chart-tab flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                            <i data-lucide="activity" class="w-4 h-4"></i>
+                            <span>Efficiency</span>
+                        </button>
+                        <button onclick="switchChartTab('multi')" id="tab-multi"
+                            class="chart-tab flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all">
+                            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                            <span>Multi-Metric</span>
+                        </button>
+                    </div>
+
+                    <!-- Chart Canvas -->
+                    <div class="relative h-[380px] w-full">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Live Status & Quick Stats -->
+                <div class="space-y-6">
+                    <!-- Active Changeovers -->
+                    <div class="glass-card p-8 relative overflow-hidden">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-heading font-bold text-slate-900">Active Now</h3>
+                            <span class="badge badge-live bg-emerald-50 text-emerald-700">2 Live</span>
+                        </div>
+                        <div class="space-y-4" id="activeChangeoversList">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Operations Analytics Widget -->
+                    <div class="glass-card p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-heading font-bold text-slate-900">Operations Analytics</h3>
+                            <button onclick="refreshOperationsData()"
+                                class="p-1.5 hover:bg-slate-100 rounded-lg transition-colors">
+                                <i data-lucide="refresh-cw" class="w-4 h-4 text-slate-500"></i>
+                            </button>
+                        </div>
+
+                        <!-- Operation Tabs -->
+                        <div class="flex gap-1 mb-4 bg-slate-100 p-1 rounded-lg">
+                            <button onclick="switchOperationTab('top')" id="optab-top"
+                                class="operation-tab active flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-xs font-semibold transition-all">
+                                <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                                <span>Top Ops</span>
+                            </button>
+                            <button onclick="switchOperationTab('dept')" id="optab-dept"
+                                class="operation-tab flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-xs font-semibold transition-all">
+                                <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+                                <span>Depts</span>
+                            </button>
+                            <button onclick="switchOperationTab('line')" id="optab-line"
+                                class="operation-tab flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-xs font-semibold transition-all">
+                                <i data-lucide="list" class="w-3.5 h-3.5"></i>
+                                <span>Lines</span>
+                            </button>
+                            <button onclick="switchOperationTab('recent')" id="optab-recent"
+                                class="operation-tab flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-xs font-semibold transition-all">
+                                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                <span>Recent</span>
+                            </button>
+                        </div>
+
+                        <!-- Tab Content -->
+                        <div class="space-y-3 max-h-[380px] overflow-y-auto custom-scrollbar" id="operationsContent">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Table Section -->
+            <div class="glass-card p-8 overflow-hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-xl font-heading font-bold text-slate-900">Recent Changeovers</h3>
+                        <p class="text-sm text-slate-500 mt-1">Complete history and management</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="bulkExport()"
+                            class="px-4 py-2 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-600 hover:border-blue-500 hover:text-blue-600 transition-colors flex items-center">
+                            <i data-lucide="download" class="w-4 h-4 mr-2"></i>Bulk Export
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="data-table" id="changeoverTable">
+                        <thead>
+                            <tr>
+                                <th>QCO Number</th>
+                                <th>Style</th>
+                                <th>Line</th>
+                                <th>Status</th>
+                                <th>Duration</th>
+                                <th>Efficiency</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Dynamic content -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex justify-between items-center mt-6 pt-6 border-t border-slate-200">
+                    <p class="text-sm text-slate-500">Showing <span id="showingCount">0</span> of <span
+                            id="totalCount">0</span> entries</p>
+                    <div class="flex gap-2">
+                        <button onclick="changePage(-1)"
+                            class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center hover:border-blue-500 hover:text-blue-600 transition-colors disabled:opacity-50"
+                            id="prevBtn">
+                            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="changePage(1)"
+                            class="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center hover:border-blue-500 hover:text-blue-600 transition-colors disabled:opacity-50"
+                            id="nextBtn">
+                            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCayfWGQP1t3oBU9eFj-3Ww0uu7nSl3Q4g",
+            authDomain: "sidneymailer.firebaseapp.com",
+            projectId: "sidneymailer",
+            storageBucket: "sidneymailer.firebasestorage.app",
+            messagingSenderId: "911316068119",
+            appId: "1:911316068119:web:ce23dbe663dc385a81f952",
+            measurementId: "G-NJ0QH6DEXG"
+        };
+
+        let db, auth;
+        let currentUser = null;
+        let allChangeovers = [];
+        let filteredChangeovers = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let performanceChart = null;
+        let currentChartType = 'copt';
+        let currentTimeRange = 'week';
+        let currentOperationTab = 'top';
+        let notifications = [];
+        let realTimeUnsubscribes = [];
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            initScroll();
+            initCursor();
+            initAnimations();
+
+            // Initialize Firebase
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            auth = firebase.auth();
+
+            // Enable offline persistence
+            db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
+                if (err.code == 'failed-precondition') {
+                    console.warn('Persistence failed: Multiple tabs open');
+                } else if (err.code == 'unimplemented') {
+                    console.warn('Persistence not supported');
+                }
+            });
+
+            checkAuth();
+            startRealtimeListeners();
+            initClock();
+
+            // Initial load with slight delay to show loading animation
+            setTimeout(() => {
+                initTilt();
+            }, 500);
+        });
+
+        // --- Authentication ---
+        function checkAuth() {
+            // Strict Auth Check - Redirect immediately if no local session
+            const user = JSON.parse(localStorage.getItem('qcoCurrentUser'));
+            if (!user) {
+                window.location.href = '../index.html';
+                return;
+            }
+
+            auth.onAuthStateChanged((u) => {
+                if (u) {
+                    currentUser = u;
+                    localStorage.setItem('qcoCurrentUser', JSON.stringify({
+                        uid: u.uid,
+                        name: u.displayName || 'User',
+                        email: u.email,
+                        role: 'Administrator'
+                    }));
+                } else {
+                    // Double check local storage, if empty then redirect
+                    if (!localStorage.getItem('qcoCurrentUser')) {
+                        window.location.href = '../index.html';
+                    } else {
+                        currentUser = JSON.parse(localStorage.getItem('qcoCurrentUser'));
+                    }
+                }
+                updateUserUI();
+            });
+        }
+
+        function updateUserUI() {
+            let user = {};
+            try {
+                user = currentUser || JSON.parse(localStorage.getItem('qcoCurrentUser')) || {};
+            } catch (e) {
+                console.warn('Invalid user data in localStorage', e);
+                localStorage.removeItem('qcoCurrentUser');
+                window.location.href = '../index.html';
+                return;
+            }
+
+            const name = user.displayName || user.name || 'User';
+            const role = user.role || 'Member';
+
+            document.getElementById('userName').textContent = name;
+            document.getElementById('userRole').textContent = role;
+
+            const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            document.getElementById('userInitials').textContent = initials;
+        }
+
+        function handleLogout() {
+            auth.signOut().then(() => {
+                localStorage.removeItem('qcoCurrentUser');
+                localStorage.removeItem('qcoSessionActive');
+                localStorage.removeItem('currentQCOId');
+                window.location.href = '../index.html';
+            }).catch((error) => {
+                console.error('Logout error', error);
+                // Force logout anyway
+                localStorage.removeItem('qcoCurrentUser');
+                localStorage.removeItem('qcoSessionActive');
+                window.location.href = '../index.html';
+            });
+        }
+
+        // --- Real-time Data Listeners ---
+        function startRealtimeListeners() {
+            // Clear existing listeners
+            realTimeUnsubscribes.forEach(unsub => unsub());
+            realTimeUnsubscribes = [];
+
+            // Listen to changeovers collection
+            const unsub = db.collection('changeovers')
+                .orderBy('createdAt', 'desc')
+                .limit(100)
+                .onSnapshot((snapshot) => {
+                    allChangeovers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                    // Update global filtering and stats
+                    populateQCOSelector();
+                    updateStatistics();
+                    updateChartData();
+                    refreshOperationsData();
+                    updateActiveChangeovers();
+                    updateMachineStatus();
+                    applyDateFilter();
+
+                    // Derived Updates (New Logic)
+                    generateNotifications(allChangeovers);
+                    deriveActivityFeed(allChangeovers);
+
+                    // Update Table
+                    filterData(document.querySelector('.filter-chip.active')?.textContent.toLowerCase() || 'all');
+                }, (error) => {
+                    console.error("Error fetching changeovers:", error);
+                    showToast("Error syncing data", "error");
+                });
+
+            realTimeUnsubscribes.push(unsub);
+        }
+
+        // --- Dashboard Updates ---
+        function updateStatistics() {
+            // Calculate statistics
+            const data = getFilteredDashboardData();
+            const total = data.length;
+            const completed = data.filter(c => c.status === 'completed').length;
+            const pending = data.filter(c => c.status === 'pending').length;
+            const live = data.filter(c => c.status === 'in-progress');
+
+            // Target COPT calculation based on category and SMV
+            const calculateTargetCOPT = (qco) => {
+                // Get SMV - check multiple possible field names
+                const smv = qco.upcomingSMV || qco.newStyleSMV || qco.upcomingStyleSMV || 0;
+
+                // Get category (default to C)
+                const category = qco.changeoverCategory || 'C';
+
+                // Multiplier based on category
+                const multipliers = { 'A': 7, 'B': 5, 'C': 3 };
+                const multiplier = multipliers[category] || 3;
+
+                return smv > 0 ? Math.round(smv * multiplier) : 0;
+            };
+
+            // Calculate average target COPT for active/recent changeovers
+            // Calculate average target COPT for active/recent changeovers
+            const changesWithTargets = data
+                .filter(c => c.changeoverCategory || c.upcomingSMV || c.newStyleSMV)
+                .map(c => calculateTargetCOPT(c))
+                .filter(t => t > 0);
+
+            const avgTargetCOPT = changesWithTargets.length
+                ? Math.round(changesWithTargets.reduce((sum, t) => sum + t, 0) / changesWithTargets.length)
+                : 0;
+
+            // Efficiency calculation (calculate actual COPT from operations)
+            const completedChangeovers = data.filter(c => {
+                const actual = calculateActualCOPT(c);
+                return actual > 0;
+            });
+
+            const avgActualCOPT = completedChangeovers.length
+                ? Math.round(completedChangeovers.reduce((sum, c) => sum + calculateActualCOPT(c), 0) / completedChangeovers.length)
+                : 0;
+
+            const efficiency = (avgTargetCOPT && avgActualCOPT)
+                ? Math.round((avgTargetCOPT / avgActualCOPT) * 100)
+                : 0;
+
+            // Critical issues (overdue or high deviation)
+            const critical = data.filter(c => {
+                const actual = calculateActualCOPT(c);
+                const target = calculateTargetCOPT(c);
+                if (!actual || !target) return false;
+                return (actual - target) > 10;
+            }).length;
+
+            // Update DOM
+            document.getElementById('totalChangeovers').textContent = total;
+            document.getElementById('targetCOPT').textContent = avgTargetCOPT || '-';
+            document.getElementById('efficiencyScore').textContent = efficiency + '%';
+            document.getElementById('efficiencyBar').style.width = Math.min(efficiency, 100) + '%';
+            document.getElementById('pendingTasks').textContent = critical;
+
+            // Update Target COPT badge
+            const targetBadge = document.getElementById('targetCOPTBadge');
+            if (avgTargetCOPT > 0) {
+                targetBadge.textContent = changesWithTargets.length + ' Active Targets';
+                targetBadge.className = 'px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold';
+            } else {
+                targetBadge.textContent = 'No Targets Set';
+                targetBadge.className = 'px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-bold';
+            }
+
+            // Update trends including new efficiency trend
+            updateTrends(data, efficiency);
+        }
+
+        function updateTrends(changeovers, currentEfficiency) {
+            const now = new Date();
+
+            // 1. Total Changeovers Trend
+            // Compare "Last 7 Days" volume vs "Previous 7 Days"
+            const last7Arr = changeovers.filter(c => {
+                const d = c.createdAt ? (c.createdAt.toDate ? c.createdAt.toDate() : new Date(c.createdAt)) : null;
+                return d && (now - d) < 7 * 86400000;
+            });
+            const prev7Arr = changeovers.filter(c => {
+                const d = c.createdAt ? (c.createdAt.toDate ? c.createdAt.toDate() : new Date(c.createdAt)) : null;
+                const diff = d ? now - d : 0;
+                return diff >= 7 * 86400000 && diff < 14 * 86400000;
+            });
+
+            const totalTrend = prev7Arr.length > 0
+                ? Math.round(((last7Arr.length - prev7Arr.length) / prev7Arr.length) * 100)
+                : (last7Arr.length > 0 ? 100 : 0);
+            updateTrendBadge('totalTrend', totalTrend);
+
+            // 2. Efficiency Trend calculation
+            // Simplified: Compare current efficiency (active selection) vs dummy historical baseline if no history
+            // Better: Calculate efficiency for "Last 7 days" changeovers
+            const last7Completed = last7Arr.filter(c => c.status === 'completed');
+            const prev7Completed = prev7Arr.filter(c => c.status === 'completed');
+
+            const calcEff = (list) => {
+                if (!list.length) return 0;
+                const sums = list.map(q => {
+                    const a = calculateActualCOPT(q);
+                    const t = calculateTargetCOPT(q);
+                    return (a > 0 && t > 0) ? (t / a) * 100 : 0;
+                }).filter(v => v > 0);
+                return sums.length ? (sums.reduce((a, b) => a + b, 0) / sums.length) : 0;
+            };
+
+            const effLast7 = calcEff(last7Completed);
+            const effPrev7 = calcEff(prev7Completed);
+
+            const effTrend = effPrev7 > 0
+                ? Math.round(((effLast7 - effPrev7) / effPrev7) * 100)
+                : (effLast7 > 0 ? 100 : 0); /* Default to 100% improvement if starting from 0 */
+
+            const effEl = document.getElementById('efficiencyTrend');
+            effEl.textContent = (effTrend >= 0 ? '↑ ' : '↓ ') + Math.abs(effTrend) + '%';
+            effEl.className = `text-sm font-semibold mb-1 ${effTrend >= 0 ? 'text-emerald-600' : 'text-red-500'}`;
+        }
+
+        function getAvgCOPT(list) {
+            if (!list.length) return 0;
+            const total = list.reduce((sum, qco) => sum + calculateActualCOPT(qco), 0);
+            return Math.round(total / list.length);
+        }
+
+        function updateTrendBadge(id, value) {
+            const el = document.getElementById(id);
+            const isPositive = value >= 0;
+            el.textContent = (value > 0 ? '+' : '') + value + '%';
+            el.className = `px-3 py-1 rounded-full text-xs font-bold ${isPositive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+        }
+
+        // --- Table Management ---
+        function updateTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const pageItems = filteredChangeovers.slice(start, end);
+
+            pageItems.forEach(qco => {
+                const row = createTableRow(qco);
+                tbody.appendChild(row);
+            });
+
+            // Update pagination
+            document.getElementById('showingCount').textContent = Math.min(end, filteredChangeovers.length);
+            document.getElementById('totalCount').textContent = filteredChangeovers.length;
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = end >= filteredChangeovers.length;
+            lucide.createIcons();
+        }
+
+        function createTableRow(qco) {
+            const tr = document.createElement('tr');
+            tr.onclick = () => showDetails(qco.id);
+
+            const statusColors = {
+                'completed': 'bg-green-100 text-green-700',
+                'in-progress': 'bg-blue-100 text-blue-700',
+                'pending': 'bg-amber-100 text-amber-700',
+                'cancelled': 'bg-red-100 text-red-700'
+            };
+
+            const status = qco.status || 'pending';
+            const date = qco.createdAt ? new Date(qco.createdAt.toDate()).toLocaleDateString() : '-';
+            const duration = qco.actualCOPT ? `${qco.actualCOPT} min` : '-';
+            const efficiency = calculateEfficiency(qco.targetCOPT, qco.actualCOPT);
+
+            tr.innerHTML = `
+                <td class="font-semibold text-slate-900">#${qco.qcoNumber || 'N/A'}</td>
+                <td>
+                    <div class="flex flex-col">
+                        <span class="font-semibold text-slate-900">${qco.currentStyle || 'N/A'}</span>
+                        <span class="text-xs text-slate-500">→ ${qco.upcomingStyle || 'N/A'}</span>
+                    </div>
+                </td>
+                <td class="text-slate-600">Line ${qco.lineNumber || 'N/A'}</td>
+                <td><span class="badge ${statusColors[status] || 'bg-gray-100 text-gray-700'}">${status}</span></td>
+                <td class="text-slate-600">${duration}</td>
+                <td>
+                    <div class="flex items-center gap-2">
+                        <div class="w-16 bg-slate-200 rounded-full h-2">
+                            <div class="bg-blue-500 h-full rounded-full" style="width: ${efficiency}%"></div>
+                        </div>
+                        <span class="text-sm font-semibold text-slate-700">${efficiency}%</span>
+                    </div>
+                </td>
+                <td class="text-slate-600">${date}</td>
+                <td>
+                    <div class="flex gap-2">
+                        <button onclick="event.stopPropagation(); showDetails('${qco.id}')" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition-colors">
+                            <i data-lucide="eye" class="w-3 h-3"></i>
+                        </button>
+                        <button onclick="event.stopPropagation(); editQCO('${qco.id}')" class="w-8 h-8 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors">
+                            <i data-lucide="pen" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+
+            return tr;
+        }
+
+        function calculateEfficiency(target, actual) {
+            if (!target || !actual) return 0;
+            return Math.min(100, Math.round((target / actual) * 100));
+        }
+
+        // --- Active Changeovers Widget ---
+        function updateActiveChangeovers() {
+            const active = getFilteredDashboardData().filter(c => c.status === 'in-progress').slice(0, 3);
+            const container = document.getElementById('activeChangeoversList');
+
+            if (active.length === 0) {
+                container.innerHTML = '<p class="text-slate-400 text-sm italic">No active changeovers</p>';
+                return;
+            }
+
+            container.innerHTML = active.map(qco => {
+                const elapsed = qco.startedAt ? Math.floor((Date.now() - qco.startedAt.toDate()) / 60000) : 0;
+                const progress = Math.min(100, (elapsed / (qco.targetCOPT || 45)) * 100);
+
+                return `
+                    <div class="bg-white/50 rounded-xl p-4 border border-white/60">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-semibold text-slate-900">#${qco.qcoNumber}</span>
+                            <span class="text-xs font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded">${elapsed} min elapsed</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-slate-600 mb-2">
+                            <span>${qco.currentStyle}</span>
+                            <span>${qco.upcomingStyle}</span>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2">
+                            <div class="bg-emerald-500 h-full rounded-full transition-all duration-1000" style="width: ${progress}%"></div>
+                        </div>
+                        <div class="mt-2 flex justify-between text-xs text-slate-400">
+                            <span>Line ${qco.lineNumber}</span>
+                            <span>${Math.round(progress)}% complete</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // --- Machine Status Widget ---
+        function updateMachineStatus() {
+            // Show department activity (since machineSummary doesn't exist in DB)
+            const deptStats = {};
+            const data = getFilteredDashboardData();
+
+            data.forEach(qco => {
+                if (qco.operationTimings && typeof qco.operationTimings === 'object') {
+                    Object.entries(qco.operationTimings).forEach(([name, details]) => {
+                        const dept = (details.department || 'MAINTENANCE').toUpperCase();
+                        const duration = Number(details.actualTime) || Number(details.duration) || 0;
+                        if (duration > 0) {
+                            if (!deptStats[dept]) {
+                                deptStats[dept] = { total: 0, operations: 0 };
+                            }
+                            deptStats[dept].total += duration;
+                            deptStats[dept].operations++;
+                        }
+                    });
+                }
+            });
+
+            const container = document.getElementById('machineStatusList');
+            const depts = Object.entries(deptStats)
+                .sort((a, b) => b[1].total - a[1].total)
+                .slice(0, 4);
+
+            if (depts.length === 0) {
+                container.innerHTML = '<p class="text-sm text-slate-400 text-center py-4">No department data</p>';
+                return;
+            }
+
+            const maxTime = Math.max(...depts.map(([_, stats]) => stats.total));
+
+            container.innerHTML = depts.map(([name, stats]) => {
+                const percentage = maxTime > 0 ? Math.round((stats.total / maxTime) * 100) : 0;
+                return `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center text-violet-600">
+                                <i data-lucide="layers" class="w-4 h-4"></i>
+                            </div>
+                            <span class="text-sm font-medium text-slate-700">${name}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-20 bg-slate-200 rounded-full h-1.5">
+                                <div class="bg-violet-500 h-full rounded-full" style="width: ${percentage}%"></div>
+                            </div>
+                            <span class="text-xs font-semibold text-slate-600">${stats.total.toFixed(0)}m</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        // --- Charts ---
+        function updateCharts() {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+
+            // Prepare data - last 30 days
+            const days = 30;
+            const labels = [];
+            const dataPoints = [];
+            const targetLine = [];
+
+            for (let i = days - 1; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                labels.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
+
+                // Find changeovers for this day
+                const dayChangeovers = allChangeovers.filter(c => {
+                    if (!c.completedAt && !c.createdAt) return false;
+                    const cDate = new Date((c.completedAt || c.createdAt).toDate());
+                    return cDate.toDateString() === date.toDateString();
+                });
+
+                const avg = dayChangeovers.length
+                    ? dayChangeovers.reduce((sum, c) => sum + (Number(c.actualCOPT) || 0), 0) / dayChangeovers.length
+                    : null;
+
+                dataPoints.push(avg);
+                targetLine.push(45); // Target line
+            }
+
+            if (performanceChart) {
+                performanceChart.destroy();
+            }
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(14, 165, 233, 0.4)');
+            gradient.addColorStop(1, 'rgba(14, 165, 233, 0)');
+
+            performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Actual COPT',
+                        data: dataPoints,
+                        borderColor: '#0ea5e9',
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#0ea5e9',
+                        pointBorderWidth: 3,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        tension: 0.4,
+                        fill: true,
+                        spanGaps: true
+                    }, {
+                        label: 'Target',
+                        data: targetLine,
+                        borderColor: '#10b981',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        pointHoverRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            align: 'end',
+                            labels: {
+                                font: { family: 'Inter', size: 12 },
+                                usePointStyle: true,
+                                boxWidth: 8
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#1e293b',
+                            bodyColor: '#64748b',
+                            borderColor: 'rgba(255, 255, 255, 0.8)',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: true
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            grid: { color: 'rgba(0, 0, 0, 0.03)', drawBorder: false },
+                            ticks: { font: { family: 'Inter', size: 11 }, color: '#94a3b8' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { family: 'Inter', size: 11 }, color: '#94a3b8', maxTicksLimit: 10 }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Filtering & Search ---
+        function filterData(type) {
+            // Update active chip
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.classList.remove('active');
+                if (chip.textContent.toLowerCase().includes(type)) chip.classList.add('active');
+            });
+
+            const data = getFilteredDashboardData();
+            if (type === 'all') {
+                filteredChangeovers = data;
+            } else {
+                filteredChangeovers = data.filter(c => c.status === type);
+            }
+
+            currentPage = 1;
+            updateTable();
+        }
+
+        let searchTimeout = null;
+
+        function handleSearch(event) {
+            const searchTerm = event.target.value.trim().toUpperCase();
+            const statusEl = document.getElementById('searchStatus');
+            const clearBtn = document.getElementById('clearSearchBtn');
+
+            // Toggle clear button
+            if (searchTerm) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+
+            // Immediate Table Filter
+            searchTable(searchTerm.toLowerCase());
+
+            // Clear any existing timeout for Auto-Select
+            if (searchTimeout) clearTimeout(searchTimeout);
+
+            if (!searchTerm) {
+                statusEl.classList.add('hidden');
+                return;
+            }
+
+            // Debounce Auto-Select
+            searchTimeout = setTimeout(() => {
+                // Search through all Changeovers
+                const matchedQCO = allChangeovers.find(q => {
+                    const qcoNumber = (q.qcoNumber || '').toUpperCase();
+                    const upcomingStyle = (q.upcomingStyle || '').toUpperCase();
+                    return qcoNumber === searchTerm ||
+                        upcomingStyle === searchTerm ||
+                        qcoNumber.includes(searchTerm) ||
+                        upcomingStyle.includes(searchTerm);
+                });
+
+                if (matchedQCO) {
+                    // Found exact or partial match - auto-load it
+                    statusEl.textContent = `Found: ${matchedQCO.qcoNumber} - ${matchedQCO.upcomingStyle}`;
+                    statusEl.classList.remove('hidden', 'text-red-500');
+                    statusEl.classList.add('text-emerald-600');
+
+                    // Auto-select in dropdown IF it exists in the dropdown (it should)
+                    const selector = document.getElementById('qcoSelector');
+                    // Check if option exists, strict match first
+                    let optionExists = Array.from(selector.options).some(opt => opt.value === matchedQCO.qcoNumber);
+
+                    if (optionExists) {
+                        selector.value = matchedQCO.qcoNumber;
+                        filterByQCO(matchedQCO.qcoNumber);
+                    }
+
+                } else {
+                    statusEl.textContent = `No QCO found matching "${searchTerm}"`;
+                    statusEl.classList.remove('hidden', 'text-emerald-600');
+                    statusEl.classList.add('text-red-500');
+                }
+            }, 500); // Wait 500ms after last keystroke
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('searchInput');
+            input.value = '';
+            document.getElementById('searchStatus').classList.add('hidden');
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+            searchTable('');
+            // Optional: Reset QCO selection?
+            // document.getElementById('qcoSelector').value = 'all';
+            // filterByQCO('all');
+        }
+
+        function searchTable(query) {
+            // If query not passed, get from input (legacy support or direct call)
+            if (query === undefined) {
+                query = document.getElementById('searchInput').value.toLowerCase();
+            }
+
+            const data = getFilteredDashboardData();
+
+            filteredChangeovers = data.filter(c =>
+                (c.qcoNumber && c.qcoNumber.toLowerCase().includes(query)) ||
+                (c.currentStyle && c.currentStyle.toLowerCase().includes(query)) ||
+                (c.upcomingStyle && c.upcomingStyle.toLowerCase().includes(query)) ||
+                (c.lineNumber && c.lineNumber.toLowerCase().includes(query))
+            );
+            currentPage = 1;
+            updateTable();
+        }
+
+        function applyDateFilter() {
+            const date = document.getElementById('dateFilter').value;
+            if (!date) {
+                filteredChangeovers = [...allChangeovers];
+            } else {
+                const selected = new Date(date);
+                filteredChangeovers = allChangeovers.filter(c => {
+                    const cDate = c.createdAt ? new Date(c.createdAt.toDate()) : null;
+                    return cDate && cDate.toDateString() === selected.toDateString();
+                });
+            }
+            currentPage = 1;
+            updateTable();
+        }
+
+        function changePage(direction) {
+            currentPage += direction;
+            updateTable();
+        }
+
+        // --- Actions ---
+        function showDetails(id) {
+            const qco = allChangeovers.find(c => c.id === id);
+            if (!qco) return;
+
+            document.getElementById('modalTitle').textContent = `QCO #${qco.qcoNumber}`;
+            document.getElementById('modalSubtitle').textContent = `Created on ${qco.createdAt ? new Date(qco.createdAt.toDate()).toLocaleString() : 'Unknown'}`;
+
+            const content = document.getElementById('modalContent');
+            content.innerHTML = `
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="bg-slate-50 p-4 rounded-xl">
+                        <p class="text-xs text-slate-500 uppercase mb-1">Current Style</p>
+                        <p class="font-semibold text-slate-900">${qco.currentStyle || 'N/A'}</p>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl">
+                        <p class="text-xs text-slate-500 uppercase mb-1">Upcoming Style</p>
+                        <p class="font-semibold text-slate-900">${qco.upcomingStyle || 'N/A'}</p>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl">
+                        <p class="text-xs text-slate-500 uppercase mb-1">Line Number</p>
+                        <p class="font-semibold text-slate-900">${qco.lineNumber || 'N/A'}</p>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl">
+                        <p class="text-xs text-slate-500 uppercase mb-1">Status</p>
+                        <span class="badge ${getStatusColor(qco.status)}">${qco.status || 'Unknown'}</span>
+                    </div>
+                </div>
+
+                ${qco.machineSummary ? `
+                <div class="mb-6">
+                    <h4 class="font-semibold text-slate-900 mb-3">Machine Summary</h4>
+                    <div class="space-y-2">
+                        ${qco.machineSummary.map(m => `
+                            <div class="flex justify-between items-center p-3 bg-white border border-slate-200 rounded-lg">
+                                <span class="font-medium text-slate-700">${m.name}</span>
+                                <div class="flex items-center gap-4">
+                                    <span class="text-sm text-slate-500">Target: ${m.target} min</span>
+                                    <span class="text-sm font-semibold ${m.actual > m.target ? 'text-red-600' : 'text-emerald-600'}">Actual: ${m.actual} min</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
+                ${qco.checklist ? `
+                <div>
+                    <h4 class="font-semibold text-slate-900 mb-3">Checklist Progress</h4>
+                    <div class="w-full bg-slate-200 rounded-full h-3 mb-2">
+                        <div class="bg-blue-500 h-full rounded-full transition-all duration-500" style="width: ${getChecklistProgress(qco.checklist)}%"></div>
+                    </div>
+                    <p class="text-sm text-slate-600 text-right">${getChecklistProgress(qco.checklist)}% Complete</p>
+                </div>
+                ` : ''}
+
+                <div class="flex gap-3 mt-6 pt-6 border-t border-slate-200">
+                    <button onclick="editQCO('${qco.id}')" class="flex-1 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors">
+                        Edit QCO
+                    </button>
+                    <button onclick="deleteQCO('${qco.id}')" class="px-6 py-3 rounded-xl bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition-colors">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('modalOverlay').classList.add('active');
+            document.getElementById('detailModal').classList.add('active');
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            document.getElementById('modalOverlay').classList.remove('active');
+            document.getElementById('detailModal').classList.remove('active');
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                'completed': 'bg-green-100 text-green-700',
+                'in-progress': 'bg-blue-100 text-blue-700',
+                'pending': 'bg-amber-100 text-amber-700'
+            };
+            return colors[status] || 'bg-gray-100 text-gray-700';
+        }
+
+        function getChecklistProgress(checklist) {
+            if (!checklist || typeof checklist !== 'object') return 0;
+            const items = Object.values(checklist);
+            if (!items.length) return 0;
+            const completed = items.filter(v => v === true || v === 'completed').length;
+            return Math.round((completed / items.length) * 100);
+        }
+
+        function editQCO(id) {
+            closeModal();
+            window.location.href = `creation.html?edit=${id}`;
+        }
+
+        async function deleteQCO(id) {
+            if (!confirm('Are you sure you want to delete this changeover? This action cannot be undone.')) return;
+
+            try {
+                await db.collection('changeovers').doc(id).delete();
+                showToast('Changeover deleted successfully', 'success');
+                closeModal();
+            } catch (error) {
+                showToast('Error deleting: ' + error.message, 'error');
+            }
+        }
+
+        // --- Export Functionality ---
+        function exportData() {
+            const csvContent = convertToCSV(filteredChangeovers);
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `qco_export_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('Export downloaded successfully', 'success');
+        }
+
+        function convertToCSV(data) {
+            const headers = ['QCO Number', 'Current Style', 'Upcoming Style', 'Line', 'Status', 'Target COPT', 'Actual COPT', 'Created Date'];
+            const rows = data.map(qco => [
+                qco.qcoNumber,
+                qco.currentStyle,
+                qco.upcomingStyle,
+                qco.lineNumber,
+                qco.status,
+                qco.targetCOPT,
+                qco.actualCOPT,
+                qco.createdAt ? new Date(qco.createdAt.toDate()).toISOString() : ''
+            ]);
+
+            return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+        }
+
+        // --- UI Utilities ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="flex items-center gap-3">
+                     <i data-lucide="${type === 'success' ? 'check-circle' : type === 'error' ? 'alert-circle' : 'info'}" class="w-6 h-6 ${type === 'success' ? 'text-green-500' : type === 'error' ? 'text-red-500' : 'text-blue-500'}"></i>
+                    <div>
+                        <p class="font-semibold text-slate-900">${type === 'success' ? 'Success' : type === 'error' ? 'Error' : 'Info'}</p>
+                        <p class="text-sm text-slate-600">${message}</p>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+
+            // Trigger animation
+            setTimeout(() => toast.classList.add('show'), 100);
+
+            // Remove after 3s
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        function refreshAllData() {
+            const icon = document.getElementById('refreshIcon');
+            icon.classList.add('animate-spin');
+
+            // Force refresh
+            startRealtimeListeners();
+
+            setTimeout(() => {
+                icon.classList.remove('animate-spin');
+            }, 1000);
+        }
+
+        function initClock() {
+            const updateClock = () => {
+                const now = new Date();
+                document.getElementById('liveClock').textContent = now.toLocaleTimeString();
+            };
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        // --- Lenis & Animations ---
+        function initScroll() {
+            const lenis = new Lenis({
+                duration: 1.2,
+                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                smooth: true
+            });
+            function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+            requestAnimationFrame(raf);
+        }
+
+        function initCursor() {
+            const dot = document.querySelector('.cursor-dot');
+            const outline = document.querySelector('.cursor-outline');
+
+            window.addEventListener('mousemove', (e) => {
+                gsap.to(dot, { x: e.clientX, y: e.clientY, duration: 0.1 });
+                gsap.to(outline, { x: e.clientX, y: e.clientY, duration: 0.5 });
+            });
+
+            document.querySelectorAll('a, button, .glass-card, tr').forEach(el => {
+                el.addEventListener('mouseenter', () => {
+                    gsap.to(outline, { scale: 1.5, backgroundColor: "rgba(14, 165, 233, 0.1)", borderColor: "transparent", duration: 0.3 });
+                });
+                el.addEventListener('mouseleave', () => {
+                    gsap.to(outline, { scale: 1, backgroundColor: "transparent", borderColor: "rgba(14, 165, 233, 0.3)", duration: 0.3 });
+                });
+            });
+        }
+
+        function initAnimations() {
+            const tl = gsap.timeline();
+
+            tl.to("#mainApp", { opacity: 1, duration: 0.5 })
+                .fromTo(".split-header", { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: "power3.out" }, "-=0.3")
+                .fromTo(".hero-subtitle", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8 }, "-=0.6")
+                .fromTo("#headerActions", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8 }, "-=0.6")
+                .fromTo(".glass-card", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, stagger: 0.1 }, "-=0.4");
+        }
+
+        function initTilt() {
+            const cards = document.querySelectorAll('[data-tilt]');
+            cards.forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const centerX = rect.width / 2;
+                    const centerY = rect.height / 2;
+                    const rotateX = ((y - centerY) / centerY) * -5;
+                    const rotateY = ((x - centerX) / centerX) * 5;
+
+                    gsap.to(card, {
+                        transformPerspective: 1000,
+                        rotationX: rotateX,
+                        rotationY: rotateY,
+                        scale: 1.02,
+                        duration: 0.4,
+                        ease: "power2.out"
+                    });
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    gsap.to(card, {
+                        rotationX: 0,
+                        rotationY: 0,
+                        scale: 1,
+                        duration: 0.8,
+                        ease: "elastic.out(1, 0.5)"
+                    });
+                });
+            });
+        }
+
+        // --- Activity Feed & Notifications (Derived) ---
+        function deriveActivityFeed(data) {
+            // Generate list of recent events
+            const events = [];
+            data.forEach(qco => {
+                const qNum = qco.qcoNumber || '???';
+                // Created Event
+                if (qco.createdAt) {
+                    const d = qco.createdAt.toDate ? qco.createdAt.toDate() : new Date(qco.createdAt);
+                    events.push({
+                        type: 'created',
+                        msg: `New QCO #${qNum} created`,
+                        time: d,
+                        icon: 'plus-circle',
+                        color: 'text-blue-500',
+                        bg: 'bg-blue-100'
+                    });
+                }
+                // Completed Event
+                if (qco.status === 'completed' && qco.completedAt) { // Assuming completedAt exists or fallback
+                    // If no completedAt, use last operation end?
+                    // For now, let's skip if no completedAt
+                }
+            });
+
+            // Sort by time desc
+            events.sort((a, b) => b.time - a.time);
+
+            // Limit to top 10
+            const recentEvents = events.slice(0, 10);
+
+            // We don't have a specific UI container for "Activity Feed" in the HTML structure I saw earlier 
+            // (only "Recent Operations" which is handled by renderRecentOperations).
+            // So we will focus on Notifications being the primary "Feed".
+        }
+
+        function generateNotifications(data) {
+            const tempNotifications = [];
+            const now = new Date();
+
+            data.forEach(qco => {
+                // 1. Overdue Check (In Progress + High COPT)
+                if (qco.status === 'in-progress') {
+                    const actual = calculateActualCOPT(qco);
+                    const target = calculateTargetCOPT(qco);
+                    if (target > 0 && actual > target * 1.2) {
+                        tempNotifications.push({
+                            title: `Overdue: QCO #${qco.qcoNumber}`,
+                            desc: `${actual}min elapsed (Target: ${target}min)`,
+                            time: now, // Ongoing
+                            type: 'error',
+                            read: false
+                        });
+                    }
+                }
+
+                // 2. Deadline Check (Pending + Scheduled < 24h)
+                if (qco.status === 'pending' && qco.date) {
+                    const schedDate = new Date(qco.date); // String or Date
+                    const diffHours = (schedDate - now) / 36e5;
+                    if (diffHours > 0 && diffHours < 24) {
+                        tempNotifications.push({
+                            title: `Upcoming: QCO #${qco.qcoNumber}`,
+                            desc: `Scheduled for tomorrow (${schedDate.toLocaleDateString()})`,
+                            time: now,
+                            type: 'warning',
+                            read: false
+                        });
+                    }
+                }
+
+                // 3. New QCOs (Last 2 hours)
+                if (qco.createdAt) {
+                    const created = qco.createdAt.toDate ? qco.createdAt.toDate() : new Date(qco.createdAt);
+                    if ((now - created) < 2 * 36e5) {
+                        tempNotifications.push({
+                            title: `New QCO Created`,
+                            desc: `Style: ${qco.upcomingStyle}`,
+                            time: created,
+                            type: 'info',
+                            read: false
+                        });
+                    }
+                }
+            });
+
+            // Limit to 20
+            notifications = tempNotifications.sort((a, b) => b.time - a.time).slice(0, 20);
+            updateNotificationUI();
+        }
+
+        function updateNotificationUI() {
+            const list = document.getElementById('notificationList');
+            const badge = document.getElementById('notificationBadge');
+
+            if (notifications.length === 0) {
+                list.innerHTML = '<div class="p-4 text-center text-slate-500 text-sm">No new notifications</div>';
+                badge.classList.add('hidden');
+                return;
+            }
+
+            badge.textContent = notifications.length;
+            badge.classList.remove('hidden');
+
+            list.innerHTML = notifications.map(n => `
+                <div class="p-3 border-b border-slate-50 hover:bg-slate-50 transition-colors flex gap-3">
+                    <div class="w-2 h-2 mt-2 rounded-full ${n.type === 'error' ? 'bg-red-500' : n.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'} flex-shrink-0"></div>
+                    <div>
+                        <p class="text-sm font-semibold text-slate-900">${n.title}</p>
+                        <p class="text-xs text-slate-500 mb-1">${n.desc}</p>
+                        <p class="text-[10px] text-slate-400">${n.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+        }
+
+        function markAllAsRead() {
+            // Visualize Read State (for now just clear badge until next refresh)
+            document.getElementById('notificationBadge').classList.add('hidden');
+        }
+
+        function clearAllNotifications() {
+            notifications = [];
+            updateNotificationUI();
+        }
+
+        // =====================================================
+        // CHART MANAGEMENT
+        // =====================================================
+        currentChartType = 'copt';
+        currentTimeRange = 'week';
+        let currentQCOFilter = 'all';
+
+        function populateQCOSelector() {
+            const selector = document.getElementById('qcoSelector');
+            if (!selector) return;
+            const currentSelection = selector.value;
+
+            // Extract unique QCO numbers
+            const qcos = [...new Set(allChangeovers.map(q => q.qcoNumber).filter(n => n && n !== 'Unknown'))].sort();
+
+            selector.innerHTML = '<option value="all">All Styles</option>' +
+                qcos.map(qco => `<option value="${qco}">${qco}</option>`).join('');
+
+            if (qcos.includes(currentSelection)) {
+                selector.value = currentSelection;
+            } else {
+                selector.value = 'all';
+                currentQCOFilter = 'all';
+            }
+        }
+
+        function filterByQCO(val) {
+            currentQCOFilter = val;
+            updateStatistics();
+            updateChartData();
+            refreshOperationsData();
+            calculateCriticalIssues();
+            renderActiveChangeovers();
+        }
+
+        function getFilteredDashboardData() {
+            let data = allChangeovers;
+
+            // Apply QCO filter
+            if (currentQCOFilter !== 'all') {
+                data = data.filter(qco => qco.qcoNumber === currentQCOFilter);
+            }
+
+            // Apply date range filter
+            const days = parseInt(document.getElementById('chartRange')?.value) || 30;
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - days);
+
+            data = data.filter(qco => {
+                const qcoDate = qco.createdAt?.toDate?.() || new Date(qco.createdAt);
+                return qcoDate >= cutoffDate;
+            });
+
+            return data;
+        }
+
+        function initializeChart() {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            performanceChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: [], datasets: [] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'top' },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+            updateChartData();
+        }
+
+        function switchChartTab(type) {
+            currentChartType = type;
+            // Update tab styles
+            document.querySelectorAll('.chart-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(`tab-${type}`).classList.add('active');
+            lucide.createIcons();
+            updateChartData();
+        }
+
+        function updateChartRange() {
+            const range = document.getElementById('chartRange').value;
+            // Update all dashboard components when date range changes
+            updateStatistics();
+            updateChartData();
+            refreshOperationsData();
+            calculateCriticalIssues();
+            updateActiveChangeovers();
+            updateTable();
+        }
+
+        function updateChartData() {
+            if (!performanceChart || allChangeovers.length === 0) return;
+
+            // Get data filtered by both QCO and date range
+            const filtered = getFilteredDashboardData();
+
+            switch (currentChartType) {
+                case 'copt':
+                    renderCOPTChart(filtered);
+                    break;
+                case 'daily':
+                    renderDailyCountChart(filtered);
+                    break;
+                case 'efficiency':
+                    renderEfficiencyChart(filtered);
+                    break;
+                case 'multi':
+                    renderMultiMetricChart(filtered);
+                    break;
+            }
+        }
+
+        function renderCOPTChart(data) {
+            // Group by date, but ensure unique QCOs per day (handling potential duplicates)
+            const grouped = {};
+            data.forEach(qco => {
+                if (!qco.createdAt) return;
+                const date = (qco.createdAt.toDate ? qco.createdAt.toDate() : new Date(qco.createdAt)).toISOString().split('T')[0];
+                if (!grouped[date]) grouped[date] = new Map();
+                // Use Map to ensure unique QCO ID per day
+                grouped[date].set(qco.id, qco);
+            });
+
+            const labels = Object.keys(grouped).sort();
+            const actualCOPT = labels.map(date => {
+                const qcos = Array.from(grouped[date].values());
+                const validQcos = qcos.filter(q => calculateActualCOPT(q) > 0);
+                return validQcos.length > 0 ? average(validQcos.map(q => calculateActualCOPT(q))) : null;
+            });
+            const targetCOPT = labels.map(date => {
+                const qcos = Array.from(grouped[date].values());
+                const validQcos = qcos.filter(q => calculateTargetCOPT(q) > 0);
+                return validQcos.length > 0 ? average(validQcos.map(q => calculateTargetCOPT(q))) : null;
+            });
+
+            performanceChart.data = {
+                labels: labels.map(l => new Date(l).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                datasets: [
+                    {
+                        label: 'Actual COPT',
+                        data: actualCOPT,
+                        borderColor: '#0ea5e9',
+                        backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'Target COPT',
+                        data: targetCOPT,
+                        borderColor: '#10b981',
+                        borderDash: [5, 5],
+                        tension: 0.4,
+                        fill: false
+                    }
+                ]
+            };
+            performanceChart.options.scales.y.title = { display: true, text: 'Minutes' };
+            performanceChart.update();
+        }
+
+        function renderDailyCountChart(data) {
+            const grouped = {};
+            data.forEach(qco => {
+                if (!qco.createdAt) return;
+                const date = (qco.createdAt.toDate ? qco.createdAt.toDate() : new Date(qco.createdAt)).toISOString().split('T')[0];
+                if (!grouped[date]) grouped[date] = new Map();
+                grouped[date].set(qco.id, qco);
+            });
+
+            const labels = Object.keys(grouped).sort();
+            const counts = {
+                completed: labels.map(date => Array.from(grouped[date].values()).filter(q => q.status === 'completed').length),
+                live: labels.map(date => Array.from(grouped[date].values()).filter(q => q.status === 'in-progress').length),
+                pending: labels.map(date => Array.from(grouped[date].values()).filter(q => q.status === 'pending').length)
+            };
+
+            performanceChart.data = {
+                labels: labels.map(l => new Date(l).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                datasets: [
+                    {
+                        label: 'Completed',
+                        data: counts.completed,
+                        backgroundColor: '#10b981',
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'In Progress',
+                        data: counts.live,
+                        backgroundColor: '#f59e0b',
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'Pending',
+                        data: counts.pending,
+                        backgroundColor: '#64748b',
+                        borderRadius: 6
+                    }
+                ]
+            };
+            performanceChart.options.type = 'bar';
+            performanceChart.options.scales.y.title = { display: true, text: 'Count' };
+            performanceChart.update();
+        }
+
+        function renderEfficiencyChart(data) {
+            const grouped = {};
+            data.forEach(qco => {
+                if (!qco.createdAt) return;
+                const date = (qco.createdAt.toDate ? qco.createdAt.toDate() : new Date(qco.createdAt)).toISOString().split('T')[0];
+                if (!grouped[date]) grouped[date] = new Map();
+                grouped[date].set(qco.id, qco);
+            });
+
+            const labels = Object.keys(grouped).sort();
+            const efficiency = labels.map(date => {
+                const qcos = Array.from(grouped[date].values());
+                const validQcos = qcos.filter(q => {
+                    const actual = calculateActualCOPT(q);
+                    const target = calculateTargetCOPT(q);
+                    return actual > 0 && target > 0;
+                });
+                if (validQcos.length === 0) return null;
+                const avg = average(validQcos.map(q => {
+                    const actual = calculateActualCOPT(q);
+                    const target = calculateTargetCOPT(q);
+                    return Math.min(100, (target / actual) * 100);
+                }));
+                return avg.toFixed(1);
+            });
+
+            performanceChart.data = {
+                labels: labels.map(l => new Date(l).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                datasets: [{
+                    label: 'Efficiency Score',
+                    data: efficiency,
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            };
+            performanceChart.options.scales.y.title = { display: true, text: 'Efficiency %' };
+            performanceChart.update();
+        }
+
+        function renderMultiMetricChart(data) {
+            const grouped = {};
+            data.forEach(qco => {
+                if (!qco.createdAt) return;
+                const date = (qco.createdAt.toDate ? qco.createdAt.toDate() : new Date(qco.createdAt)).toISOString().split('T')[0];
+                if (!grouped[date]) grouped[date] = new Map();
+                grouped[date].set(qco.id, qco);
+            });
+
+            const labels = Object.keys(grouped).sort();
+            const avgCOPT = labels.map(date => {
+                const qcos = Array.from(grouped[date].values());
+                const validQcos = qcos.filter(q => calculateActualCOPT(q) > 0);
+                return validQcos.length > 0 ? average(validQcos.map(q => calculateActualCOPT(q))) : null;
+            });
+            const totalCount = labels.map(date => grouped[date].size);
+
+            performanceChart.data = {
+                labels: labels.map(l => new Date(l).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                datasets: [
+                    {
+                        label: 'Avg COPT (min)',
+                        data: avgCOPT,
+                        borderColor: '#0ea5e9',
+                        backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                        yAxisID: 'y',
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Total Count',
+                        data: totalCount,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        yAxisID: 'y1',
+                        type: 'bar',
+                        borderRadius: 6
+                    }
+                ]
+            };
+            performanceChart.options.scales = {
+                y: { type: 'linear', position: 'left', title: { display: true, text: 'COPT (min)' } },
+                y1: { type: 'linear', position: 'right', title: { display: true, text: 'Count' }, grid: { drawOnChartArea: false } }
+            };
+            performanceChart.update();
+        }
+
+        // =====================================================
+        // OPERATIONS ANALYTICS WIDGET
+        // =====================================================
+
+        function switchOperationTab(tab) {
+            currentOperationTab = tab;
+            document.querySelectorAll('.operation-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(`optab-${tab}`).classList.add('active');
+            lucide.createIcons();
+            refreshOperationsData();
+        }
+
+        function refreshOperationsData() {
+            const container = document.getElementById('operationsContent');
+            if (!container) return;
+
+            switch (currentOperationTab) {
+                case 'top':
+                    renderTopOperations(container);
+                    break;
+                case 'dept':
+                    renderDepartmentBreakdown(container);
+                    break;
+                case 'line':
+                    renderLinePerformance(container);
+                    break;
+                case 'recent':
+                    renderRecentOperations(container);
+                    break;
+            }
+        }
+
+        function renderTopOperations(container) {
+            const operations = extractAllOperations();  // uses getFilteredDashboardData internally now
+            // Filter out 'Unknown' operations before slicing
+            const topOps = operations.filter(op => op.name !== 'Unknown' && op.totalTime > 0).slice(0, 8);
+
+            container.innerHTML = topOps.length === 0
+                ? '<p class="text-sm text-slate-400 text-center py-8">No operations data available</p>'
+                : topOps.map(op => `
+                    <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
+                        <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="zap" class="w-4 h-4 text-blue-600"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-bold text-slate-900 truncate">${op.name}</p>
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <span class="text-[10px] text-slate-500">${op.count} times</span>
+                                <span class="text-[10px] text-slate-400">•</span>
+                                <span class="text-[10px] text-slate-500">Avg: ${op.avgTime.toFixed(1)}min</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-bold text-blue-600">${op.totalTime.toFixed(0)}min</p>
+                        </div>
+                    </div>
+                `).join('');
+            lucide.createIcons();
+        }
+
+        function renderDepartmentBreakdown(container) {
+            const deptMap = {
+                'Planning': 0, 'IE': 0, 'Production': 0, 'Maintenance': 0,
+                'Quality': 0, 'Packing': 0, 'Store': 0, 'Finishing': 0, 'Cutting': 0
+            };
+
+            const data = getFilteredDashboardData();
+            data.forEach(qco => {
+                if (qco.operationTimings && typeof qco.operationTimings === 'object') {
+                    // Iterate through operation entries
+                    Object.entries(qco.operationTimings).forEach(([opName, details]) => {
+                        const duration = Number(details.actualTime) || Number(details.duration) || 0;
+                        const dept = (details.department || 'MAINTENANCE').toUpperCase();
+                        if (deptMap[dept] !== undefined) {
+                            deptMap[dept] += duration;
+                        } else {
+                            deptMap[dept] = duration;
+                        }
+                    });
+                }
+            });
+
+            // Filter out departments with 0 time
+            const depts = Object.entries(deptMap).filter(([_, time]) => time > 0).sort((a, b) => b[1] - a[1]);
+
+            container.innerHTML = depts.length === 0
+                ? '<p class="text-sm text-slate-400 text-center py-8">No department data available</p>'
+                : depts.map(([dept, time]) => `
+                    <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                        <div class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="layers" class="w-4 h-4 text-purple-600"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-xs font-bold text-slate-900">${dept}</p>
+                            <div class="w-full bg-slate-200 rounded-full h-1.5 mt-1">
+                                <div class="bg-purple-500 h-1.5 rounded-full" style="width: ${Math.min(100, (time / Math.max(...Object.values(deptMap))) * 100)}%"></div>
+                            </div>
+                        </div>
+                        <p class="text-sm font-bold text-purple-600">${Math.round(time)}min</p>
+                    </div>
+                `).join('');
+            lucide.createIcons();
+        }
+
+        function renderLinePerformance(container) {
+            const lineData = {};
+            const data = getFilteredDashboardData();
+            data.forEach(qco => {
+                const line = qco.lineNumber;
+                if (!line) return; // Skip if no line number
+
+                if (!lineData[line]) lineData[line] = { count: 0, totalCOPT: 0, totalTarget: 0 };
+                lineData[line].count++;
+                if (qco.actualCOPT) lineData[line].totalCOPT += Number(qco.actualCOPT) || 0;
+                if (qco.targetCOPT) lineData[line].totalTarget += Number(qco.targetCOPT) || 0;
+            });
+
+            const lines = Object.entries(lineData)
+                .filter(([_, data]) => data.count > 0)
+                .sort((a, b) => b[1].count - a[1].count);
+
+            container.innerHTML = lines.length === 0
+                ? '<p class="text-sm text-slate-400 text-center py-8">No line data available</p>'
+                : lines.map(([line, data]) => {
+                    const avgCOPT = data.count > 0 ? (data.totalCOPT / data.count).toFixed(1) : 0;
+                    const efficiency = data.totalTarget > 0 && data.totalCOPT > 0 ? ((data.totalTarget / data.totalCOPT) * 100).toFixed(0) : 0;
+                    return `
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                                    <i data-lucide="list" class="w-4 h-4 text-emerald-600"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-slate-900">Line ${line}</p>
+                                    <p class="text-[10px] text-slate-500">${data.count} changeovers</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm font-bold text-emerald-600">${avgCOPT}min</p>
+                                <p class="text-[10px] text-slate-500">${efficiency}% eff</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            lucide.createIcons();
+        }
+
+        function renderRecentOperations(container) {
+            const allOps = [];
+            const data = getFilteredDashboardData();
+            data.forEach(qco => {
+                if (qco.operationTimings && typeof qco.operationTimings === 'object') {
+                    Object.entries(qco.operationTimings).forEach(([name, details]) => {
+                        const duration = Number(details.actualTime) || Number(details.duration) || 0;
+                        if (details.end && name && duration > 0) {
+                            allOps.push({
+                                name: name,
+                                duration: duration,
+                                endTime: new Date(details.end),
+                                dept: details.department || 'Unknown',
+                                qco: qco.qcoNumber || 'QCO'
+                            });
+                        }
+                    });
+                }
+            });
+
+            const recent = allOps.sort((a, b) => b.endTime - a.endTime).slice(0, 10);
+
+            container.innerHTML = recent.length === 0
+                ? '<p class="text-sm text-slate-400 text-center py-8">No recent operations</p>'
+                : recent.map(op => `
+                    <div class="flex items-center gap-3 p-2.5 border-b border-slate-100 last:border-0">
+                        <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400 flex-shrink-0"></i>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold text-slate-900 truncate">${op.name}</p>
+                            <p class="text-[10px] text-slate-500">QCO #${op.qco}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs font-bold text-blue-600">${op.duration.toFixed(1)}min</p>
+                            <p class="text-[10px] text-slate-400">${op.endTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
+                    </div>
+                `).join('');
+            lucide.createIcons();
+        }
+
+        function extractAllOperations() {
+            const opMap = {};
+            const data = getFilteredDashboardData();
+            data.forEach(qco => {
+                if (qco.operationTimings && typeof qco.operationTimings === 'object') {
+                    // operationTimings is an Object, not Array
+                    Object.entries(qco.operationTimings).forEach(([name, details]) => {
+                        const duration = Number(details.actualTime) || Number(details.duration) || 0;
+                        if (!name || name === 'Unknown' || duration <= 0) return;
+
+                        if (!opMap[name]) {
+                            opMap[name] = { name, totalTime: 0, count: 0 };
+                        }
+                        opMap[name].totalTime += duration;
+                        opMap[name].count++;
+                    });
+                }
+            });
+
+            return Object.values(opMap)
+                .map(op => ({
+                    name: op.name,
+                    totalTime: op.totalTime,
+                    count: op.count,
+                    avgTime: op.totalTime / op.count
+                }))
+                .sort((a, b) => b.totalTime - a.totalTime);
+        }
+
+        // =====================================================
+        // TIME RANGE FILTERS
+        // =====================================================
+        function setTimeRange(range) {
+            currentTimeRange = range;
+            document.querySelectorAll('.time-range-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`range-${range}`).classList.add('active');
+            lucide.createIcons();
+
+            applyTimeRangeFilter();
+        }
+
+        function applyTimeRangeFilter() {
+            let startDate;
+            const now = new Date();
+
+            switch (currentTimeRange) {
+                case 'today':
+                    startDate = new Date(now.setHours(0, 0, 0, 0));
+                    break;
+                case 'week':
+                    startDate = new Date(now.setDate(now.getDate() - 7));
+                    break;
+                case 'month':
+                    startDate = new Date(now.setMonth(now.getMonth() - 1));
+                    break;
+                default:
+                    return;
+            }
+
+            // Apply filter to all dashboard components
+            updateStatistics();
+            updateChartData();
+            refreshOperationsData();
+            renderActiveChangeovers();
+        }
+
+        function openCustomRangePicker() {
+            // Placeholder for custom range picker modal
+            showToast('Custom range picker coming soon', 'info');
+        }
+
+        // =====================================================
+        // NOTIFICATION SYSTEM
+        // =====================================================
+
+        function checkForNotifications() {
+            notifications = [];
+            const now = new Date();
+
+            allChangeovers.forEach(qco => {
+                const scheduledDate = qco.scheduledDate?.toDate?.() || new Date(qco.scheduledDate);
+                const hoursUntil = (scheduledDate - now) / (1000 * 60 * 60);
+
+                // Deadline approaching (< 24h)
+                if (qco.status === 'pending' && hoursUntil > 0 && hoursUntil < 24) {
+                    notifications.push({
+                        id: `deadline-${qco.id}`,
+                        type: 'warning',
+                        icon: 'alert-circle',
+                        title: 'Deadline Approaching',
+                        message: `QCO #${qco.qcoNumber} scheduled in ${Math.round(hoursUntil)}h`,
+                        qcoId: qco.id,
+                        time: now
+                    });
+                }
+
+                // Over COPT
+                if (qco.status === 'completed' && qco.actualCOPT && qco.targetCOPT) {
+                    const overPercent = ((qco.actualCOPT - qco.targetCOPT) / qco.targetCOPT) * 100;
+                    if (overPercent > 20) {
+                        notifications.push({
+                            id: `overcopt-${qco.id}`,
+                            type: 'error',
+                            icon: 'trending-up',
+                            title: 'Exceeded Target COPT',
+                            message: `QCO #${qco.qcoNumber} exceeded by ${overPercent.toFixed(0)}%`,
+                            qcoId: qco.id,
+                            time: now
+                        });
+                    }
+                }
+
+                // Risk flagged (from 72h logic in schedule.html)
+                if (qco.riskFlag) {
+                    notifications.push({
+                        id: `risk-${qco.id}`,
+                        type: 'warning',
+                        icon: 'flag',
+                        title: 'Risk Flagged',
+                        message: `QCO #${qco.qcoNumber} requires attention`,
+                        qcoId: qco.id,
+                        time: now
+                    });
+                }
+            });
+
+            updateNotificationUI();
+        }
+
+        function updateNotificationUI() {
+            const badge = document.getElementById('notificationBadge');
+            const unreadCount = notifications.filter(n => !n.read).length;
+
+            if (unreadCount > 0) {
+                badge.textContent = unreadCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            renderNotificationList();
+        }
+
+        function renderNotificationList() {
+            const list = document.getElementById('notificationList');
+            if (!list) return;
+
+            if (notifications.length === 0) {
+                list.innerHTML = '<div class="p-8 text-center"><i data-lucide="bell-off" class="w-12 h-12 mx-auto text-slate-300 mb-2"></i><p class="text-sm text-slate-400">No notifications</p></div>';
+                lucide.createIcons();
+                return;
+            }
+
+            list.innerHTML = notifications.map(notif => {
+                const iconColor = notif.type === 'error' ? 'text-red-600' : notif.type === 'warning' ? 'text-amber-600' : 'text-blue-600';
+                const bgColor = notif.type === 'error' ? 'bg-red-50' : notif.type === 'warning' ? 'bg-amber-50' : 'bg-blue-50';
+
+                return `
+                    <div class="p-4 border-b border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer ${notif.read ? 'opacity-60' : ''}"
+                        onclick="markNotificationRead('${notif.id}')">
+                        <div class="flex gap-3">
+                            <div class="w-10 h-10 ${bgColor} rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="${notif.icon}" class="w-5 h-5 ${iconColor}"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-bold text-slate-900">${notif.title}</p>
+                                <p class="text-xs text-slate-600 mt-0.5">${notif.message}</p>
+                                <p class="text-[10px] text-slate-400 mt-1">${new Date(notif.time).toLocaleTimeString()}</p>
+                            </div>
+                            ${!notif.read ? '<div class="w-2 h-2 bg-blue-500 rounded-full"></div>' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function toggleNotifications() {
+            const panel = document.getElementById('notificationPanel');
+            panel.classList.toggle('hidden');
+        }
+
+        function markNotificationRead(id) {
+            const notif = notifications.find(n => n.id === id);
+            if (notif) notif.read = true;
+            updateNotificationUI();
+        }
+
+        function markAllAsRead() {
+            notifications.forEach(n => n.read = true);
+            updateNotificationUI();
+        }
+
+        function clearAllNotifications() {
+            notifications = [];
+            updateNotificationUI();
+            toggleNotifications();
+        }
+
+
+        // =====================================================
+        // CRITICAL ISSUES
+        // =====================================================
+        function calculateCriticalIssues() {
+            let criticalCount = 0;
+            const now = new Date();
+            // Critical issues should respect the filter if analyzing specific QCO
+            const data = getFilteredDashboardData();
+
+            data.forEach(qco => {
+                // Safely parse date
+                if (!qco.scheduledDate) return;
+                const scheduledDate = qco.scheduledDate.toDate ? qco.scheduledDate.toDate() : new Date(qco.scheduledDate);
+                const hoursUntil = (scheduledDate - now) / (1000 * 60 * 60);
+
+                // Criteria 1: Scheduled within 72h with low checklist completion
+                if (qco.status === 'pending' && hoursUntil > 0 && hoursUntil < 72) {
+                    criticalCount++;
+                }
+
+                // Criteria 2: In progress and exceeding target by 50%
+                if (qco.status === 'in-progress') {
+                    const actual = calculateActualCOPT(qco);
+                    const target = calculateTargetCOPT(qco);
+                    if (target > 0 && actual > target * 1.5) criticalCount++;
+                }
+
+                // Criteria 3: Overdue pending
+                if (qco.status === 'pending' && scheduledDate < now) {
+                    criticalCount++;
+                }
+
+                // Criteria 4: Has risk flag
+                if (qco.riskFlag) criticalCount++;
+            });
+
+            const pendingEl = document.getElementById('pendingTasks');
+            if (pendingEl) pendingEl.textContent = criticalCount;
+        }
+
+        // =====================================================
+        // COPT CALCULATION HELPERS
+        // =====================================================
+        /**
+         * Calculate actual COPT (total time taken) from operation timings
+         * @param {Object} qco - QCO document data
+         * @returns {number} Total duration in minutes
+         */
+        function calculateActualCOPT(qco) {
+            if (!qco.operationTimings || typeof qco.operationTimings !== 'object') {
+                return 0;
+            }
+
+            let total = 0;
+            Object.values(qco.operationTimings).forEach(details => {
+                const duration = Number(details.actualTime) || Number(details.duration) || 0;
+                total += duration;
+            });
+
+            return total;
+        }
+
+        /**
+         * Calculate target COPT based on SMV and changeover category
+         * @param {Object} qco - QCO document data
+         * @returns {number} Target COPT in minutes
+         */
+        function calculateTargetCOPT(qco) {
+            // Get SMV - check multiple possible field names
+            const smv = qco.upcomingSMV || qco.newStyleSMV || qco.upcomingStyleSMV || 0;
+
+            // Get category (default to C)
+            const category = qco.changeoverCategory || 'C';
+
+            // Multiplier based on category
+            const multipliers = { 'A': 7, 'B': 5, 'C': 3 };
+            const multiplier = multipliers[category] || 3;
+
+            return smv > 0 ? Math.round(smv * multiplier) : 0;
+        }
+
+        // =====================================================
+        // UTILITY FUNCTIONS
+        // =====================================================
+        function groupBy(array, keyFn) {
+            return array.reduce((result, item) => {
+                const key = keyFn(item);
+                if (!result[key]) result[key] = [];
+                result[key].push(item);
+                return result;
+            }, {});
+        }
+
+        function average(numbers) {
+            return numbers.length > 0 ? numbers.reduce((a, b) => a + b, 0) / numbers.length : 0;
+        }
+
+        // Close notification panel when clicking outside
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('notificationPanel');
+            const btn = document.getElementById('notificationBtn');
+            if (panel && !panel.contains(e.target) && !btn.contains(e.target)) {
+                panel.classList.add('hidden');
+            }
+        });
+
+        // =====================================================
+        // REAL-TIME DATA LISTENERS
+        // =====================================================
+        function startRealtimeListeners() {
+            const changeoverRef = firebase.firestore().collection('changeovers');
+
+            const unsubscribe = changeoverRef.onSnapshot((snapshot) => {
+                allChangeovers = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                })).filter(qco => qco.qcoNumber && qco.qcoNumber !== 'Unknown'); // Only relevant QCOs
+
+                // Sort by creation date (newest first)
+                allChangeovers.sort((a, b) => {
+                    const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+                    const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                    return dateB - dateA;
+                });
+
+                filteredChangeovers = allChangeovers;
+
+                // Populate QCO dropdown
+                populateQCOSelector();
+
+                // Update all components
+                updateStatistics();
+                updateChartData();
+                refreshOperationsData();
+                renderActiveChangeovers();
+                updateTable();
+                checkForNotifications();
+                calculateCriticalIssues();
+
+                lucide.createIcons();
+            });
+
+            realTimeUnsubscribes.push(unsubscribe);
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            realTimeUnsubscribes.forEach(unsub => unsub());
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            initClock();
+            initAnimations();
+            initTilt();
+            initScroll();
+            initCursor();
+            // Auth check normally runs here
+            initializeChart();
+            refreshOperationsData();
+            startRealtimeListeners();
+            // Check notifications and critical issues every minute
+            setInterval(() => {
+                checkForNotifications();
+                calculateCriticalIssues();
+            }, 60000);
+        });
+    </script>
+</body>
+
+</html>

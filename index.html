@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QCO WorkForce Portal | Enterprise Workflow Management</title>
+
+    <!-- Frameworks & Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <!-- Animation Libraries (GSAP + Lenis) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.1.2/dist/lenis.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Lenis Smooth Scroll */
+        html.lenis,
+        html.lenis body {
+            height: auto;
+        }
+
+        .lenis.lenis-smooth {
+            scroll-behavior: auto !important;
+        }
+
+        .lenis.lenis-smooth [data-lenis-prevent] {
+            overscroll-behavior: contain;
+        }
+
+        .lenis.lenis-stopped {
+            overflow: hidden;
+        }
+
+        body {
+            background-color: #f8fafc;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .login-glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 40px 100px -12px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        /* Text Animation Utilities */
+        .split-parent {
+            overflow: hidden;
+        }
+
+        .split-child {
+            display: inline-block;
+            transform-origin: 0% 100%;
+        }
+
+        /* Custom Cursor */
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #0ea5e9;
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+            mix-blend-mode: multiply;
+        }
+
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            z-index: 9998;
+            pointer-events: none;
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
+        }
+
+        /* Hide elements initially to prevent FOUC */
+        .gsap-hidden {
+            visibility: hidden;
+        }
+
+        /* Card Hover Effects */
+        .dashboard-card {
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+    </style>
+</head>
+
+<body class="text-slate-800">
+
+    <!-- Custom Cursor -->
+    <div class="cursor-dot hidden md:block"></div>
+    <div class="cursor-outline hidden md:block"></div>
+
+    <!-- Notifications -->
+    <div id="notificationContainer" class="fixed top-6 right-6 z-[100] flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden">
+        <!-- Animated Background Blobs -->
+        <div class="absolute inset-0 z-0 overflow-hidden">
+            <div
+                class="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-blue-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob">
+            </div>
+            <div
+                class="absolute top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-indigo-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-2000">
+            </div>
+            <div
+                class="absolute bottom-[-20%] left-[20%] w-[60vw] h-[60vw] bg-pink-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-4000">
+            </div>
+        </div>
+
+        <div class="login-card login-glass w-full max-w-md rounded-[2rem] p-12 relative z-10 transform opacity-0">
+            <div class="text-center mb-10">
+                <div
+                    class="logo-icon w-20 h-20 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl mx-auto flex items-center justify-center text-white shadow-xl shadow-blue-500/20 mb-6 transform scale-0">
+                    <i data-lucide="layers" class="w-8 h-8"></i>
+                </div>
+                <!-- Title for splitting -->
+                <h1 class="split-header text-3xl font-bold text-slate-900 mb-2 overflow-hidden">
+                    Changeover Portal
+                </h1>
+                <p class="text-slate-500 text-sm tracking-wide font-medium">Manufacturing Excellence</p>
+            </div>
+
+            <div class="space-y-6">
+                <div class="input-group opacity-0 translate-y-8">
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Password
+                        Access</label>
+                    <div class="relative group">
+                        <input type="password" id="loginPassword"
+                            class="w-full pl-5 pr-12 py-4 bg-white/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all shadow-sm group-hover:bg-white text-lg tracking-widest"
+                            placeholder="••••••••" onkeypress="if(event.key === 'Enter') authenticateUser()">
+                        <button onclick="togglePassword()"
+                            class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors p-2">
+                            <i data-lucide="eye" class="w-5 h-5" id="toggleIcon"></i>
+                        </button>
+                    </div>
+                    <p id="loginError"
+                        class="text-red-500 text-sm mt-3 hidden font-medium flex items-center gap-2 pl-1">
+                        <i data-lucide="alert-circle" class="w-4 h-4"></i> <span>Invalid password</span>
+                    </p>
+                </div>
+
+                <button onclick="authenticateUser()" id="loginBtn"
+                    class="btn-login w-full bg-slate-900 text-white font-semibold py-4 rounded-xl shadow-lg hover:shadow-2xl hover:scale-[1.02] transition-all transform opacity-0 translate-y-4 relative overflow-hidden group active:scale-[0.98]">
+                    <span class="relative z-10 flex items-center justify-center gap-2">
+                        <i data-lucide="log-in" class="w-5 h-5"></i> Access System
+                    </span>
+                    <div
+                        class="absolute inset-0 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-out">
+                    </div>
+                </button>
+
+                <p class="footer-text text-center text-[10px] text-slate-400 uppercase tracking-widest opacity-0">
+                    Authorized Personnel Only</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="hidden flex-col min-h-screen relative z-10 opacity-0">
+
+        <!-- Navigation -->
+        <nav class="fixed top-0 w-full z-40 glass transition-all duration-300" id="navbar">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between h-20 items-center relative">
+
+                    <!-- Centered Navigation -->
+                    <div class="hidden xl:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                        <div
+                            class="flex items-center gap-1 bg-white/50 p-1.5 rounded-full border border-white/20 shadow-sm backdrop-blur-md">
+                            <a href="#"
+                                class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-900 bg-white shadow-sm transition-all">Home</a>
+                            <a href="pages/dashboard.html"
+                                class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Dashboard</a>
+                            <a href="pages/creation.html"
+                                class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Creation</a>
+                            <a href="pages/schedule.html"
+                                class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Schedule</a>
+                            <a href="pages/checklist.html"
+                                class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Checklist</a>
+                            <a href="pages/recorder.html"
+                                class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Recorder</a>
+                            <a href="pages/summary.html"
+                                class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Reports</a>
+                        </div>
+                    </div>
+
+                    <!-- Logo -->
+                    <a href="#" class="nav-item flex items-center gap-3 group">
+                        <div
+                            class="w-10 h-10 bg-slate-900 rounded-lg flex items-center justify-center text-white shadow-lg group-hover:rotate-12 transition-transform duration-500 ease-out">
+                            <i data-lucide="layers" class="w-5 h-5"></i>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="font-bold text-slate-900 leading-none text-lg tracking-tight">QCO Portal</span>
+                        </div>
+                    </a>
+
+                    <!-- Right Side -->
+                    <div class="flex items-center gap-6">
+                        <div
+                            class="nav-item hidden md:flex items-center gap-2 px-4 py-1.5 bg-white/60 border border-slate-200/60 rounded-full text-xs font-semibold text-slate-600 backdrop-blur-md shadow-sm">
+                            <span class="relative flex h-2 w-2">
+                                <span
+                                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                            System Active
+                        </div>
+
+                        <!-- User Profile Dropdown -->
+                        <div class="relative nav-item">
+                            <button id="userMenuBtn" onclick="toggleDropdown()"
+                                class="flex items-center gap-3 focus:outline-none group p-1.5 pr-3 rounded-full hover:bg-white/60 transition-all border border-transparent hover:border-slate-200">
+                                <div
+                                    class="w-9 h-9 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border border-white shadow-sm flex items-center justify-center overflow-hidden">
+                                    <i data-lucide="user" class="w-4 h-4 text-slate-500"></i>
+                                </div>
+                                <div class="text-left hidden sm:block">
+                                    <p class="text-xs font-bold text-slate-900 user-name-display leading-tight">User</p>
+                                    <p class="text-[10px] text-slate-500 leading-tight">Admin</p>
+                                </div>
+                                <i data-lucide="chevron-down"
+                                    class="w-3 h-3 text-slate-400 ml-1 group-hover:text-slate-600 transition-colors"></i>
+                            </button>
+
+                            <div id="userDropdown"
+                                class="hidden absolute right-0 mt-3 w-60 bg-white/90 backdrop-blur-xl rounded-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] border border-white/50 ring-1 ring-black/5 divide-y divide-slate-100 transform origin-top-right transition-all z-50">
+                                <div class="px-5 py-4">
+                                    <p class="text-sm font-bold text-slate-900 user-name-display">User</p>
+                                    <p class="text-xs text-slate-500 user-email-display font-medium mt-1 truncate">
+                                        email@example.com</p>
+                                </div>
+                                <div class="p-2">
+                                    <button onclick="logout()"
+                                        class="w-full group flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left">
+                                        <i data-lucide="log-out"
+                                            class="w-4 h-4 text-red-400 group-hover:text-red-600 transition-colors mr-3"></i>
+                                        Sign Out
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="flex-grow pt-36 pb-20 px-4 sm:px-6 relative w-full">
+            <!-- Background Gradients -->
+            <div class="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
+                <div class="absolute top-[10%] right-[5%] w-[40vw] h-[40vw] bg-blue-100/30 rounded-full blur-[100px] parallax-layer"
+                    data-speed="0.03"></div>
+                <div class="absolute top-[40%] left-[10%] w-[30vw] h-[30vw] bg-indigo-100/30 rounded-full blur-[100px] parallax-layer"
+                    data-speed="0.06"></div>
+            </div>
+
+            <div class="max-w-7xl mx-auto w-full">
+
+                <div class="mb-20">
+                    <h2
+                        class="hero-split-text text-5xl md:text-7xl font-bold text-slate-900 tracking-tight leading-[1.1] mb-6 overflow-hidden">
+                        Changeover <br />
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Control
+                            Center</span>
+                    </h2>
+                    <div class="hero-subtitle overflow-hidden">
+                        <p class="text-lg text-slate-500 max-w-2xl leading-relaxed">
+                            Select an application module to begin your workflow.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10" id="cardsGrid">
+
+                    <!-- Dashboard -->
+                    <a href="pages/dashboard.html"
+                        class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
+                        </div>
+                        <div
+                            class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-[4rem] -mr-8 -mt-8 group-hover:scale-125 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                        </div>
+
+                        <div class="relative z-10 h-full flex flex-col">
+                            <div
+                                class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-blue-600 mb-6 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                                <i data-lucide="line-chart" class="w-7 h-7"></i>
+                            </div>
+                            <h3
+                                class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-blue-600 transition-colors">
+                                Dashboard</h3>
+                            <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">Real-time KPIs, workflow
+                                efficiency monitoring, and operational throughput metrics.</p>
+
+                            <div class="flex items-center justify-between mt-auto">
+                                <span
+                                    class="flex items-center text-sm font-bold text-slate-900 group-hover:translate-x-2 transition-transform duration-300">
+                                    Launch Dashboard <i data-lucide="arrow-right"
+                                        class="ml-2 w-4 h-4 text-blue-500"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- QCO Creation -->
+                    <a href="pages/creation.html"
+                        class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
+                        </div>
+                        <div
+                            class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-bl-[4rem] -mr-8 -mt-8 group-hover:scale-125 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                        </div>
+
+                        <div class="relative z-10 h-full flex flex-col">
+                            <div
+                                class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-indigo-600 mb-6 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                                <i data-lucide="pen-tool" class="w-7 h-7"></i>
+                            </div>
+                            <h3
+                                class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-indigo-600 transition-colors">
+                                QCO Creation</h3>
+                            <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">Draft and issue Quality
+                                Control Orders with automated compliance checks.</p>
+
+                            <div class="flex items-center justify-between mt-auto">
+                                <span
+                                    class="flex items-center text-sm font-bold text-slate-900 group-hover:translate-x-2 transition-transform duration-300">
+                                    Create New <i data-lucide="arrow-right" class="ml-2 w-4 h-4 text-indigo-500"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- QCO Schedule -->
+                    <a href="pages/schedule.html"
+                        class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
+                        </div>
+                        <div
+                            class="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-bl-[4rem] -mr-8 -mt-8 group-hover:scale-125 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                        </div>
+
+                        <div class="relative z-10 h-full flex flex-col">
+                            <div
+                                class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-violet-600 mb-6 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                                <i data-lucide="calendar" class="w-7 h-7"></i>
+                            </div>
+                            <h3
+                                class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-violet-600 transition-colors">
+                                QCO Schedule</h3>
+                            <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">Manage changeover dates
+                                and
+                                timelines for all Unique Numbers.</p>
+
+                            <div class="flex items-center justify-between mt-auto">
+                                <span
+                                    class="flex items-center text-sm font-bold text-slate-900 group-hover:translate-x-2 transition-transform duration-300">
+                                    Manage Schedule <i data-lucide="arrow-right"
+                                        class="ml-2 w-4 h-4 text-violet-500"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Activity Checklist -->
+                    <a href="pages/checklist.html"
+                        class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
+                        </div>
+                        <div
+                            class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-bl-[4rem] -mr-8 -mt-8 group-hover:scale-125 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                        </div>
+
+                        <div class="relative z-10 h-full flex flex-col">
+                            <div
+                                class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-emerald-600 mb-6 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                                <i data-lucide="clipboard-list" class="w-7 h-7"></i>
+                            </div>
+                            <h3
+                                class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-emerald-600 transition-colors">
+                                Checklist</h3>
+                            <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">Track daily tasks,
+                                monitor
+                                process completion, and ensure SOP adherence.</p>
+
+                            <div class="flex items-center justify-between mt-auto">
+                                <span
+                                    class="flex items-center text-sm font-bold text-slate-900 group-hover:translate-x-2 transition-transform duration-300">
+                                    View Tasks <i data-lucide="arrow-right" class="ml-2 w-4 h-4 text-emerald-500"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- QCO Recorder -->
+                    <a href="pages/recorder.html"
+                        class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
+                        </div>
+                        <div
+                            class="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-bl-[4rem] -mr-8 -mt-8 group-hover:scale-125 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                        </div>
+
+                        <div class="relative z-10 h-full flex flex-col">
+                            <div
+                                class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-amber-600 mb-6 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                                <i data-lucide="mic" class="w-7 h-7"></i>
+                            </div>
+                            <h3
+                                class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-amber-600 transition-colors">
+                                Recorder</h3>
+                            <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">Capture verbal updates,
+                                session notes, and maintain audio audit trails.</p>
+
+                            <div class="flex items-center justify-between mt-auto">
+                                <span
+                                    class="flex items-center text-sm font-bold text-slate-900 group-hover:translate-x-2 transition-transform duration-300">
+                                    Open Recorder <i data-lucide="arrow-right" class="ml-2 w-4 h-4 text-amber-500"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Summary & Reports -->
+                    <a href="pages/summary.html"
+                        class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
+                        <div
+                            class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
+                        </div>
+                        <div
+                            class="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 rounded-bl-[4rem] -mr-8 -mt-8 group-hover:scale-125 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                        </div>
+
+                        <div class="relative z-10 h-full flex flex-col">
+                            <div
+                                class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-rose-600 mb-6 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                                <i data-lucide="file-text" class="w-7 h-7"></i>
+                            </div>
+                            <h3
+                                class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-rose-600 transition-colors">
+                                Reports</h3>
+                            <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">Access historical data
+                                archives and generate comprehensive reports.</p>
+
+                            <div class="flex items-center justify-between mt-auto">
+                                <span
+                                    class="flex items-center text-sm font-bold text-slate-900 group-hover:translate-x-2 transition-transform duration-300">
+                                    View Archives <i data-lucide="arrow-right" class="ml-2 w-4 h-4 text-rose-500"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-white/40 backdrop-blur-md border-t border-slate-200/50 mt-auto py-8 relative z-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+                <p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">
+                    © 2026 Manufacturing Excellence
+                </p>
+                <div class="flex items-center gap-2 text-[10px] font-bold text-slate-400 tracking-widest uppercase">
+                    <i data-lucide="lock" class="w-3 h-3 text-slate-300"></i> Authorized Access Only
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Application Logic -->
+    <script>
+        // --- Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCayfWGQP1t3oBU9eFj-3Ww0uu7nSl3Q4g",
+            authDomain: "sidneymailer.firebaseapp.com",
+            projectId: "sidneymailer",
+            storageBucket: "sidneymailer.firebasestorage.app",
+            messagingSenderId: "911316068119",
+            appId: "1:911316068119:web:ce23dbe663dc385a81f952",
+            measurementId: "G-NJ0QH6DEXG"
+        };
+
+        // --- State ---
+        let db, auth, currentUser = null, sessionStartTime = null, isFirebaseConnected = false;
+        let lenis;
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+            initLenis();
+            initCursor();
+
+            // Initial Animation Setup
+            gsap.set("#mainApp", { autoAlpha: 0 }); // Ensure dashboard is hidden
+            splitTextAnimations();
+            runLoginIntro();
+
+            try {
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                auth = firebase.auth();
+                isFirebaseConnected = true;
+
+                db.collection('system').doc('connection-test').set({
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    status: 'online'
+                }, { merge: true }).catch(() => { });
+
+                setTimeout(checkExistingSession, 500);
+            } catch (e) {
+                console.warn('Firebase init failed:', e);
+                initializeLocalStorage();
+                checkExistingSession();
+            }
+        });
+
+        // --- Animations ---
+
+        function initLenis() {
+            lenis = new Lenis({
+                duration: 1.5,
+                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // Exponential easing for "heavy" feel
+                smooth: true,
+                mouseMultiplier: 1,
+            });
+            function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+            requestAnimationFrame(raf);
+        }
+
+        function initCursor() {
+            const dot = document.querySelector('.cursor-dot');
+            const outline = document.querySelector('.cursor-outline');
+
+            window.addEventListener('mousemove', (e) => {
+                gsap.to(dot, { x: e.clientX, y: e.clientY, duration: 0.1, ease: "power2.out" });
+                gsap.to(outline, { x: e.clientX, y: e.clientY, duration: 0.5, ease: "power2.out" });
+            });
+
+            const interactiveEls = document.querySelectorAll('a, button, input');
+            interactiveEls.forEach(el => {
+                el.addEventListener('mouseenter', () => {
+                    gsap.to(outline, { scale: 1.5, backgroundColor: "rgba(14, 165, 233, 0.1)", borderColor: "transparent", duration: 0.3 });
+                });
+                el.addEventListener('mouseleave', () => {
+                    gsap.to(outline, { scale: 1, backgroundColor: "transparent", borderColor: "rgba(14, 165, 233, 0.3)", duration: 0.3 });
+                });
+            });
+        }
+
+        // Advanced Split Text Utility
+        function splitTextAnimations() {
+            const targets = document.querySelectorAll('.split-header');
+            targets.forEach(target => {
+                const text = target.innerText;
+                target.innerHTML = '';
+                const words = text.split(' ');
+
+                words.forEach((word) => {
+                    const wordDiv = document.createElement('div');
+                    wordDiv.style.display = 'inline-block';
+                    wordDiv.style.overflow = 'hidden';
+                    wordDiv.style.marginRight = '0.3em';
+                    wordDiv.className = 'split-parent';
+
+                    const innerSpan = document.createElement('span');
+                    innerSpan.className = 'split-child';
+                    innerSpan.innerText = word;
+
+                    wordDiv.appendChild(innerSpan);
+                    target.appendChild(wordDiv);
+                });
+            });
+        }
+
+        function runLoginIntro() {
+            const tl = gsap.timeline();
+
+            tl.to('.login-card', { opacity: 1, y: 0, duration: 1.2, ease: "power4.out" })
+                .to('.logo-icon', { scale: 1, rotation: 0, duration: 0.8, ease: "back.out(1.7)" }, "-=0.8")
+                .fromTo('.split-child',
+                    { y: "110%", rotation: 5 },
+                    { y: "0%", rotation: 0, duration: 1, ease: "power4.out", stagger: 0.05 }, "-=0.6")
+                .to('.input-group, .btn-login, .footer-text', {
+                    opacity: 1, y: 0, duration: 0.8, ease: "power3.out", stagger: 0.1
+                }, "-=0.4");
+        }
+
+        function transitionToDashboard() {
+            const tl = gsap.timeline();
+
+            // 1. Clean Exit Login
+            tl.to('.login-card', {
+                scale: 0.95, opacity: 0, y: -20, filter: "blur(10px)", duration: 0.6, ease: "power3.in"
+            })
+                .to('#loginScreen', {
+                    opacity: 0, duration: 0.4,
+                    onComplete: () => {
+                        document.getElementById('loginScreen').classList.add('hidden');
+                        const app = document.getElementById('mainApp');
+                        app.classList.remove('hidden');
+                        app.classList.add('flex');
+                        lenis.resize(); // Reset scroll
+                    }
+                })
+                // 2. Dashboard Reveal
+                .to('#mainApp', { autoAlpha: 1, duration: 0.1 })
+                .fromTo('#navbar', { y: -100 }, { y: 0, duration: 1, ease: "power4.out" })
+                .fromTo('.hero-split-text .split-child',
+                    { y: "110%" },
+                    { y: "0%", duration: 1.2, ease: "power4.out", stagger: 0.03 }, "-=0.8")
+                .fromTo('.hero-subtitle',
+                    { opacity: 0, y: 20 },
+                    { opacity: 1, y: 0, duration: 1, ease: "power3.out" }, "-=0.8")
+                // 3. Staggered Cards
+                .fromTo('.dashboard-card',
+                    { y: 100, opacity: 0 },
+                    { y: 0, opacity: 1, duration: 1, ease: "power4.out", stagger: 0.1 }, "-=0.6");
+
+            initDashboardInteractions();
+        }
+
+        function initDashboardInteractions() {
+            // Elastic Hover Effect
+            const cards = document.querySelectorAll('.dashboard-card');
+            cards.forEach(card => {
+                const cardContent = card.querySelector('.relative.z-10');
+
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const xPercent = (x / rect.width - 0.5) * 10; // Tilt amount
+                    const yPercent = (y / rect.height - 0.5) * 10;
+
+                    gsap.to(card, {
+                        rotationY: xPercent,
+                        rotationX: -yPercent,
+                        transformPerspective: 1000,
+                        duration: 0.4,
+                        ease: "power2.out"
+                    });
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    gsap.to(card, { rotationY: 0, rotationX: 0, duration: 0.8, ease: "elastic.out(1, 0.5)" });
+                });
+            });
+
+            // Parallax Background
+            window.addEventListener('mousemove', (e) => {
+                const x = (e.clientX / window.innerWidth - 0.5) * 2;
+                const y = (e.clientY / window.innerHeight - 0.5) * 2;
+
+                gsap.to('.parallax-layer', {
+                    x: (i, target) => x * 50 * (i + 1),
+                    y: (i, target) => y * 50 * (i + 1),
+                    duration: 1.5,
+                    ease: "power2.out"
+                });
+            });
+        }
+
+        // --- Auth Logic (Preserved) ---
+        async function authenticateUser() {
+            const pwdInput = document.getElementById('loginPassword');
+            const btn = document.getElementById('loginBtn');
+            const password = pwdInput.value.trim();
+
+            if (!password) {
+                gsap.fromTo(pwdInput.parentElement, { x: -10 }, { x: 0, duration: 0.4, ease: "elastic.out(1, 0.3)" });
+                return showError("Please enter a password");
+            }
+
+            // Loading UI
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+            btn.disabled = true;
+
+            setTimeout(async () => { // Fake delay for UX
+                let user = null;
+                try {
+                    if (isFirebaseConnected) {
+                        const snap = await db.collection('users').where('password', '==', password).get();
+                        if (!snap.empty) {
+                            user = { ...snap.docs[0].data(), id: snap.docs[0].id };
+                            db.collection('users').doc(user.id).update({ lastLogin: firebase.firestore.FieldValue.serverTimestamp() });
+                        }
+                    }
+                    if (!user) {
+                        const local = JSON.parse(localStorage.getItem('qcoSystemUsers') || '[]');
+                        user = local.find(u => u.password === password);
+                    }
+
+                    if (user) {
+                        currentUser = user;
+                        sessionStartTime = new Date();
+                        startUserSession();
+                    } else {
+                        throw new Error('Invalid credentials');
+                    }
+                } catch (e) {
+                    showError("Access denied. Invalid password.");
+                    btn.innerHTML = originalContent;
+                    btn.disabled = false;
+                }
+            }, 800);
+        }
+
+        function startUserSession() {
+            localStorage.setItem('qcoCurrentUser', JSON.stringify(currentUser));
+            localStorage.setItem('qcoSessionActive', 'true');
+            localStorage.setItem('qcoSessionStart', sessionStartTime.toISOString());
+            updateUI();
+            transitionToDashboard();
+        }
+
+        function checkExistingSession() {
+            const active = localStorage.getItem('qcoSessionActive');
+            if (active === 'true') {
+                try {
+                    currentUser = JSON.parse(localStorage.getItem('qcoCurrentUser'));
+                    sessionStartTime = new Date(localStorage.getItem('qcoSessionStart'));
+                    updateUI();
+
+                    // Instant Transition (Skip Login)
+                    document.getElementById('loginScreen').classList.add('hidden');
+                    const app = document.getElementById('mainApp');
+                    app.classList.remove('hidden');
+                    app.classList.add('flex');
+
+                    // Animate Dashboard In
+                    gsap.to('#mainApp', { autoAlpha: 1 });
+                    gsap.fromTo('#navbar', { y: -100 }, { y: 0, duration: 1, ease: "power4.out" });
+                    gsap.fromTo('.dashboard-card',
+                        { y: 50, opacity: 0 },
+                        { y: 0, opacity: 1, duration: 0.8, stagger: 0.1, ease: "power2.out", delay: 0.2 });
+
+                    initDashboardInteractions();
+                    lenis.resize();
+                } catch (e) { logout(); }
+            } else {
+                initializeLocalStorage();
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('qcoCurrentUser');
+            localStorage.removeItem('qcoSessionActive');
+            localStorage.removeItem('qcoSessionStart');
+            currentUser = null;
+
+            // Reverse Transition
+            gsap.to('#mainApp', {
+                autoAlpha: 0, scale: 0.98, duration: 0.5, onComplete: () => {
+                    document.getElementById('mainApp').classList.add('hidden');
+                    document.getElementById('loginScreen').classList.remove('hidden');
+                    gsap.set('.login-card', { opacity: 0, y: 20 });
+                    runLoginIntro();
+                }
+            });
+            showNotification("Signed out successfully", 'info');
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('loginError');
+            el.querySelector('span').textContent = msg;
+            el.classList.remove('hidden');
+            gsap.fromTo(el, { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.3 });
+        }
+
+        function updateUI() {
+            if (!currentUser) return;
+            document.querySelectorAll('.user-name-display').forEach(el => el.textContent = currentUser.name);
+            document.querySelectorAll('.user-email-display').forEach(el => el.textContent = currentUser.email);
+        }
+
+        function togglePassword() {
+            const inp = document.getElementById('loginPassword');
+            const icon = document.getElementById('toggleIcon');
+            if (inp.type === "password") {
+                inp.type = "text";
+                icon.classList.replace("fa-eye", "fa-eye-slash");
+            } else {
+                inp.type = "password";
+                icon.classList.replace("fa-eye-slash", "fa-eye");
+            }
+        }
+
+        function toggleDropdown() {
+            const dd = document.getElementById('userDropdown');
+            if (dd.classList.contains('hidden')) {
+                dd.classList.remove('hidden');
+                gsap.fromTo(dd, { opacity: 0, scale: 0.95, y: -10 }, { opacity: 1, scale: 1, y: 0, duration: 0.4, ease: "back.out(1.7)" });
+            } else {
+                gsap.to(dd, { opacity: 0, scale: 0.95, y: -10, duration: 0.2, onComplete: () => dd.classList.add('hidden') });
+            }
+        }
+
+        function showNotification(msg, type) {
+            const c = document.getElementById('notificationContainer');
+            const d = document.createElement('div');
+            const colors = { success: 'bg-emerald-500', error: 'bg-red-500', info: 'bg-blue-500' };
+            d.className = `p-4 rounded-xl shadow-lg text-white font-medium ${colors[type] || colors.info} transform translate-x-full pointer-events-auto`;
+            d.innerHTML = `<i class="fas fa-info-circle mr-2"></i> ${msg}`;
+            c.appendChild(d);
+            gsap.to(d, { x: 0, duration: 0.5, ease: "back.out" });
+            setTimeout(() => { gsap.to(d, { x: 200, opacity: 0, duration: 0.5, onComplete: () => d.remove() }) }, 3000);
+        }
+
+        function initializeLocalStorage() {
+            if (!localStorage.getItem('qcoSystemUsers')) {
+                const users = [
+                    { name: "Mr. Shantanu", password: "welcome@123", role: "admin", email: "shantanu@sidneyapparels.co" },
+                    { name: "Mr. Tharun", password: "tharun123", role: "user", email: "tharun@sidneyapparels.co" }
+                ];
+                localStorage.setItem('qcoSystemUsers', JSON.stringify(users));
+            }
+        }
+
+        // Close dropdown on click outside
+        window.addEventListener('click', (e) => {
+            if (!e.target.closest('#userMenuBtn') && !e.target.closest('#userDropdown')) {
+                const dd = document.getElementById('userDropdown');
+                if (dd && !dd.classList.contains('hidden')) toggleDropdown();
+            }
+        });
+    </script>
+    <!-- Settings Modal -->
+    <div id="settingsModal"
+        class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div class="glass w-full max-w-lg p-8 rounded-2xl shadow-2xl transform transition-all scale-95 opacity-0 bg-white"
+            id="settingsPanel">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-slate-800"><i class="fas fa-sliders-h mr-2 text-blue-600"></i> Global
+                    Settings</h3>
+                <button onclick="closeSettings()" class="text-slate-400 hover:text-slate-600"><i
+                        class="fas fa-times text-xl"></i></button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Backend URL (Nodemailer)</label>
+                    <input type="text" id="settingBackendUrl"
+                        class="w-full p-3 bg-white/50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
+                        placeholder="http://localhost:3000">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Default Meeting Time</label>
+                    <input type="time" id="settingMeetingTime"
+                        class="w-full p-3 bg-white/50 border border-slate-200 rounded-xl outline-none">
+                </div>
+                <div class="flex items-center justify-between p-3 bg-white/40 rounded-xl border border-white/50">
+                    <span class="text-sm font-bold text-slate-700">Auto-Save Sessions</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="settingAutoSave" class="sr-only peer">
+                        <div
+                            class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="mt-8 flex justify-end gap-3">
+                <button onclick="closeSettings()"
+                    class="px-4 py-2 text-slate-500 font-bold hover:bg-slate-100 rounded-lg transition-colors">Cancel</button>
+                <button onclick="saveSettings()"
+                    class="px-6 py-2 bg-slate-900 text-white font-bold rounded-lg shadow-lg hover:shadow-xl hover:scale-105 transition-all">Save
+                    Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Settings Logic
+        function openSettings(e) {
+            if (e) e.preventDefault();
+            const modal = document.getElementById('settingsModal');
+            const panel = document.getElementById('settingsPanel');
+            const settings = JSON.parse(localStorage.getItem('appSettings')) || {};
+
+            // Load Values
+            document.getElementById('settingBackendUrl').value = settings.backendUrl || 'http://localhost:3000';
+            document.getElementById('settingMeetingTime').value = settings.defaultMeetingTime || '09:00';
+            document.getElementById('settingAutoSave').checked = settings.autoSave !== false;
+
+            modal.classList.remove('hidden');
+            gsap.to(panel, { scale: 1, opacity: 1, duration: 0.3, ease: 'back.out' });
+        }
+
+        function closeSettings() {
+            const modal = document.getElementById('settingsModal');
+            const panel = document.getElementById('settingsPanel');
+            gsap.to(panel, { scale: 0.95, opacity: 0, duration: 0.2, onComplete: () => modal.classList.add('hidden') });
+        }
+
+        function saveSettings() {
+            const settings = {
+                backendUrl: document.getElementById('settingBackendUrl').value,
+                defaultMeetingTime: document.getElementById('settingMeetingTime').value,
+                autoSave: document.getElementById('settingAutoSave').checked,
+                lastUpdated: new Date().toISOString()
+            };
+            localStorage.setItem('appSettings', JSON.stringify(settings));
+            showNotification('Settings saved successfully', 'success');
+            closeSettings();
+        }
+    </script>
+</body>
+
+</html>
