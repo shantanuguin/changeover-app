@@ -1206,7 +1206,7 @@
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 3000);
 
-                const response = await fetch(`${backendUrl}/health`, {
+                const response = await fetch(`${backendUrl}/api/health`, {
                     method: 'GET',
                     signal: controller.signal
                 });
@@ -1231,7 +1231,7 @@
             resultEl.classList.add('text-slate-600');
 
             try {
-                const response = await fetch(`${backendUrl}/health`);
+                const response = await fetch(`${backendUrl}/api/health`);
                 if (response.ok) {
                     resultEl.innerHTML = '<i class="fas fa-check-circle"></i> Connection Successful! Backend is online.';
                     resultEl.classList.remove('text-slate-600');
