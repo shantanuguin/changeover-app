@@ -780,6 +780,13 @@
             localStorage.setItem('qcoCurrentUser', JSON.stringify(currentUser));
             localStorage.setItem('qcoSessionActive', 'true');
             localStorage.setItem('qcoSessionStart', sessionStartTime.toISOString());
+
+            // Redirect Planning Users immediately
+            if (currentUser.role === 'planning') {
+                window.location.href = 'pages/schedule.html';
+                return;
+            }
+
             updateUI();
             transitionToDashboard();
         }

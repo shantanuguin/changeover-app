@@ -330,6 +330,11 @@
                 window.location.href = '../index.html';
                 return;
             }
+            // Navigation Guard for Planning Role
+            if (user.role === 'planning') {
+                window.location.replace('schedule.html');
+                return;
+            }
 
             // Init utils
             const lenis = new Lenis();

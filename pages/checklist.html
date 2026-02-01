@@ -987,6 +987,12 @@
                 return;
             }
 
+            // Navigation Guard for Planning Role
+            if (user.role === 'planning') {
+                window.location.replace('schedule.html');
+                return;
+            }
+
             lucide.createIcons();
             initFirebase();
             checkAuth(); // Verify session validity

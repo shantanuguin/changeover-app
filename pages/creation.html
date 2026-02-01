@@ -1423,6 +1423,7 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
                                 <select id="newUserRole" class="w-full p-2 border border-gray-300 rounded-lg">
                                     <option value="user">Regular User</option>
+                                    <option value="planning">Planning User</option>
                                     <option value="admin">Administrator</option>
                                 </select>
                             </div>
@@ -3521,6 +3522,13 @@
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', async function () {
+            // Navigation Guard for Planning Role
+            const localUser = JSON.parse(localStorage.getItem('qcoCurrentUser') || '{}');
+            if (localUser.role === 'planning') {
+                window.location.replace('schedule.html');
+                return;
+            }
+
             // Initialize Firebase first
             await initializeFirebase();
 

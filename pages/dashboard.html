@@ -952,6 +952,12 @@
             measurementId: "G-NJ0QH6DEXG"
         };
 
+        // Navigation Guard for Planning Role
+        const localUser = JSON.parse(localStorage.getItem('qcoCurrentUser') || '{}');
+        if (localUser.role === 'planning') {
+            window.location.replace('schedule.html');
+        }
+
         let db, auth;
         let currentUser = null;
         let allChangeovers = [];
