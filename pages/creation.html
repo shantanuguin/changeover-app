@@ -1631,7 +1631,7 @@
                 <div class="p-6 border-b border-gray-200 flex justify-between items-center">
                     <div>
                         <h3 class="text-xl font-bold text-gray-800">Changeover Details</h3>
-                        <p class="text-sm text-gray-500" id="modalQCOCode">QVJCO10001</p>
+                        <p class="text-sm text-gray-500" id="modalQCOCode">L-XXXX-XXXX-XX</p>
                     </div>
                     <button onclick="closeChangeoverModal()" class="text-gray-400 hover:text-gray-600">
                         <i class="fas fa-times text-xl"></i>
@@ -2144,7 +2144,7 @@
                             <div>
                                 <h3 class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Changeover
                                     Reference Number</h3>
-                                <div class="qco-highlight" id="qcoNumberDisplay">QVJCO10001</div>
+                                <div class="qco-highlight" id="qcoNumberDisplay">L-XXXX-XXXX-XX</div>
                             </div>
                             <div class="text-right">
                                 <p class="text-xs text-gray-500">Created by</p>
@@ -2315,20 +2315,11 @@
                                 <h2 class="text-xl font-bold text-gray-800 mb-2">Changeover Meeting Email</h2>
                                 <p class="text-sm text-gray-600">Auto-generated based on machine analysis and personnel
                                     allocation</p>
-                                <div class="mt-2 qco-highlight" id="emailQCONumber">QVJCO10001</div>
+                                <div class="mt-2 qco-highlight" id="emailQCONumber">L-XXXX-XXXX-XX</div>
                             </div>
                             <div class="flex space-x-3 flex-wrap gap-2">
-                                <button onclick="copyEmail()" class="email-action-btn btn-copy">
-                                    <i class="fas fa-copy mr-2"></i> Copy Email
-                                </button>
-                                <button onclick="sendEmailOutlook()" class="email-action-btn btn-outlook">
-                                    <i class="fas fa-paper-plane mr-2"></i> Send via Outlook
-                                </button>
                                 <button onclick="sendEmailSMTP()" class="email-action-btn btn-smtp">
                                     <i class="fas fa-envelope mr-2"></i> Send via Nodemailer
-                                </button>
-                                <button onclick="downloadEmail()" class="email-action-btn btn-download">
-                                    <i class="fas fa-download mr-2"></i> Download
                                 </button>
                                 <button onclick="printEmail()" class="email-action-btn bg-gray-600 text-white">
                                     <i class="fas fa-print mr-2"></i> Print
@@ -2727,6 +2718,11 @@
                             qam: "",
                             mechIncharge: "",
                             technical: "",
+                            planning: "",
+                            production: "",
+                            fabric: "",
+                            cutting: "",
+                            maintenance: "",
                             lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
                         };
                     });
@@ -2811,56 +2807,77 @@
         // QCO Number Management
         // QCO Number Management
         async function getNextQCONumber(lineNumber, currentStyle, upcomingStyle) {
-            if (!lineNumber || !currentStyle || !upcomingStyle) {
-                console.error("Missing data for QCO ID generation");
-                // Fallback to local counter if data missing
-                const localQCO = localStorage.getItem('qcoCounter') || 10000;
-                const next = parseInt(localQCO) + 1;
-                localStorage.setItem('qcoCounter', next);
-                return `QVJCO${next}`;
-            }
-
-            const cleanLine = lineNumber.toString();
-            // Get last 3 digits, remove any non-alphanumeric chars if needed, but requirements say "Last 3 digits"
-            // We assume implies last 3 characters of the string.
-            const curLast3 = currentStyle.length > 3 ? currentStyle.slice(-3) : currentStyle.padStart(3, '0');
-            const nextLast3 = upcomingStyle.length > 3 ? upcomingStyle.slice(-3) : upcomingStyle.padStart(3, '0');
-
-            // Base ID for query
-            const idPrefix = `${cleanLine}${curLast3}${nextLast3}`;
+            const cleanLine = lineNumber ? lineNumber.toString().replace(/[^0-9A-Z]/gi, '') : "0";
+            const curLast3 = currentStyle ? (currentStyle.length > 3 ? currentStyle.slice(-3) : currentStyle.padStart(3, '0')) : "000";
+            const nextLast3 = upcomingStyle ? (upcomingStyle.length > 3 ? upcomingStyle.slice(-3) : upcomingStyle.padStart(3, '0')) : "000";
 
             if (isFirebaseConnected) {
                 try {
-                    // Query for existing changeovers with same parameters to determine sequence
-                    // We query by the structured fields to be precise
-                    const snapshot = await db.collection('changeovers')
-                        .where('lineNumber', '==', cleanLine)
-                        .where('currentStyle', '==', currentStyle)
-                        .where('upcomingStyle', '==', upcomingStyle)
-                        .get();
+                    addFirebaseLog('Generating QCO number via Firebase transaction...', 'info');
 
-                    const count = snapshot.size;
-                    const nextSeq = (count + 1).toString().padStart(2, '0');
+                    // Construct the Unique Key for this specific combo
+                    const uniqueKey = `L${cleanLine}-${curLast3}-${nextLast3}`;
+                    const sequenceRef = db.collection('qco_sequences').doc(uniqueKey);
 
-                    const newId = `${cleanLine}${curLast3}${nextLast3}${nextSeq}`;
-                    addFirebaseLog(`Generated new QCO number: ${newId}`, 'info');
+                    const nextSeq = await db.runTransaction(async (transaction) => {
+                        const doc = await transaction.get(sequenceRef);
+                        let seq = 1;
+
+                        if (doc.exists) {
+                            seq = (doc.data().count || 0) + 1;
+                        }
+
+                        transaction.set(sequenceRef, {
+                            count: seq,
+                            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true });
+
+                        return seq;
+                    });
+
+                    // Format: L + Line + Cur3 + Next3 + Seq (01, 02... 99, 100...)
+                    const seqStr = nextSeq.toString().padStart(2, '0');
+                    const newId = `L${cleanLine}${curLast3}${nextLast3}${seqStr}`;
+
+                    addFirebaseLog(`Generated synced QCO number: ${newId}`, 'success');
                     return newId;
 
                 } catch (error) {
-                    addFirebaseLog(`Error generating QCO number: ${error.message}`, 'error');
-                    return `${cleanLine}${curLast3}${nextLast3}01`; // Default to 01 on error
+                    addFirebaseLog(`Error in QCO sync transaction: ${error.message}`, 'error');
+                    // Fallback to querying changeovers if transaction fails
+                    // Try to count existing changeovers for this specific combination
+                    const prefix = `L${cleanLine}${curLast3}${nextLast3}`;
+                    /* 
+                       Note: A true "startsWith" query in Firestore requires a range query.
+                       We query for IDs >= prefix and < prefix + last_char_increment
+                    */
+                    try {
+                        const endPrefix = prefix + '\uf8ff';
+                        const snapshot = await db.collection('changeovers')
+                            .where('qcoNumber', '>=', prefix)
+                            .where('qcoNumber', '<=', endPrefix)
+                            .get();
+
+                        const nextSeq = (snapshot.size + 1).toString().padStart(2, '0');
+                        return `${prefix}${nextSeq}`;
+                    } catch (fallbackError) {
+                        // Ultimate fallback if query fails
+                        return `${prefix}01`;
+                    }
                 }
             } else {
-                // Offline handling - maybe just random or timestamp? 
-                // User asked for specific format which requires DB check for sequence.
-                // We will append a timestamp for uniqueness in offline mode to avoid collision
-                const nextSeq = "01";
-                return `${cleanLine}${curLast3}${nextLast3}${nextSeq}`;
+                // Offline fallback - use localStorage per combo
+                const uniqueKey = `qco_seq_L${cleanLine}-${curLast3}-${nextLast3}`;
+                const localSeq = localStorage.getItem(uniqueKey) || 0;
+                const next = parseInt(localSeq) + 1;
+                localStorage.setItem(uniqueKey, next);
+                const seqStr = next.toString().padStart(2, '0');
+                return `L${cleanLine}${curLast3}${nextLast3}${seqStr}`;
             }
         }
 
         async function deleteQCONumber(qcoNumber) {
-            const num = parseInt(qcoNumber.replace('QVJCO', ''));
+            const num = parseInt(qcoNumber.replace(/[^0-9]/g, ''));
 
             if (isFirebaseConnected) {
                 try {
@@ -2937,7 +2954,9 @@
             noData.classList.add('hidden');
             container.innerHTML = '';
 
-            changeovers.forEach(co => {
+            container.innerHTML = '';
+
+            changeovers.forEach((co, index) => {
                 const card = document.createElement('div');
                 card.className = 'changeover-card';
                 card.onclick = () => openChangeoverModal(co);
@@ -2948,7 +2967,7 @@
                 card.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>
-                            <span class="qco-code">${co.qcoNumber}</span>
+                            <span class="qco-code">#${changeovers.length - index} | ${co.qcoNumber}</span>
                             <p class="mt-2 font-semibold text-gray-800">Line ${co.lineNumber || 'Unknown'}</p>
                             <p class="text-sm text-gray-600">${co.currentStyle || 'Unknown'} → ${co.upcomingStyle || 'Unknown'}</p>
                         </div>
@@ -3946,6 +3965,11 @@
                         qam: "",
                         mechIncharge: "",
                         technical: "",
+                        planning: "",
+                        production: "",
+                        fabric: "",
+                        cutting: "",
+                        maintenance: "",
                         lastUpdated: new Date().toISOString()
                     };
                 }
@@ -4021,75 +4045,60 @@
 
                 row.innerHTML = `
                     <td class="font-medium text-gray-900">${line}</td>
+                    <!-- Supervisor -->
                     <td class="email-input-cell">
-                        <input type="email" 
-                               class="w-full p-2 border border-gray-300 rounded-lg text-sm email-input"
-                               data-line="${line}"
-                               data-role="supervisor"
-                               value="${lineData.supervisor || ''}"
-                               placeholder="supervisor@domain.com"
-                               onchange="updateEmailField(this)"
-                               onblur="updateEmailField(this)">
+                        <input type="email" class="w-full p-2 border border-gray-300 rounded-lg text-sm email-input"
+                               data-line="${line}" data-role="supervisor" value="${lineData.supervisor || ''}" placeholder="Sup" onchange="updateEmailField(this)">
                     </td>
+                    <!-- RQC -->
                     <td class="email-input-cell">
-                        <input type="email" 
-                               class="w-full p-2 border border-gray-300 rounded-lg text-sm email-input"
-                               data-line="${line}"
-                               data-role="rqc"
-                               value="${lineData.rqc || ''}"
-                               placeholder="rqc@domain.com"
-                               onchange="updateEmailField(this)"
-                               onblur="updateEmailField(this)">
+                        <input type="email" class="w-full p-2 border border-gray-300 rounded-lg text-sm email-input"
+                               data-line="${line}" data-role="rqc" value="${lineData.rqc || ''}" placeholder="RQC" onchange="updateEmailField(this)">
                     </td>
+                    <!-- IE -->
                     <td class="email-input-cell">
-                        <input type="email" 
-                               class="w-full p-2 border border-gray-300 rounded-lg text-sm email-input"
-                               data-line="${line}"
-                               data-role="ie"
-                               value="${lineData.ie || ''}"
-                               placeholder="ie@domain.com"
-                               onchange="updateEmailField(this)"
-                               onblur="updateEmailField(this)">
+                        <input type="email" class="w-full p-2 border border-gray-300 rounded-lg text-sm email-input"
+                               data-line="${line}" data-role="ie" value="${lineData.ie || ''}" placeholder="IE" onchange="updateEmailField(this)">
                     </td>
+                    <!-- Line Incharge -->
                     <td class="email-input-cell">
-                        <input type="email" 
-                               class="w-full p-2 border border-gray-300 rounded-lg text-sm email-input"
-                               data-line="${line}"
-                               data-role="lineIncharge"
-                               value="${lineData.lineIncharge || ''}"
-                               placeholder="lineincharge@domain.com"
-                               onchange="updateEmailField(this)"
-                               onblur="updateEmailField(this)">
+                        <input type="email" class="w-full p-2 border border-gray-300 rounded-lg text-sm email-input"
+                               data-line="${line}" data-role="lineIncharge" value="${lineData.lineIncharge || ''}" placeholder="Incharge" onchange="updateEmailField(this)">
                     </td>
+                    <!-- Planning (NEW) -->
                     <td class="email-input-cell">
-                        <input type="email" 
-                               class="w-full p-2 border border-gray-300 rounded-lg text-sm email-input"
-                               data-line="${line}"
-                               data-role="qam"
-                               value="${lineData.qam || ''}"
-                               placeholder="qam@domain.com"
-                               onchange="updateEmailField(this)"
-                               onblur="updateEmailField(this)">
+                        <input type="email" class="w-full p-2 border border-gray-300 rounded-lg text-sm email-input"
+                               data-line="${line}" data-role="planning" value="${lineData.planning || ''}" placeholder="Planning" onchange="updateEmailField(this)">
                     </td>
+                     <!-- Maintenance (NEW) -->
                     <td class="email-input-cell">
-                        <input type="email" 
-                               class="w-full p-2 border border-gray-300 rounded-lg text-sm email-input"
-                               data-line="${line}"
-                               data-role="mechIncharge"
-                               value="${lineData.mechIncharge || ''}"
-                               placeholder="mechincharge@domain.com"
-                               onchange="updateEmailField(this)"
-                               onblur="updateEmailField(this)">
+                        <input type="email" class="w-full p-2 border border-gray-300 rounded-lg text-sm email-input"
+                               data-line="${line}" data-role="maintenance" value="${lineData.maintenance || ''}" placeholder="Maint" onchange="updateEmailField(this)">
                     </td>
+                     <!-- Technical (NEW) -->
                     <td class="email-input-cell">
-                        <input type="email" 
-                               class="w-full p-2 border border-gray-300 rounded-lg text-sm email-input"
-                               data-line="${line}"
-                               data-role="technical"
-                               value="${lineData.technical || ''}"
-                               placeholder="technical@domain.com"
-                               onchange="updateEmailField(this)"
-                               onblur="updateEmailField(this)">
+                        <input type="email" class="w-full p-2 border border-gray-300 rounded-lg text-sm email-input"
+                               data-line="${line}" data-role="technical" value="${lineData.technical || ''}" placeholder="Tech" onchange="updateEmailField(this)">
+                    </td>
+                     <!-- Quality/QAM -->
+                    <td class="email-input-cell">
+                        <input type="email" class="w-full p-2 border border-gray-300 rounded-lg text-sm email-input"
+                               data-line="${line}" data-role="qam" value="${lineData.qam || ''}" placeholder="QAM" onchange="updateEmailField(this)">
+                    </td>
+                     <!-- Production -->
+                    <td class="email-input-cell">
+                        <input type="email" class="w-full p-2 border border-gray-300 rounded-lg text-sm email-input"
+                               data-line="${line}" data-role="production" value="${lineData.production || ''}" placeholder="Prod" onchange="updateEmailField(this)">
+                    </td>
+                     <!-- Fabric -->
+                    <td class="email-input-cell">
+                        <input type="email" class="w-full p-2 border border-gray-300 rounded-lg text-sm email-input"
+                               data-line="${line}" data-role="fabric" value="${lineData.fabric || ''}" placeholder="Fabric" onchange="updateEmailField(this)">
+                    </td>
+                    <!-- Cutting -->
+                    <td class="email-input-cell">
+                        <input type="email" class="w-full p-2 border border-gray-300 rounded-lg text-sm email-input"
+                               data-line="${line}" data-role="cutting" value="${lineData.cutting || ''}" placeholder="Cutting" onchange="updateEmailField(this)">
                     </td>
                     <td>
                         <button onclick="clearLineEmails('${line}')" 
@@ -4128,6 +4137,11 @@
                     qam: "",
                     mechIncharge: "",
                     technical: "",
+                    planning: "",
+                    production: "",
+                    fabric: "",
+                    cutting: "",
+                    maintenance: "",
                     lastUpdated: new Date().toISOString()
                 };
             }
@@ -4164,6 +4178,11 @@
                         qam: "",
                         mechIncharge: "",
                         technical: "",
+                        planning: "",
+                        production: "",
+                        fabric: "",
+                        cutting: "",
+                        maintenance: "",
                         lastUpdated: new Date().toISOString()
                     };
 
@@ -4292,6 +4311,11 @@
                             qam: "",
                             mechIncharge: "",
                             technical: "",
+                            planning: "",
+                            production: "",
+                            fabric: "",
+                            cutting: "",
+                            maintenance: "",
                             lastUpdated: new Date().toISOString()
                         };
                     }
@@ -4357,14 +4381,13 @@
         // ============================================
 
         function generateEmailRecipients() {
-            if (!selectedLine || !emailData[selectedLine]) {
-                return [];
-            }
-
-            const lineEmails = emailData[selectedLine];
             const recipients = new Set(); // Use Set to ensure uniqueness
 
-            // Add email IDs from Firebase
+            if (!selectedLine) return [];
+
+            const lineEmails = emailData[selectedLine] || {};
+
+            // Add email IDs from Firebase/Local
             if (lineEmails.supervisor) recipients.add(lineEmails.supervisor);
             if (lineEmails.rqc) recipients.add(lineEmails.rqc);
             if (lineEmails.ie) recipients.add(lineEmails.ie);
@@ -4372,6 +4395,11 @@
             if (lineEmails.qam) recipients.add(lineEmails.qam);
             if (lineEmails.mechIncharge) recipients.add(lineEmails.mechIncharge);
             if (lineEmails.technical) recipients.add(lineEmails.technical);
+            if (lineEmails.planning) recipients.add(lineEmails.planning);
+            if (lineEmails.production) recipients.add(lineEmails.production);
+            if (lineEmails.fabric) recipients.add(lineEmails.fabric);
+            if (lineEmails.cutting) recipients.add(lineEmails.cutting);
+            if (lineEmails.maintenance) recipients.add(lineEmails.maintenance);
 
             // Add additional recipients from select2
             const additionalRecipients = $('#additionalRecipients').select2('data');
@@ -4407,8 +4435,16 @@
         function generateEmail() {
             if (!comparisonResults || !selectedLine || !currentOBData || !upcomingOBData) return;
 
-            const lineData = personnelData[selectedLine];
-            if (!lineData) return;
+            const lookupLine = document.getElementById('lineSelect').value;
+            const lineData = {
+                supervisor: document.getElementById('supervisorName').value.trim() || (personnelData[lookupLine]?.supervisor || "TBD"),
+                rqc: document.getElementById('rqcName').value.trim() || (personnelData[lookupLine]?.rqc || "TBD"),
+                ie: document.getElementById('ieName').value.trim() || (personnelData[lookupLine]?.ie || "TBD"),
+                lineIncharge: document.getElementById('lineIncharge').value.trim() || (personnelData[lookupLine]?.lineIncharge || "TBD"),
+                qam: document.getElementById('qamName').value.trim() || (personnelData[lookupLine]?.qam || "TBD"),
+                mechIncharge: document.getElementById('mechIncharge').value.trim() || (personnelData[lookupLine]?.mechIncharge || "TBD"),
+                technical: document.getElementById('technicalName').value.trim() || (personnelData[lookupLine]?.technical || "TBD")
+            };
 
             // Update QCO number display in email section
             if (currentQCONumber) {
@@ -4452,14 +4488,15 @@
                 }).join('\n');
             }
 
-            // Get email IDs for display
-            const lineEmails = emailData[selectedLine] || {};
+            // Get email IDs for display - lookup by parent line for complex lines
+            const lineEmails = emailData[lookupLine] || emailData[selectedLine] || {};
 
             // Generate HTML email content
             const htmlContent = generateHtmlEmailContent(criticalMachines, machinesToRelease, meetingDate, lineData, formattedDate, sign, smvChange, targetChange, machineList, releaseList, lineEmails);
 
-            // Generate plain text email content
-            const plainTextContent = generatePlainTextEmail(criticalMachines, machinesToRelease, meetingDate, lineData, formattedDate, sign, smvChange, targetChange, machineList, releaseList, lineEmails);
+            // Generate plain text email content/
+            // Note: Plain text is less prioritized now, simplified call
+            const plainTextContent = "Please use HTML view."; // simplified for now as HTML is primary
 
             // Update preview
             document.getElementById('emailPreviewContent').innerHTML = htmlContent;
@@ -4518,7 +4555,10 @@
                         CRITICAL LOGISTICS
                     </h3>
                     <div style="font-weight: bold; font-size: 1.1em; margin-bottom: 20px;">
-                        Date: ${formattedDate} @ ${meetingTime} | Line ${selectedLine}
+                        Date: ( to be decided by planning team ) | Line ${selectedLine}<br>
+                        <div style="margin-top: 10px;">
+                            <strong>Checklist:</strong> <a href="https://shantanuguin.github.io/sidneyme/outlist.html" style="color: #b91c1c; font-weight: bold; text-decoration: underline; background-color: #fee2e2; padding: 4px 8px; border-radius: 4px; border: 1px solid #fecaca;">Department Checklist Link</a>
+                        </div>
                     </div>
                     
                     <h3 style="color: ${headerColor}; border-bottom: 2px solid ${headerColor}40; padding-bottom: 8px; margin-top: 24px; margin-bottom: 16px;">
@@ -4535,26 +4575,19 @@
                     
                     ${criticalMachines.length > 0 ? `
                         <div style="background-color: #fef2f2; padding: 16px; border-radius: 6px; margin-bottom: 16px; border-left: 5px solid #dc2626;">
-                            <h4 style="margin-top: 0; margin-bottom: 12px; color: #991b1b; text-transform: uppercase;">🔥 MACHINES TO ADD IMMEDIATELY:</h4>
+                            <h4 style="margin-top: 0; margin-bottom: 12px; color: #991b1b; text-transform: uppercase;">MACHINES TO ADD IMMEDIATELY:</h4>
                             <pre style="margin: 0; font-family: inherit; white-space: pre-wrap; font-weight: bold; color: #7f1d1d;">${machineList}</pre>
                         </div>
                     ` : '<p style="color: #047857; font-weight: bold;">No new machines required.</p>'}
                     
-                    <h3 style="color: ${headerColor}; border-bottom: 2px solid ${headerColor}40; padding-bottom: 8px; margin-top: 24px; margin-bottom: 16px;">
-                        KEY ATTENDEES
-                    </h3>
-                    <p style="margin-bottom: 20px;">
-                        <strong>Supervisor:</strong> ${lineData.supervisor}<br>
-                        <strong>Maintenance:</strong> ${lineData.mechIncharge}<br>
-                        <strong>Quality:</strong> ${lineData.rqc}
-                    </p>
+                    ${this.generateStandardAttendeesSection(headerColor, lineData, lineEmails)}
                 `;
 
             } else if (template === 'detailed') {
                 headerColor = "#047857"; // Green
                 urgencyBanner = `
                 <div style="background-color: #ecfdf5; border: 1px solid #10b981; color: #065f46; padding: 12px; text-align: center; margin-bottom: 25px; border-radius: 8px;">
-                    <div style="font-weight: 600;">📊 Detailed Transition Analysis</div>
+                    <div style="font-weight: 600;">Detailed Transition Analysis</div>
                     <div style="font-size: 12px; opacity: 0.8;">Full comprehensive report for records and planning.</div>
                 </div>`;
 
@@ -4575,8 +4608,8 @@
                         MEETING LOGISTICS
                     </h3>
                     <table style="width: 100%; margin-bottom: 20px;">
-                        <tr><td style="width: 140px; font-weight: bold;">Date:</td><td>${formattedDate}</td></tr>
-                        <tr><td style="font-weight: bold;">Time:</td><td>${meetingTime}</td></tr>
+                        <tr><td style="width: 140px; font-weight: bold;">Date:</td><td>( to be decided by planning team )</td></tr>
+                        <tr><td style="font-weight: bold;">Checklist:</td><td><a href="https://shantanuguin.github.io/sidneyme/outlist.html" style="color: #047857; font-weight: bold; text-decoration: underline; background-color: #ecfdf5; padding: 3px 6px; border-radius: 4px; border: 1px solid #a7f3d0;">Department Checklist Link</a></td></tr>
                         <tr><td style="font-weight: bold;">Location:</td><td>Line ${selectedLine} - Production Floor</td></tr>
                         <tr><td style="font-weight: bold;">Purpose:</td><td>Detailed Layout & Resource Planning</td></tr>
                     </table>
@@ -4662,8 +4695,8 @@
                         MEETING LOGISTICS
                     </h3>
                     <table style="width: 100%; margin-bottom: 20px;">
-                        <tr><td style="width: 120px; padding: 4px 0;"><strong>Date:</strong></td><td style="padding: 4px 0;">${formattedDate}</td></tr>
-                        <tr><td style="padding: 4px 0;"><strong>Time:</strong></td><td style="padding: 4px 0;">${meetingTime}</td></tr>
+                        <tr><td style="width: 120px; padding: 4px 0;"><strong>Date:</strong></td><td style="padding: 4px 0;">( to be decided by planning team )</td></tr>
+                        <tr><td style="padding: 4px 0;"><strong>Checklist:</strong></td><td style="padding: 4px 0;"><a href="https://shantanuguin.github.io/sidneyme/outlist.html" style="color: #2563eb; font-weight: bold; text-decoration: underline; background-color: #eff6ff; padding: 4px 8px; border-radius: 4px; border: 1px solid #bfdbfe;">Department Checklist Link</a></td></tr>
                         <tr><td style="padding: 4px 0;"><strong>Location:</strong></td><td style="padding: 4px 0;">Line ${selectedLine} - Production Floor</td></tr>
                         <tr><td style="padding: 4px 0;"><strong>Purpose:</strong></td><td style="padding: 4px 0;">Pre-production layout review and resource allocation</td></tr>
                     </table>
@@ -4730,15 +4763,19 @@
                         REQUIRED ATTENDEES
                     </h3>
                     <ul style="margin: 0 0 20px 0; padding-left: 20px;">
-                        <li>${lineData.supervisor} ${lineEmails.supervisor ? `(${lineEmails.supervisor})` : ''}</li>
-                        <li>${lineData.rqc} ${lineEmails.rqc ? `(${lineEmails.rqc})` : ''}</li>
-                        <li>${lineData.ie} ${lineEmails.ie ? `(${lineEmails.ie})` : ''}</li>
-                        <li>${lineData.lineIncharge} ${lineEmails.lineIncharge ? `(${lineEmails.lineIncharge})` : ''}</li>
-                        ${lineData.qam ? `<li>${lineData.qam} ${lineEmails.qam ? `(${lineEmails.qam})` : ''}</li>` : ''}
-                        <li>${lineData.mechIncharge} ${lineEmails.mechIncharge ? `(${lineEmails.mechIncharge})` : ''}</li>
-                        <li>${lineData.technical} ${lineEmails.technical ? `(${lineEmails.technical})` : ''}</li>
-                        ${document.getElementById('includeMaintenance').checked ? '<li>Maintenance Department</li>' : ''}
-                        ${document.getElementById('includeManagement').checked ? '<li>Production Manager</li><li>IE Manager</li>' : ''}
+                        <li><strong>Supervisor:</strong> ${lineData.supervisor} ${lineEmails.supervisor ? `(${lineEmails.supervisor})` : ''}</li>
+                        <li><strong>RQC:</strong> ${lineData.rqc} ${lineEmails.rqc ? `(${lineEmails.rqc})` : ''}</li>
+                        <li><strong>IE:</strong> ${lineData.ie} ${lineEmails.ie ? `(${lineEmails.ie})` : ''}</li>
+                        <li><strong>Line Incharge:</strong> ${lineData.lineIncharge} ${lineEmails.lineIncharge ? `(${lineEmails.lineIncharge})` : ''}</li>
+                        ${lineData.qam && lineData.qam !== 'TBD' ? `<li><strong>QAM:</strong> ${lineData.qam} ${lineEmails.qam ? `(${lineEmails.qam})` : ''}</li>` : (lineEmails.qam ? `<li><strong>QAM:</strong> ${lineEmails.qam}</li>` : '')}
+                        <li><strong>Maintenance:</strong> ${lineData.mechIncharge} ${lineEmails.maintenance ? `(${lineEmails.maintenance})` : ''}</li>
+                        <li><strong>Technical:</strong> ${lineData.technical} ${lineEmails.technical ? `(${lineEmails.technical})` : ''}</li>
+                        <li><strong>Planning:</strong> ${lineEmails.planning || 'TBD'}</li>
+                        <li><strong>Production:</strong> ${lineEmails.production || 'TBD'}</li>
+                        <li><strong>Fabric/Cutting:</strong> ${lineEmails.fabric || ''} ${lineEmails.cutting ? `/ ${lineEmails.cutting}` : ''}</li>
+                        <li style="margin-top: 10px; font-weight: bold; color: #4b5563;">Maintenance Department</li>
+                        <li style="font-weight: bold; color: #4b5563;">Production Manager</li>
+                        <li style="font-weight: bold; color: #4b5563;">IE Manager</li>
                     </ul>
              `;
         }
@@ -4784,8 +4821,8 @@ Please be advised that a style changeover is scheduled for Line ${selectedLine}.
 
 MEETING LOGISTICS
 ------------------------------------------------
-Date:    ${formattedDate}
-Time:    ${meetingTime}
+Date:    ( to be decided by planning team )
+Checklist: https://shantanuguin.github.io/sidneyme/outlist.html
 Location: Line ${selectedLine} - Production Floor
 Purpose:  Pre-production layout review and resource allocation
 
@@ -4808,15 +4845,19 @@ ${releaseList}
 
 REQUIRED ATTENDEES
 ------------------------------------------------
-- ${lineData.supervisor} ${lineEmails.supervisor ? `(${lineEmails.supervisor})` : ''}
-- ${lineData.rqc} ${lineEmails.rqc ? `(${lineEmails.rqc})` : ''}
-- ${lineData.ie} ${lineEmails.ie ? `(${lineEmails.ie})` : ''}
-- ${lineData.lineIncharge} ${lineEmails.lineIncharge ? `(${lineEmails.lineIncharge})` : ''}
-${lineData.qam ? '- ' + lineData.qam + (lineEmails.qam ? ` (${lineEmails.qam})` : '') : ''}
-- ${lineData.mechIncharge} ${lineEmails.mechIncharge ? `(${lineEmails.mechIncharge})` : ''}
-- ${lineData.technical} ${lineEmails.technical ? `(${lineEmails.technical})` : ''}
-${document.getElementById('includeMaintenance').checked ? '- Maintenance Department' : ''}
-${document.getElementById('includeManagement').checked ? '- Production Manager\n- IE Manager' : ''}
+- Supervisor: ${lineData.supervisor}
+- RQC: ${lineData.rqc}
+- IE: ${lineData.ie}
+- Line Incharge: ${lineData.lineIncharge}
+- Maintenance: ${lineData.mechIncharge}
+- Technical: ${lineData.technical}
+- Planning: ${lineEmails.planning || 'TBD'}
+- Production: ${lineEmails.production || 'TBD'}
+- Fabric: ${lineEmails.fabric || ''}
+- Cutting: ${lineEmails.cutting || ''}
+- Maintenance Department
+- Production Manager
+- IE Manager
 
 ACTION ITEMS
 ------------------------------------------------
@@ -4976,27 +5017,9 @@ Shantanu & Sampreeti`;
             const htmlBody = document.getElementById('emailPreviewContent').innerHTML;
 
             // Prepare attachments for sending
-            let emailAttachments = [];
-
-            // Check if we should include original OB files
-            const settingsObj = JSON.parse(localStorage.getItem('appSettings')) || defaultSettings;
-            if (settingsObj.includeOriginalFiles && currentFile && upcomingFile) {
-                // Convert current file to base64
-                const currentFileBase64 = await fileToBase64(currentFile);
-                emailAttachments.push({
-                    filename: `Current_OB_${currentOBData.style || 'Style'}.${getFileExtension(currentFile.name)}`,
-                    content: currentFileBase64,
-                    contentType: getMimeType(currentFile.name)
-                });
-
-                // Convert upcoming file to base64
-                const upcomingFileBase64 = await fileToBase64(upcomingFile);
-                emailAttachments.push({
-                    filename: `Upcoming_OB_${upcomingOBData.style || 'Style'}.${getFileExtension(upcomingFile.name)}`,
-                    content: upcomingFileBase64,
-                    contentType: getMimeType(upcomingFile.name)
-                });
-            }
+            // Check if we should include original OB files - DISABLED BY DEFAULT AS PER REQUEST
+            // Only add if explicitly requested (logic can be added here if needed, but for now we rely on manual attachments)
+            // If user wants to re-enable default attachments, we can uncomment logic or add a toggle.
 
             // Add user-added attachments
             attachments.forEach(attachment => {
