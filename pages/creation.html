@@ -4493,12 +4493,16 @@
             const settings = JSON.parse(localStorage.getItem('appSettings')) || defaultSettings;
             const meetingTime = settings.defaultMeetingTime || "09:00";
 
-            const qcoDisplay = currentQCONumber ? `<div class="qco-highlight" style="margin-bottom: 20px;">Changeover Reference: ${currentQCONumber}</div>` : '';
+            // INLINE STYLES for QCO Highlight (Ensures visibility in email clients)
+            const qcoStyle = "background-color: #fffbeb; border: 2px solid #f59e0b; color: #92400e; padding: 12px; border-radius: 8px; font-weight: 800; margin-bottom: 20px; display: inline-block; font-size: 1.1em; box-shadow: 0 2px 4px rgba(0,0,0,0.05);";
+            const qcoDisplay = currentQCONumber ? `<div style="${qcoStyle}">Changeover Reference: ${currentQCONumber}</div>` : '';
 
             // Template Handling
             let headerColor = "#1e40af"; // Default Blue
             let urgencyBanner = "";
             let template = (typeof emailTemplate !== 'undefined') ? emailTemplate : 'standard';
+
+            let contentBody = "";
 
             if (template === 'urgent') {
                 headerColor = "#b91c1c"; // Red
@@ -4507,6 +4511,45 @@
                     <div style="font-size: 18px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px;">⚠️ URGENT CHANGEOVER NOTICE</div>
                     <div style="font-size: 14px;">Immediate preparation and attention required. Please prioritize this transition.</div>
                 </div>`;
+
+                // URGENT TEMPLATE: Focus on CRITICAL items only
+                contentBody = `
+                    <h3 style="color: ${headerColor}; border-bottom: 2px solid ${headerColor}40; padding-bottom: 8px; margin-top: 24px; margin-bottom: 16px;">
+                        CRITICAL LOGISTICS
+                    </h3>
+                    <div style="font-weight: bold; font-size: 1.1em; margin-bottom: 20px;">
+                        Date: ${formattedDate} @ ${meetingTime} | Line ${selectedLine}
+                    </div>
+                    
+                    <h3 style="color: ${headerColor}; border-bottom: 2px solid ${headerColor}40; padding-bottom: 8px; margin-top: 24px; margin-bottom: 16px;">
+                        STYLE CHANGE
+                    </h3>
+                    <div style="font-size: 1.1em;">
+                        <strong>Current:</strong> ${currentOBData.style || "N/A"} &rarr; 
+                        <strong>Upcoming:</strong> ${upcomingOBData.style || "N/A"}
+                    </div>
+
+                    <h3 style="color: ${headerColor}; border-bottom: 2px solid ${headerColor}40; padding-bottom: 8px; margin-top: 24px; margin-bottom: 16px;">
+                        CRITICAL MACHINE REQUIREMENTS
+                    </h3>
+                    
+                    ${criticalMachines.length > 0 ? `
+                        <div style="background-color: #fef2f2; padding: 16px; border-radius: 6px; margin-bottom: 16px; border-left: 5px solid #dc2626;">
+                            <h4 style="margin-top: 0; margin-bottom: 12px; color: #991b1b; text-transform: uppercase;">🔥 MACHINES TO ADD IMMEDIATELY:</h4>
+                            <pre style="margin: 0; font-family: inherit; white-space: pre-wrap; font-weight: bold; color: #7f1d1d;">${machineList}</pre>
+                        </div>
+                    ` : '<p style="color: #047857; font-weight: bold;">No new machines required.</p>'}
+                    
+                    <h3 style="color: ${headerColor}; border-bottom: 2px solid ${headerColor}40; padding-bottom: 8px; margin-top: 24px; margin-bottom: 16px;">
+                        KEY ATTENDEES
+                    </h3>
+                    <p style="margin-bottom: 20px;">
+                        <strong>Supervisor:</strong> ${lineData.supervisor}<br>
+                        <strong>Maintenance:</strong> ${lineData.mechIncharge}<br>
+                        <strong>Quality:</strong> ${lineData.rqc}
+                    </p>
+                `;
+
             } else if (template === 'detailed') {
                 headerColor = "#047857"; // Green
                 urgencyBanner = `
@@ -4514,13 +4557,103 @@
                     <div style="font-weight: 600;">📊 Detailed Transition Analysis</div>
                     <div style="font-size: 12px; opacity: 0.8;">Full comprehensive report for records and planning.</div>
                 </div>`;
-            }
 
-            return `
-                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #374151;">
-                    ${qcoDisplay}
-                    ${urgencyBanner}
+                // Calculate additional metrics
+                const currentWP = currentOBData.allotedWP || 0;
+                const upcomingWP = upcomingOBData.allotedWP || 0;
+                const wpDelta = upcomingWP - currentWP;
+
+                const currentOps = currentOBData.operations ? currentOBData.operations.length : 0;
+                const upcomingOps = upcomingOBData.operations ? upcomingOBData.operations.length : 0;
+
+                const efficiencyCurrent = (currentOBData.smv && currentOBData.target) ? ((currentOBData.smv * currentOBData.target) / (480 * (currentWP || 1)) * 100).toFixed(1) : "N/A";
+                const efficiencyUpcoming = (upcomingOBData.smv && upcomingOBData.target) ? ((upcomingOBData.smv * upcomingOBData.target) / (480 * (upcomingWP || 1)) * 100).toFixed(1) : "N/A";
+
+                // DETAILED TEMPLATE: Everything + More Metrics
+                contentBody = `
+                    <h3 style="color: ${headerColor}; border-bottom: 2px solid ${headerColor}40; padding-bottom: 8px; margin-top: 24px; margin-bottom: 16px;">
+                        MEETING LOGISTICS
+                    </h3>
+                    <table style="width: 100%; margin-bottom: 20px;">
+                        <tr><td style="width: 140px; font-weight: bold;">Date:</td><td>${formattedDate}</td></tr>
+                        <tr><td style="font-weight: bold;">Time:</td><td>${meetingTime}</td></tr>
+                        <tr><td style="font-weight: bold;">Location:</td><td>Line ${selectedLine} - Production Floor</td></tr>
+                        <tr><td style="font-weight: bold;">Purpose:</td><td>Detailed Layout & Resource Planning</td></tr>
+                    </table>
+
+                    <h3 style="color: ${headerColor}; border-bottom: 2px solid ${headerColor}40; padding-bottom: 8px; margin-top: 24px; margin-bottom: 16px;">
+                        STYLE & METRICS COMPARISON
+                    </h3>
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.95em;">
+                        <thead>
+                            <tr style="background-color: #f3f4f6; text-align: left;">
+                                <th style="padding: 8px; border: 1px solid #e5e7eb;">Metric</th>
+                                <th style="padding: 8px; border: 1px solid #e5e7eb;">Current Style</th>
+                                <th style="padding: 8px; border: 1px solid #e5e7eb;">Upcoming Style</th>
+                                <th style="padding: 8px; border: 1px solid #e5e7eb;">Variance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;"><strong>Style Name</strong></td>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;">${currentOBData.style || "N/A"}</td>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;">${upcomingOBData.style || "N/A"}</td>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;">-</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;"><strong>SMV</strong></td>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;">${currentOBData.smv ? currentOBData.smv.toFixed(2) : "--"}</td>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;">${upcomingOBData.smv ? upcomingOBData.smv.toFixed(2) : "--"}</td>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb; color: ${sign === '+' ? '#b91c1c' : '#047857'}">${sign}${smvChange.toFixed(2)}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;"><strong>Target (pcs/day)</strong></td>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;">${currentOBData.target || "--"}</td>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;">${upcomingOBData.target || "--"}</td>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;">${targetChange > 0 ? '+' : ''}${targetChange}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;"><strong>Manpower (WP)</strong></td>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;">${currentWP}</td>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;">${upcomingWP}</td>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;">${wpDelta > 0 ? '+' : ''}${wpDelta}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;"><strong>Operations Count</strong></td>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;">${currentOps}</td>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;">${upcomingOps}</td>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;">${upcomingOps - currentOps}</td>
+                            </tr>
+                            <tr style="background-color: #f9fafb;">
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;"><strong>Est. Line Efficiency</strong></td>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;">${efficiencyCurrent}%</td>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;">${efficiencyUpcoming}%</td>
+                                <td style="padding: 8px; border: 1px solid #e5e7eb;">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3 style="color: ${headerColor}; border-bottom: 2px solid ${headerColor}40; padding-bottom: 8px; margin-top: 24px; margin-bottom: 16px;">
+                        RESOURCE PLAN
+                    </h3>
                     
+                    <div style="background-color: #fff7ed; padding: 16px; border-radius: 6px; margin-bottom: 16px; border-left: 4px solid #f97316;">
+                        <h4 style="margin-top: 0; margin-bottom: 8px; color: #9a3412;">MACHINES TO ACQUIRE (Shortage):</h4>
+                        <pre style="margin: 0; font-family: inherit; white-space: pre-wrap;">${machineList}</pre>
+                    </div>
+                    
+                    <div style="background-color: #f0fdf4; padding: 16px; border-radius: 6px; margin-bottom: 16px; border-left: 4px solid #22c55e;">
+                        <h4 style="margin-top: 0; margin-bottom: 8px; color: #166534;">MACHINES TO RETURN (Surplus):</h4>
+                        <pre style="margin: 0; font-family: inherit; white-space: pre-wrap;">${releaseList}</pre>
+                    </div>
+
+                    ${this.generateStandardAttendeesSection(headerColor, lineData, lineEmails)}
+                    ${this.generateStandardActionItems(headerColor)}
+                `;
+
+            } else {
+                // STANDARD TEMPLATE (Existing)
+                contentBody = `
                     <p>Dear Team,</p>
                     
                     <p>Please be advised that a style changeover is scheduled for Line ${selectedLine}. Below is the operational analysis and resource requirement plan for the transition.</p>
@@ -4529,36 +4662,18 @@
                         MEETING LOGISTICS
                     </h3>
                     <table style="width: 100%; margin-bottom: 20px;">
-                        <tr>
-                            <td style="width: 120px; padding: 4px 0;"><strong>Date:</strong></td>
-                            <td style="padding: 4px 0;">${formattedDate}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 4px 0;"><strong>Time:</strong></td>
-                            <td style="padding: 4px 0;">${meetingTime}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 4px 0;"><strong>Location:</strong></td>
-                            <td style="padding: 4px 0;">Line ${selectedLine} - Production Floor</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 4px 0;"><strong>Purpose:</strong></td>
-                            <td style="padding: 4px 0;">Pre-production layout review and resource allocation</td>
-                        </tr>
+                        <tr><td style="width: 120px; padding: 4px 0;"><strong>Date:</strong></td><td style="padding: 4px 0;">${formattedDate}</td></tr>
+                        <tr><td style="padding: 4px 0;"><strong>Time:</strong></td><td style="padding: 4px 0;">${meetingTime}</td></tr>
+                        <tr><td style="padding: 4px 0;"><strong>Location:</strong></td><td style="padding: 4px 0;">Line ${selectedLine} - Production Floor</td></tr>
+                        <tr><td style="padding: 4px 0;"><strong>Purpose:</strong></td><td style="padding: 4px 0;">Pre-production layout review and resource allocation</td></tr>
                     </table>
                     
                     <h3 style="color: ${headerColor}; border-bottom: 2px solid ${headerColor}40; padding-bottom: 8px; margin-top: 24px; margin-bottom: 16px;">
                         STYLE TRANSITION SUMMARY
                     </h3>
                     <table style="width: 100%; margin-bottom: 20px;">
-                        <tr>
-                            <td style="width: 120px; padding: 4px 0;"><strong>Current Style:</strong></td>
-                            <td style="padding: 4px 0;">${currentOBData.style || "N/A"}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 4px 0;"><strong>Upcoming Style:</strong></td>
-                            <td style="padding: 4px 0;">${upcomingOBData.style || "N/A"}</td>
-                        </tr>
+                        <tr><td style="width: 120px; padding: 4px 0;"><strong>Current Style:</strong></td><td style="padding: 4px 0;">${currentOBData.style || "N/A"}</td></tr>
+                        <tr><td style="padding: 4px 0;"><strong>Upcoming Style:</strong></td><td style="padding: 4px 0;">${upcomingOBData.style || "N/A"}</td></tr>
                     </table>
                     
                     <div style="background-color: #f8fafc; padding: 16px; border-radius: 6px; margin-bottom: 20px;">
@@ -4583,6 +4698,34 @@
                         <pre style="margin: 0; font-family: inherit; white-space: pre-wrap;">${releaseList}</pre>
                     </div>
                     
+                    ${this.generateStandardAttendeesSection(headerColor, lineData, lineEmails)}
+                    ${this.generateStandardActionItems(headerColor)}
+                `;
+            }
+
+            return `
+                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #374151;">
+                    ${qcoDisplay}
+                    ${urgencyBanner}
+                    ${contentBody}
+                    ${this.generateAttachmentsSection(headerColor)}
+                    
+                    <div class="email-signature" style="margin-top: 40px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+                        <p>Regards,<br>
+                        <strong>Manufacturing Excellence Department</strong><br>
+                        Sidney Apparels LLC, QVJ</p>
+                        <p style="font-size: 0.75rem; color: #9ca3af;">
+                            This email was automatically generated by Changeover Meeting Initiator System<br>
+                            ${currentUser.name}
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Helper functions attached to window/this context to avoid rewriting same code
+        function generateStandardAttendeesSection(headerColor, lineData, lineEmails) {
+            return `
                     <h3 style="color: ${headerColor}; border-bottom: 2px solid ${headerColor}40; padding-bottom: 8px; margin-top: 24px; margin-bottom: 16px;">
                         REQUIRED ATTENDEES
                     </h3>
@@ -4597,7 +4740,11 @@
                         ${document.getElementById('includeMaintenance').checked ? '<li>Maintenance Department</li>' : ''}
                         ${document.getElementById('includeManagement').checked ? '<li>Production Manager</li><li>IE Manager</li>' : ''}
                     </ul>
-                    
+             `;
+        }
+
+        function generateStandardActionItems(headerColor) {
+            return `
                     <h3 style="color: ${headerColor}; border-bottom: 2px solid ${headerColor}40; padding-bottom: 8px; margin-top: 24px; margin-bottom: 16px;">
                         ACTION ITEMS
                     </h3>
@@ -4606,28 +4753,20 @@
                         <li><strong>Supervisor/IE:</strong> Review the new operation bulletin and balance layout.</li>
                         <li><strong>Quality:</strong> Prepare standard operating procedures (SOPs) for the new style.</li>
                     </ol>
-                    
-                    ${attachments.length > 0 ? `
-                        <h3 style="color: ${headerColor}; border-bottom: 2px solid ${headerColor}40; padding-bottom: 8px; margin-top: 24px; margin-bottom: 16px;">
-                        ATTACHMENTS
-                    </h3>
-                    <div style="background-color: #f0f9ff; padding: 16px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #3b82f6;">
-                        <p style="margin: 0 0 8px 0; color: #1e40af;"><strong>${attachments.length} file${attachments.length !== 1 ? 's' : ''} attached:</strong></p>
-                        <ul style="margin: 0; padding-left: 20px;">
-                            ${attachments.map(att => `<li>${att.name} (${formatFileSize(att.size)})</li>`).join('')}
-                        </ul>
-                    </div>
-                    ` : ''}
-                    
-                    <div class="email-signature">
-                        <p>Regards,<br>
-                        <strong>Manufacturing Excellence Department</strong><br>
-                        Sidney Apparels LLC, QVJ</p>
-                        <p style="font-size: 0.75rem; color: #9ca3af;">
-                            This email was automatically generated by Changeover Meeting Initiator System<br>
-                            Shantanu & Sampreeti
-                        </p>
-                    </div>
+            `;
+        }
+
+        function generateAttachmentsSection(headerColor) {
+            if (!attachments || attachments.length === 0) return '';
+            return `
+                <h3 style="color: ${headerColor}; border-bottom: 2px solid ${headerColor}40; padding-bottom: 8px; margin-top: 24px; margin-bottom: 16px;">
+                    ATTACHMENTS
+                </h3>
+                <div style="background-color: #f0f9ff; padding: 16px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #3b82f6;">
+                    <p style="margin: 0 0 8px 0; color: #1e40af;"><strong>${attachments.length} file${attachments.length !== 1 ? 's' : ''} attached:</strong></p>
+                    <ul style="margin: 0; padding-left: 20px;">
+                        ${attachments.map(att => `<li>${att.name} (${formatFileSize(att.size)})</li>`).join('')}
+                    </ul>
                 </div>
             `;
         }
