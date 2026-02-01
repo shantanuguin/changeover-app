@@ -431,6 +431,11 @@
                                     <i data-lucide="save" class="w-4 h-4"></i>
                                     Save Schedule
                                 </button>
+                                <button onclick="openEmailModal()" id="emailBtn"
+                                    class="px-6 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold hover:border-violet-400 hover:text-violet-600 shadow-sm transition-all flex items-center justify-center gap-2 order-3">
+                                    <i data-lucide="mail" class="w-4 h-4"></i>
+                                    Send Invite
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -457,6 +462,152 @@
                                 <p class="font-bold text-slate-900" id="lastUpdatedText">Never</p>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Backend Status Card -->
+                    <div class="glass-card p-6 mt-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div
+                                    class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                                    <i data-lucide="server" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-heading font-bold text-slate-900 text-lg">Backend Status</h3>
+                                    <p class="text-xs text-slate-500 font-medium flex items-center gap-2">
+                                        Connection: <span id="backendStatus"
+                                            class="font-bold text-slate-400">Checking...</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <button onclick="testBackendConnection()"
+                                class="px-4 py-2 rounded-lg bg-indigo-50 text-indigo-700 text-sm font-semibold hover:bg-indigo-100 transition-colors">
+                                Test Connection
+                            </button>
+                        </div>
+
+                        <div id="smtpTestResult"
+                            class="hidden p-3 rounded-lg bg-slate-50 text-sm mb-4 border border-slate-200"></div>
+
+                        <!-- Admin Only API Settings -->
+                        <div id="adminApiSettings" class="hidden mt-4 pt-4 border-t border-slate-200">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Backend API URL (Admin
+                                Only)</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="apiUrlInput" placeholder="https://..."
+                                    class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <button onclick="saveApiUrl()"
+                                    class="px-3 py-2 rounded-lg bg-slate-800 text-white text-xs font-bold hover:bg-slate-700 transition-colors">
+                                    Update
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Modal -->
+    <div id="emailModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeEmailModal()">
+        </div>
+        <div class="absolute inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div
+                    class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-4xl border border-slate-200">
+
+                    <!-- Modal Header -->
+                    <div
+                        class="bg-slate-50 px-4 py-4 sm:px-6 border-b border-slate-100 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                <i data-lucide="mail-check" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold leading-6 text-slate-900" id="modal-title">Send Meeting
+                                    Invitation</h3>
+                                <p class="text-xs text-slate-500">Review and send the QCO meeting invite</p>
+                            </div>
+                        </div>
+                        <button type="button" class="text-slate-400 hover:text-slate-500 transition-colors"
+                            onclick="closeEmailModal()">
+                            <span class="sr-only">Close</span>
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <div class="px-4 py-5 sm:p-6 bg-white space-y-4">
+
+                        <!-- Sender/Recipient Fields -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">To
+                                    (Recipients)</label>
+                                <input type="text" id="modalRecipients"
+                                    class="w-full rounded-lg border-slate-200 bg-slate-50 text-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5">
+                                <p class="text-[10px] text-slate-400 mt-1">Separate multiple emails with commas</p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">From</label>
+                                <input type="text" id="modalSender" value="planning@sidneyapparels.co" readonly
+                                    class="w-full rounded-lg border-slate-200 bg-slate-100 text-slate-500 text-sm cursor-not-allowed p-2.5">
+                            </div>
+                        </div>
+
+                        <!-- Subject -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Subject</label>
+                            <input type="text" id="modalSubject"
+                                class="w-full rounded-lg border-slate-200 text-sm font-medium focus:border-indigo-500 focus:ring-indigo-500 p-2.5 shadow-sm">
+                        </div>
+
+                        <!-- Preview Tab Switcher -->
+                        <div class="border-b border-slate-200">
+                            <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                                <button onclick="togglePreview('html')" id="tabHtml"
+                                    class="border-indigo-500 text-indigo-600 whitespace-nowrap border-b-2 py-3 px-1 text-sm font-medium transition-colors">
+                                    Email Preview
+                                </button>
+                                <button onclick="togglePreview('text')" id="tabText"
+                                    class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 whitespace-nowrap border-b-2 py-3 px-1 text-sm font-medium transition-colors">
+                                    Raw Text
+                                </button>
+                            </nav>
+                        </div>
+
+                        <!-- Content Preview -->
+                        <div
+                            class="mt-2 h-64 overflow-y-auto border border-slate-100 rounded-lg bg-slate-50 p-4 custom-scrollbar">
+                            <div id="htmlPreview" class="prose prose-sm max-w-none">
+                                <!-- HTML Content injection -->
+                            </div>
+                            <textarea id="textPreview"
+                                class="hidden w-full h-full bg-transparent border-0 focus:ring-0 text-xs font-mono text-slate-600 resize-none p-0"
+                                readonly></textarea>
+                        </div>
+
+                        <!-- Status Message -->
+                        <div id="emailSendStatus"
+                            class="hidden p-3 rounded-lg bg-blue-50 text-blue-700 text-sm flex items-center gap-2">
+                            <i class="fas fa-spinner fa-spin"></i> Sending email...
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="bg-slate-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-slate-100">
+                        <button type="button" onclick="sendEmail()" id="confirmSendBtn"
+                            class="inline-flex w-full justify-center rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-indigo-500 sm:ml-3 sm:w-auto transition-all items-center gap-2">
+                            <i data-lucide="send" class="w-4 h-4"></i> Send Email
+                        </button>
+                        <button type="button"
+                            class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-all"
+                            onclick="closeEmailModal()">
+                            Cancel
+                        </button>
                     </div>
                 </div>
             </div>
@@ -962,6 +1113,531 @@
                 status.classList.remove('flex');
             }, 2000);
         }
+
+        // ==========================================
+        // EMAIL & BACKEND LOGIC (NEW)
+        // ==========================================
+
+        const personnelData = {
+            "1": { supervisor: "WASANA", rqc: "SANGIB", ie: "BUDDIKA", lineIncharge: "MOHAMAD", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "SAMINATHAN" },
+            "1A": { supervisor: "WASANA", rqc: "MIYARAJ", ie: "BUDDIKA", lineIncharge: "MOHAMAD", qam: "ANIL/SUJAN", mechIncharge: "MOTHIN", technical: "SAMINATHAN" },
+            "2": { supervisor: "SOHORAB", rqc: "SHERAJ", ie: "BUDDIKA", lineIncharge: "VARMA", qam: "JANAKA", mechIncharge: "MOTHIN", technical: "KOUSAR" },
+            "3": { supervisor: "SOHEL", rqc: "RIPON", ie: "SANAKA", lineIncharge: "TARAJUL", qam: "", mechIncharge: "SAKIB", technical: "SAMINATHAN" },
+            "6+17": { supervisor: "SUMI/MUSUM", rqc: "NURADAM/KHOKUN", ie: "SANAKA", lineIncharge: "TARAJUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
+            "7": { supervisor: "NAGENDER", rqc: "SHAMIM", ie: "BUDDIKA", lineIncharge: "VARMA", qam: "ANIL/SUJAN", mechIncharge: "MOTHIN", technical: "KOUSAR" },
+            "7A": { supervisor: "KAMAL", rqc: "LABO", ie: "BUDDIKA", lineIncharge: "VARMA", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "KOUSAR" },
+            "8+5": { supervisor: "BALISTER/FARUK", rqc: "SABOZ/NAIME", ie: "SANAKA", lineIncharge: "SAKIR", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "SAMINATHAN" },
+            "9": { supervisor: "MONJURUL", rqc: "HELAL", ie: "SANAKA", lineIncharge: "FARIDUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "RASHID" },
+            "10": { supervisor: "RAJ KUMAR", rqc: "RAM KUMAR", ie: "THANVIR", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "11+15": { supervisor: "KAMAL/MUNSAF", rqc: "ANWER/ARIFUL", ie: "SANAKA", lineIncharge: "TARAJUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "SAMINATHAN" },
+            "12": { supervisor: "DHARAMEDER", rqc: "JAHEDUL", ie: "BUDDIKA", lineIncharge: "VARMA", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "RASHID" },
+            "13/21": { supervisor: "SUMON/DEVRAJ", rqc: "ABU KASAM/ABHAY", ie: "THANVIR", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "14": { supervisor: "SHARIF", rqc: "GUDDU", ie: "BUDDIKA", lineIncharge: "MOHAMAD", qam: "ANIL/SUJAN", mechIncharge: "SAKIB", technical: "KOUSAR" },
+            "16": { supervisor: "RAHMAN", rqc: "JAHURUL", ie: "THANVIR", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "16A": { supervisor: "RHANIA", rqc: "VIJAY", ie: "THANVIR", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "18": { supervisor: "DIYANA", rqc: "RASHMI", ie: "THANVIR", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "19": { supervisor: "ALAMGIR", rqc: "ASLAM", ie: "SANAKA", lineIncharge: "TARAJUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
+            "20": { supervisor: "KAZOL", rqc: "TUHIN", ie: "SANAKA", lineIncharge: "FARIDUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
+            "22": { supervisor: "ASHRAFUL", rqc: "FOKRUL", ie: "BUDDIKA", lineIncharge: "MOHAMAD", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "KOUSAR" },
+            "23": { supervisor: "RUMA", rqc: "SAMANMALI", ie: "THANVIR", lineIncharge: "FARIDUL", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "24": { supervisor: "NASIR", rqc: "SOBUJ", ie: "BUDDIKA", lineIncharge: "MOHAMAD", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
+            "25": { supervisor: "AKBAR", rqc: "SAKIB", ie: "SANAKA", lineIncharge: "SAKIR", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "RASHID" },
+            "26/4": { supervisor: "HIMAYIT/AHMAD", rqc: "BELAYET/ASHISH", ie: "THANVIR", lineIncharge: "VARMA", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "28": { supervisor: "RUPNANAYAN", rqc: "NASRUL", ie: "SANAKA", lineIncharge: "SAKIR", qam: "ANIL/SUJAN", mechIncharge: "MOTHIN", technical: "RASHID" },
+            "29": { supervisor: "SUBA", rqc: "FATEMA", ie: "SANAKA", lineIncharge: "FARIDUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "RASHID" },
+            "30": { supervisor: "RAZIB", rqc: "ZAHIDUL", ie: "BUDDIKA", lineIncharge: "MOHAMAD", qam: "ANIL/SUJAN", mechIncharge: "MOTHIN", technical: "KOUSAR" },
+            "31": { supervisor: "AKESH", rqc: "MONJURY", ie: "SANAKA", lineIncharge: "FARIDUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
+            "32": { supervisor: "KALU", rqc: "MUSTAK", ie: "THANVIR", lineIncharge: "FARIDUL", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" }
+        };
+
+        let emailData = {};
+
+        // Load Email Data
+        async function loadEmailData() {
+            if (isFirebaseConnected) {
+                try {
+                    const doc = await db.collection('emailData').doc('lines').get();
+                    if (doc.exists) {
+                        emailData = doc.data();
+                        localStorage.setItem('emailData', JSON.stringify(emailData));
+                    }
+                } catch (e) {
+                    console.error("Error loading email data:", e);
+                }
+            } else {
+                const saved = localStorage.getItem('emailData');
+                if (saved) emailData = JSON.parse(saved);
+            }
+        }
+
+        // Initialize Backend Logic
+        let backendUrl = localStorage.getItem('backendUrl') || 'http://localhost:3000';
+
+        function initBackendControls() {
+            const userStr = localStorage.getItem('qcoCurrentUser');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                if (user.role === 'admin') {
+                    document.getElementById('adminApiSettings').classList.remove('hidden');
+                    document.getElementById('apiUrlInput').value = backendUrl;
+                }
+            }
+            checkBackendStatus();
+            loadEmailData(); // Also load email data here
+        }
+
+        function saveApiUrl() {
+            const url = document.getElementById('apiUrlInput').value.trim();
+            if (url) {
+                backendUrl = url.replace(/\/$/, ''); // Remove trailing slash
+                localStorage.setItem('backendUrl', backendUrl);
+                checkBackendStatus();
+                // Swal.fire('Saved', 'Backend URL updated', 'success');
+                showSaveStatus(); // Reuse existing toaster
+            }
+        }
+
+        async function checkBackendStatus() {
+            const statusEl = document.getElementById('backendStatus');
+            statusEl.textContent = 'Checking...';
+            statusEl.className = 'font-bold text-slate-400';
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+                const response = await fetch(`${backendUrl}/health`, {
+                    method: 'GET',
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
+                if (response.ok) {
+                    statusEl.textContent = 'Connected';
+                    statusEl.className = 'font-bold text-emerald-500';
+                } else {
+                    throw new Error('Status not OK');
+                }
+            } catch (error) {
+                statusEl.textContent = 'Disconnected';
+                statusEl.className = 'font-bold text-red-500';
+            }
+        }
+
+        async function testBackendConnection() {
+            const resultEl = document.getElementById('smtpTestResult');
+            resultEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing connection...';
+            resultEl.classList.remove('hidden', 'text-red-600', 'text-emerald-600');
+            resultEl.classList.add('text-slate-600');
+
+            try {
+                const response = await fetch(`${backendUrl}/health`);
+                if (response.ok) {
+                    resultEl.innerHTML = '<i class="fas fa-check-circle"></i> Connection Successful! Backend is online.';
+                    resultEl.classList.remove('text-slate-600');
+                    resultEl.classList.add('text-emerald-600');
+                } else {
+                    throw new Error('Server returned ' + response.status);
+                }
+            } catch (error) {
+                resultEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> Connection Failed: ${error.message}`;
+                resultEl.classList.remove('text-slate-600');
+                resultEl.classList.add('text-red-600');
+            }
+        }
+
+        // ==========================================
+        // EMAIL MODAL FUNCTIONS
+        // ==========================================
+
+        let currentEmailBodyHtml = '';
+        let currentEmailBodyText = '';
+
+        function closeEmailModal() {
+            document.getElementById('emailModal').classList.add('hidden');
+        }
+
+        async function openEmailModal() {
+            console.log("openEmailModal called. CurrentQCOId:", currentQCOId);
+
+            try {
+                if (!currentQCOId) {
+                    console.warn("No QCO ID selected.");
+                    Swal.fire('Error', 'No QCO Selected', 'error');
+                    return;
+                }
+
+                // Merge data from list and loaded doc
+                const qcoListItem = allChangeovers.find(q => q.id === currentQCOId) || {};
+                const qcoFullData = currentQCOData || {}; // Loaded by loadScheduleData
+
+                const qco = { ...qcoListItem, ...qcoFullData };
+
+                // 1. Determine Line and Personnel
+                // Check all possible field names for line number
+                let rawLine = qco.lineNumber || qco.line_number || qco.line || '';
+
+                // Fallback: Parse from QCO ID (e.g., L15... -> 15)
+                if (!rawLine && currentQCOId && currentQCOId.startsWith('L')) {
+                    const match = currentQCOId.match(/^L(\d+)/);
+                    if (match) rawLine = match[1];
+                }
+
+                // This is the specific line for the changeover (e.g., "15")
+                const line = (rawLine !== null && rawLine !== undefined) ? String(rawLine).trim() : 'Unknown';
+
+                // Determine lookup key for personnel (handling "11+15", "6+17" etc.)
+                let lookupLine = line.replace(/^Line\s*/i, '');
+
+                // If direct match fails, search for combined keys
+                if (!personnelData[lookupLine]) {
+                    // Try to find a key that contains the line (e.g. key "11+15" contains "15")
+                    const foundKey = Object.keys(personnelData).find(key => {
+                        const parts = key.split(/[\+\/]/).map(p => p.trim());
+                        return parts.includes(lookupLine);
+                    });
+
+                    if (foundKey) {
+                        console.log(`Mapped Line ${lookupLine} to Personnel Key ${foundKey}`);
+                        lookupLine = foundKey;
+                    }
+                }
+
+                console.log("Final Lookup Line:", lookupLine);
+
+                const linePsnl = personnelData[lookupLine] || {
+                    supervisor: "TBD", rqc: "TBD", ie: "TBD", lineIncharge: "TBD",
+                    qam: "TBD", mechIncharge: "TBD", technical: "TBD"
+                };
+
+                const lineEmails = emailData[lookupLine] || {};
+
+                // 2. Determine Dates (Meeting = 3 Days Prior to Changeover)
+                let meetDateStr = "TBD";
+                let changeoverDateStr = "TBD";
+
+                if (qco.scheduledDate) {
+                    try {
+                        const execDate = (qco.scheduledDate && typeof qco.scheduledDate.toDate === 'function')
+                            ? qco.scheduledDate.toDate()
+                            : new Date(qco.scheduledDate);
+
+                        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+                        // Changeover Date
+                        changeoverDateStr = `${execDate.getDate().toString().padStart(2, '0')}-${months[execDate.getMonth()]}-${execDate.getFullYear()}`;
+
+                        // Meeting Date (3 days prior)
+                        const meetDate = new Date(execDate);
+                        meetDate.setDate(execDate.getDate() - 3);
+                        meetDateStr = `${meetDate.getDate().toString().padStart(2, '0')}-${months[meetDate.getMonth()]}-${meetDate.getFullYear()}`;
+
+                    } catch (e) {
+                        console.error("Date parse error", e);
+                    }
+                }
+
+                const category = qco.changeoverCategory || 'C';
+
+                // 3. Construct Attendees List
+                const recipients = [];
+                const addRecip = (email) => {
+                    if (email && typeof email === 'string' && email.includes('@')) recipients.push(email.trim());
+                };
+
+                // Standard roles from emailData
+                ['supervisor', 'rqc', 'ie', 'lineIncharge', 'qam', 'mechIncharge', 'technical', 'planning', 'production', 'fabric', 'cutting', 'maintenance'].forEach(role => {
+                    if (lineEmails[role]) addRecip(lineEmails[role]);
+                });
+
+                // 4. Generate Content
+                const templateData = {
+                    qcoNumber: qco.qcoNumber || 'QCO-???',
+                    line: line, // Display the specific line (e.g. "15"), not the lookup key ("11+15")
+                    style: qco.upcomingStyle || '???',
+                    meetDate: meetDateStr,
+                    changeoverDate: changeoverDateStr,
+                    category: category,
+                    location: "Conference Room",
+                    personnel: linePsnl,
+                    emails: lineEmails,
+                    checklistLink: "https://shantanuguin.github.io/sidneyme/outlist.html"
+                };
+
+                const { html, text } = generateMeetingEmail(templateData);
+                currentEmailBodyHtml = html;
+                currentEmailBodyText = text;
+
+                // 5. Populate Modal
+                document.getElementById('modalRecipients').value = recipients.join(', ');
+
+                // Professional Subject Line: [Date] | Line [X] | Style [Y] | Category [Z]
+                document.getElementById('modalSubject').value = `Pre-Meeting Invite: Line ${templateData.line} - Style ${templateData.style} (Cat: ${templateData.category})`;
+
+                // Render Preview
+                document.getElementById('htmlPreview').innerHTML = html;
+                document.getElementById('textPreview').value = text;
+
+                // Re-render UI
+                togglePreview('html');
+                const statusEl = document.getElementById('emailSendStatus');
+                if (statusEl) statusEl.classList.add('hidden');
+
+                const btn = document.getElementById('confirmSendBtn');
+                if (btn) btn.disabled = false;
+
+                document.getElementById('emailModal').classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Critical error in openEmailModal:", error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'System Error',
+                    text: 'Failed to open email modal: ' + error.message,
+                    confirmButtonColor: '#ef4444'
+                });
+            }
+        }
+
+        function togglePreview(type) {
+            const tabHtml = document.getElementById('tabHtml');
+            const tabText = document.getElementById('tabText');
+            const htmlView = document.getElementById('htmlPreview');
+            const textView = document.getElementById('textPreview');
+
+            if (type === 'html') {
+                tabHtml.classList.add('border-indigo-500', 'text-indigo-600');
+                tabHtml.classList.remove('border-transparent', 'text-slate-500');
+
+                tabText.classList.remove('border-slate-300', 'text-slate-700');
+                tabText.classList.add('border-transparent', 'text-slate-500');
+
+                htmlView.classList.remove('hidden');
+                textView.classList.add('hidden');
+            } else {
+                tabText.classList.add('border-indigo-500', 'text-indigo-600');
+                tabText.classList.remove('border-transparent', 'text-slate-500');
+
+                tabHtml.classList.remove('border-indigo-500', 'text-indigo-600');
+                tabHtml.classList.add('border-transparent', 'text-slate-500');
+
+                htmlView.classList.add('hidden');
+                textView.classList.remove('hidden');
+            }
+        }
+
+        function generateMeetingEmail(data) {
+            const { qcoNumber, line, style, meetDate, changeoverDate, category, location, personnel, emails, checklistLink } = data;
+
+            const attendeesHtml = `
+                <ul style="margin: 0 0 20px 0; padding-left: 20px;">
+                    <li><strong>Supervisor:</strong> ${personnel.supervisor} ${emails.supervisor ? `(${emails.supervisor})` : ''}</li>
+                    <li><strong>RQC:</strong> ${personnel.rqc} ${emails.rqc ? `(${emails.rqc})` : ''}</li>
+                    <li><strong>IE:</strong> ${personnel.ie} ${emails.ie ? `(${emails.ie})` : ''}</li>
+                    <li><strong>Line Incharge:</strong> ${personnel.lineIncharge} ${emails.lineIncharge ? `(${emails.lineIncharge})` : ''}</li>
+                    <li><strong>QAM:</strong> ${personnel.qam} ${emails.qam ? `(${emails.qam})` : ''}</li>
+                    <li><strong>Maintenance:</strong> ${personnel.mechIncharge} ${emails.maintenance ? `(${emails.maintenance})` : ''}</li>
+                    <li><strong>Technical:</strong> ${personnel.technical} ${emails.technical ? `(${emails.technical})` : ''}</li>
+                    <li><strong>Planning:</strong> ${emails.planning || 'TBD'}</li>
+                    <li><strong>Production:</strong> ${emails.production || 'TBD'}</li>
+                    <li><strong>Fabric/Cutting:</strong> ${emails.fabric || ''} ${emails.cutting ? `/ ${emails.cutting}` : ''}</li>
+                    <li style="margin-top: 10px; font-weight: bold; color: #4b5563;">Maintenance Department</li>
+                    <li style="font-weight: bold; color: #4b5563;">Production Manager</li>
+                    <li style="font-weight: bold; color: #4b5563;">IE Manager</li>
+                </ul>
+             `;
+
+            const attendeesText = `
+    - Supervisor: ${personnel.supervisor} ${emails.supervisor ? `(${emails.supervisor})` : ''}
+    - RQC: ${personnel.rqc} ${emails.rqc ? `(${emails.rqc})` : ''}
+    - IE: ${personnel.ie} ${emails.ie ? `(${emails.ie})` : ''}
+    - Line Incharge: ${personnel.lineIncharge} ${emails.lineIncharge ? `(${emails.lineIncharge})` : ''}
+    - QAM: ${personnel.qam} ${emails.qam ? `(${emails.qam})` : ''}
+    - Maintenance: ${personnel.mechIncharge} ${emails.maintenance ? `(${emails.maintenance})` : ''}
+    - Technical: ${personnel.technical} ${emails.technical ? `(${emails.technical})` : ''}
+    - Planning: ${emails.planning || 'TBD'}
+    - Production: ${emails.production || 'TBD'}
+    - Fabric/Cutting: ${emails.fabric || ''} ${emails.cutting ? `/ ${emails.cutting}` : ''}
+    - Maintenance Department
+    - Production Manager
+    - IE Manager
+             `;
+
+            const html = `
+                <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 800px; color: #333; line-height: 1.6;">
+                    <div style="background-color: #1e3a8a; color: white; padding: 24px; text-align: left; border-radius: 8px 8px 0 0;">
+                        <h2 style="margin: 0; font-size: 22px; font-weight: 600;">QCO Pre-Meeting Invite</h2>
+                        <p style="margin: 4px 0 0 0; font-size: 14px; opacity: 0.9;">Ref: ${qcoNumber}</p>
+                    </div>
+                    
+                    <div style="padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; background-color: #ffffff;">
+                        <p>Dear Team,</p>
+                        <p>This is to confirm the Pre-Meeting for the upcoming Style Changeover on <strong>Line ${line}</strong>.</p>
+                        
+                        <div style="background-color: #f8fafc; padding: 20px; border-left: 4px solid #3b82f6; margin: 24px 0;">
+                            <h3 style="margin-top: 0; color: #1e3a8a; font-size: 16px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">Meeting Details</h3>
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="padding: 5px 0; color: #64748b; width: 140px;">Meeting Date:</td>
+                                    <td style="padding: 5px 0; font-weight: 600; color: #0f172a;">${meetDate}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 5px 0; color: #64748b;">Time:</td>
+                                    <td style="padding: 5px 0; font-weight: 600; color: #0f172a;">4:00 PM</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 5px 0; color: #64748b;">Location:</td>
+                                    <td style="padding: 5px 0; font-weight: 600; color: #0f172a;">${location}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 15px 0 5px 0; colspan: 2;">
+                                        <a href="${checklistLink}" style="color: #2563eb; text-decoration: underline; font-weight: 500;">
+                                            View Changeover Checklist
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                         <div style="background-color: #fff7ed; padding: 20px; border-left: 4px solid #f97316; margin: 24px 0;">
+                            <h3 style="margin-top: 0; color: #9a3412; font-size: 16px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">Changeover Context</h3>
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td style="padding: 5px 0; color: #7c2d12; width: 140px;">Execution Date:</td>
+                                    <td style="padding: 5px 0; font-weight: 600; color: #431407;">${changeoverDate}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 5px 0; color: #7c2d12;">Upcoming Style:</td>
+                                    <td style="padding: 5px 0; font-weight: 600; color: #431407;">${style}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 5px 0; color: #7c2d12;">Category:</td>
+                                    <td style="padding: 5px 0; font-weight: 600; color: #431407;">${category}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <h3 style="color: #1e3a8a; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-top: 32px; font-size: 16px;">Mandatory Attendees</h3>
+                        ${attendeesHtml}
+                        
+                        <p style="margin-top: 30px; font-size: 14px; color: #334155;">
+                            Regards,<br>
+                            <strong>Planning Department</strong><br>
+                            Sidney Apparels
+                        </p>
+
+                        <p style="margin-top: 40px; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                            Sidney Apparels QCO Portal | Automated System Message
+                        </p>
+                    </div>
+                </div>
+             `;
+
+            const text = `
+QCO PRE-MEETING INVITE
+Ref: ${qcoNumber}
+================================================
+
+Dear Team,
+
+This is to confirm the Pre-Meeting for the upcoming Style Changeover on Line ${line}.
+
+MEETING DETAILS
+------------------------------------------------
+Date:     ${meetDate}
+Time:     4:00 PM
+Location: ${location}
+
+>> Checklist: ${checklistLink}
+
+CHANGEOVER CONTEXT
+------------------------------------------------
+Execution Date: ${changeoverDate}
+Style:          ${style}
+Category:       ${category}
+
+REQUIRED ATTENDEES
+------------------------------------------------
+${attendeesText}
+
+Regards,
+Planning Department
+Sidney Apparels
+
+------------------------------------------------
+Sidney Apparels QCO Portal
+             `;
+
+            return { html, text };
+        }
+
+        async function sendEmail() {
+            const recipients = document.getElementById('modalRecipients').value;
+            const subject = document.getElementById('modalSubject').value;
+            const sender = document.getElementById('modalSender').value;
+            const statusDiv = document.getElementById('emailSendStatus');
+            const sendBtn = document.getElementById('confirmSendBtn');
+
+            if (!recipients) {
+                Swal.fire('Error', 'Please enter at least one recipient', 'warning');
+                return;
+            }
+
+            statusDiv.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'bg-green-50', 'text-green-700');
+            statusDiv.classList.add('bg-blue-50', 'text-blue-700');
+            statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending email via Backend...';
+            statusDiv.classList.remove('hidden');
+            sendBtn.disabled = true;
+
+            try {
+                const payload = {
+                    from: sender,
+                    to: recipients.split(',').map(e => e.trim()),
+                    subject: subject,
+                    text: currentEmailBodyText,
+                    html: currentEmailBodyHtml
+                };
+
+                const response = await fetch(`${backendUrl}/api/send-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusDiv.classList.remove('bg-blue-50', 'text-blue-700');
+                    statusDiv.classList.add('bg-green-50', 'text-green-700');
+                    statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Email sent successfully!';
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sent!',
+                        text: 'Meeting invite has been sent successfully.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+
+                    setTimeout(() => closeEmailModal(), 2000);
+                } else {
+                    throw new Error(data.message || data.error || 'Unknown error');
+                }
+
+            } catch (error) {
+                console.error("Email send error:", error);
+                statusDiv.classList.remove('bg-blue-50', 'text-blue-700');
+                statusDiv.classList.add('bg-red-50', 'text-red-700');
+                statusDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> Failed: ${error.message}`;
+                sendBtn.disabled = false;
+            }
+        }
+
+        // Call init on load (append to existing usage or add listener)
+        document.addEventListener('DOMContentLoaded', () => {
+            // ... existing init ...
+            setTimeout(initBackendControls, 1000); // Delay slightly to ensure user data loaded
+        });
     </script>
 </body>
 

@@ -4385,7 +4385,18 @@
 
             if (!selectedLine) return [];
 
-            const lineEmails = emailData[selectedLine] || {};
+            // Smart Lookup for combined lines (e.g. "15" should find "11+15")
+            let lookupLine = selectedLine.replace(/^Line\s*/i, '').trim();
+
+            if (!emailData[lookupLine]) {
+                const foundKey = Object.keys(emailData).find(key => {
+                    const parts = key.split(/[\+\/]/).map(p => p.trim());
+                    return parts.includes(lookupLine);
+                });
+                if (foundKey) lookupLine = foundKey;
+            }
+
+            const lineEmails = emailData[lookupLine] || {};
 
             // Add email IDs from Firebase/Local
             if (lineEmails.supervisor) recipients.add(lineEmails.supervisor);
