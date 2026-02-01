@@ -1,0 +1,1858 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Departmental Changeover Checklist</title>
+
+    <!-- Frameworks & Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- Animation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.1.2/dist/lenis.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Poppins', 'sans-serif']
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'shimmer': 'shimmer 2s infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        shimmer: {
+                            '0%': { transform: 'translateX(-100%)' },
+                            '100%': { transform: 'translateX(100%)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #f8fafc;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            color: #1e293b;
+            /* Safe area for mobile */
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* Prevent zoom on input focus for iOS */
+        input,
+        select,
+        textarea {
+            font-size: 16px;
+        }
+
+        @media (max-width: 640px) {
+
+            input,
+            select,
+            textarea {
+                font-size: 16px;
+                /* Prevent zoom on mobile */
+            }
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 20px 0 rgba(31, 38, 135, 0.07);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            border-radius: 1.5rem;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #0ea5e9;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .live-dot {
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .dept-planning {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        }
+
+        .dept-ie {
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        }
+
+        .dept-maintenance {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .dept-production {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .dept-technical {
+            background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
+        }
+
+        .dept-qa {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .dept-fabric {
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        }
+
+        .dept-cutting {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        }
+
+        .dept-final {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        .checklist-item {
+            transition: all 0.2s ease;
+            min-height: 60px;
+            /* Better touch target */
+            display: flex;
+            align-items: center;
+        }
+
+        .checklist-item:active {
+            transform: scale(0.99);
+            background-color: rgba(14, 165, 233, 0.05);
+        }
+
+        .stage-complete {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .login-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            min-height: 100dvh;
+            /* Dynamic viewport height for mobile */
+        }
+
+        /* Offline Banner */
+        #offlineBanner {
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        #offlineBanner.show {
+            transform: translateY(0);
+        }
+
+        /* Touch friendly checkbox */
+        .touch-checkbox {
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .glass {
+                background: rgba(255, 255, 255, 0.95);
+            }
+
+            .glass-card {
+                border-radius: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .mobile-stack {
+                flex-direction: column !important;
+                width: 100%;
+            }
+
+            .mobile-full {
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="relative min-h-screen">
+
+    <!-- Offline Banner -->
+    <div id="offlineBanner"
+        class="fixed top-0 left-0 right-0 z-[60] bg-red-600 text-white px-4 py-3 text-center font-semibold shadow-lg text-sm md:text-base">
+        <i data-lucide="wifi-off" class="w-4 h-4 inline-block mr-2"></i>
+        No internet connection. Changes will be saved locally and synced when back online.
+    </div>
+
+    <!-- Background Blobs -->
+    <div class="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
+        <div
+            class="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-emerald-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob">
+        </div>
+        <div
+            class="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-blue-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-4000">
+        </div>
+    </div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 login-bg overflow-y-auto">
+        <div
+            class="glass-panel w-full max-w-md p-6 md:p-8 shadow-2xl transform transition-all my-auto relative overflow-hidden">
+            <!-- Decorative background element -->
+            <div
+                class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-full -mr-8 -mt-8 pointer-events-none">
+            </div>
+
+            <div class="text-center mb-8 relative z-10">
+                <div
+                    class="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center text-white mx-auto mb-5 shadow-lg shadow-slate-900/20">
+                    <i data-lucide="shield-check" class="w-8 h-8"></i>
+                </div>
+                <h1 class="text-2xl font-heading font-bold text-slate-900">Department Login</h1>
+                <p class="text-slate-500 mt-2">Select your department to access the checklist</p>
+            </div>
+
+            <div class="space-y-5 relative z-10">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2 ml-1">Department</label>
+                    <div class="relative">
+                        <select id="deptSelect"
+                            class="w-full appearance-none bg-white border border-slate-200 text-slate-700 font-semibold py-3.5 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer touch-manipulation shadow-sm transition-all hover:border-blue-300">
+                            <option value="">Select Department...</option>
+                            <option value="PLANNING">Planning Department</option>
+                            <option value="TECHNICAL">Technical Department</option>
+                            <option value="FABRIC_STORE">Fabric & Trims Store</option>
+                            <option value="QUALITY">Quality Department</option>
+                            <option value="IE">IE Department</option>
+                            <option value="MAINTENANCE">Maintenance Department</option>
+                            <option value="CUTTING">Cutting Department</option>
+                            <option value="PRODUCTION">Production Department</option>
+                            <option value="ME">Manufacturing Excellence</option>
+                        </select>
+                        <i data-lucide="chevron-down"
+                            class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none"></i>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2 ml-1">Password</label>
+                    <div class="relative">
+                        <input type="password" id="passwordInput" placeholder="Enter department password"
+                            class="w-full bg-white border border-slate-200 text-slate-700 font-semibold py-3.5 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 pr-12 shadow-sm transition-all hover:border-blue-300">
+                        <button onclick="togglePassword()"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-2 touch-manipulation rounded-lg hover:bg-slate-100 transition-colors">
+                            <i data-lucide="eye" class="w-5 h-5" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-2 ml-1 flex items-center gap-1">
+                        <i data-lucide="info" class="w-3 h-3"></i> Format: 4 middle letters + @2026
+                    </p>
+                </div>
+
+                <button onclick="handleLogin()"
+                    class="w-full py-4 rounded-xl bg-slate-900 text-white font-bold shadow-lg shadow-slate-900/20 hover:shadow-xl hover:translate-y-[-1px] active:translate-y-[1px] active:scale-[0.99] transition-all flex items-center justify-center gap-2 mt-4 touch-manipulation text-lg">
+                    <i data-lucide="log-in" class="w-5 h-5"></i>
+                    Access Checklist
+                </button>
+
+                <div id="loginError"
+                    class="hidden text-red-600 text-sm text-center font-medium bg-red-50 p-4 rounded-xl border border-red-100 flex items-center justify-center gap-2 animate-fade-in">
+                    <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                    <span>Invalid password for selected department</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP (Hidden initially) -->
+    <div id="mainApp" class="hidden opacity-0 min-h-screen flex flex-col pb-safe">
+
+        <!-- Navigation -->
+        <nav class="fixed top-0 w-full z-40 glass transition-all duration-300 border-b border-white/50 shadow-sm">
+            <div class="max-w-[1600px] mx-auto px-4 md:px-6">
+                <!-- Desktop & Tablet Header -->
+                <div class="flex flex-col md:flex-row justify-between items-center py-2 md:py-2.5 gap-2 md:gap-0">
+
+                    <!-- Left: Brand & User Info -->
+                    <div class="flex items-center justify-between w-full md:w-auto gap-4">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                                <i data-lucide="clipboard-check" class="w-5 h-5"></i>
+                            </div>
+                            <div class="min-w-0 flex flex-col justify-center">
+                                <h1
+                                    class="font-heading font-bold text-slate-900 text-lg md:text-xl leading-tight truncate">
+                                    Changeover Checklist</h1>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span id="deptBadge"
+                                        class="px-2 py-0.5 rounded-md text-[10px] md:text-xs font-bold uppercase tracking-wider truncate bg-slate-100 text-slate-600">Dept</span>
+                                    <span id="connectionStatus"
+                                        class="hidden w-2 h-2 rounded-full bg-red-500 animate-pulse"
+                                        title="Offline"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mobile Logout (Icon only) -->
+                        <button onclick="logout()"
+                            class="md:hidden p-2.5 text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors touch-manipulation">
+                            <i data-lucide="log-out" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <!-- Right: Controls & Actions -->
+                    <div
+                        class="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto mt-1 md:mt-0">
+
+                        <!-- Mobile: Controls Row -->
+                        <div class="flex items-center gap-2 w-full md:w-auto">
+                            <!-- QCO Selector -->
+                            <div class="relative flex-1 md:w-auto group">
+                                <select id="qcoSelector" onchange="handleQCOChange(this.value)"
+                                    class="w-full appearance-none bg-white/80 border border-slate-200/60 text-slate-700 font-bold py-2.5 pl-4 pr-10 rounded-xl hover:bg-white hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-sm shadow-sm md:min-w-[240px]">
+                                    <option value="">Select QCO...</option>
+                                </select>
+                                <i data-lucide="chevron-down"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
+                            </div>
+
+                            <!-- Search (Compact) -->
+                            <div
+                                class="flex items-center gap-2 bg-white/80 rounded-xl border border-slate-200/60 px-3 py-2.5 shadow-sm max-w-[140px] md:max-w-[200px]">
+                                <i data-lucide="search" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+                                <input type="text" id="qcoSearchInput" placeholder="Find #"
+                                    class="bg-transparent border-none outline-none text-sm font-semibold text-slate-700 w-full placeholder:text-slate-400 min-w-0"
+                                    onkeypress="handleSearchKeypress(event)">
+                            </div>
+                        </div>
+
+                        <!-- Action Bar: Countdown & Save -->
+                        <div class="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
+
+
+                            <div class="flex items-center gap-3">
+                                <!-- Save Status -->
+                                <div id="saveStatus"
+                                    class="hidden items-center gap-1.5 text-xs text-emerald-600 font-medium bg-emerald-50 px-2.5 py-1.5 rounded-full border border-emerald-100">
+                                    <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full live-dot"></div>
+                                    <span class="hidden sm:inline">Saved</span>
+                                </div>
+
+                                <!-- Save Button -->
+                                <button onclick="manualSave()"
+                                    class="flex-1 md:flex-none px-5 py-2.5 rounded-xl bg-slate-900 text-white font-semibold text-sm shadow-lg shadow-slate-900/20 hover:translate-y-[-1px] active:translate-y-[1px] transition-all flex items-center justify-center gap-2 touch-manipulation">
+                                    <i data-lucide="save" class="w-4 h-4"></i>
+                                    <span>Save</span>
+                                </button>
+
+                                <!-- Desktop Logout -->
+                                <button onclick="logout()"
+                                    class="hidden md:flex p-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                    title="Logout">
+                                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="pt-[140px] md:pt-20 pb-32 px-4 md:px-8 flex-1 w-full max-w-[1200px] mx-auto">
+
+            <!-- Date & Time Info Card -->
+            <div id="dateInfoCard" class="hidden mb-6 glass-card p-5 border-l-4 border-blue-500 animate-slide-up">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <div
+                            class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0 shadow-sm">
+                            <i data-lucide="calendar-clock" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Scheduled
+                                Changeover</p>
+                            <p id="scheduledDateText"
+                                class="text-xl font-heading font-bold text-slate-900 leading-tight">Not scheduled</p>
+                        </div>
+                    </div>
+                    <div class="md:text-right pl-16 md:pl-0">
+                        <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Time Remaining</p>
+                        <p id="remainingTimeText" class="text-2xl md:text-3xl font-bold text-amber-600 tabular-nums">--
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Header Info -->
+            <div class="flex flex-col gap-6 mb-8">
+                <!-- Progress Card -->
+                <div class="glass-card p-5 md:p-8 w-full relative overflow-hidden group">
+                    <div
+                        class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110 duration-700">
+                    </div>
+
+                    <div class="flex justify-between items-end mb-4 relative z-10">
+                        <div>
+                            <p class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">Progress</p>
+                            <h2 class="text-3xl md:text-4xl font-heading font-bold text-slate-900" id="progressText">0%
+                            </h2>
+                        </div>
+                        <div class="text-right">
+                            <span id="stageProgress" class="text-sm font-bold text-slate-700 block">0/0 Stages</span>
+                            <span id="itemProgress" class="text-xs font-semibold text-slate-500 block">0/0 Tasks</span>
+                        </div>
+                    </div>
+
+                    <div class="h-4 bg-slate-100 rounded-full overflow-hidden mb-0 shadow-inner">
+                        <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full transition-all duration-1000 ease-out w-0 relative"
+                            id="mainProgress">
+                            <div class="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stages Container -->
+            <div id="stagesContainer" class="space-y-4 md:space-y-6">
+                <!-- Stages injected here -->
+                <div class="text-center py-20 md:py-32 text-slate-400 animate-fade-in">
+                    <div
+                        class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                        <i data-lucide="search" class="w-10 h-10 opacity-40"></i>
+                    </div>
+                    <h3 class="text-lg md:text-xl font-bold text-slate-600 mb-2">Ready to Start?</h3>
+                    <p class="text-sm md:text-base text-slate-400 max-w-xs mx-auto">Select a QCO Number from the top
+                        menu to load your department's checklist.</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Mobile Bottom Safe Area -->
+        <div class="h-safe-area-bottom bg-transparent"></div>
+    </div>
+
+    <script>
+        // --- Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCayfWGQP1t3oBU9eFj-3Ww0uu7nSl3Q4g",
+            authDomain: "sidneymailer.firebaseapp.com",
+            projectId: "sidneymailer",
+            storageBucket: "sidneymailer.firebasestorage.app",
+            messagingSenderId: "911316068119",
+            appId: "1:911316068119:web:ce23dbe663dc385a81f952"
+        };
+
+        // --- Department Passwords (4 middle letters + @2026) ---
+        const DEPT_PASSWORDS = {
+            'PLANNING': 'ANNI@2026',
+            'TECHNICAL': 'CHNI@2026',
+            'FABRIC_STORE': 'STOR@2026',
+            'QUALITY': 'LITY@2026',
+            'IE': 'IEIE@2026',
+            'MAINTENANCE': 'NTEN@2026',
+            'CUTTING': 'UTTI@2026',
+            'PRODUCTION': 'DUCT@2026',
+            'ME': 'MEXC@2026'
+        };
+
+        const DEPT_COLORS = {
+            'PLANNING': 'blue',
+            'TECHNICAL': 'pink',
+            'FABRIC_STORE': 'cyan',
+            'QUALITY': 'red',
+            'IE': 'purple',
+            'MAINTENANCE': 'amber',
+            'CUTTING': 'indigo',
+            'PRODUCTION': 'emerald',
+            'ME': 'rose'
+        };
+
+        // --- Global State ---
+        let db;
+        let currentDepartment = null;
+        let currentQCOId = null;
+        let fullDepartmentsData = [];
+        let autoSaveTimeout = null;
+        let countdownInterval = null;
+        let currentRemainingHours = null;
+        let isOnline = navigator.onLine;
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            initFirebase();
+            initLenis();
+            initConnectivityMonitor();
+
+            const savedDept = sessionStorage.getItem('currentDepartment');
+            if (savedDept && DEPT_PASSWORDS[savedDept]) {
+                currentDepartment = savedDept;
+                showMainApp();
+            } else {
+                showLoginScreen();
+            }
+        });
+
+        function initFirebase() {
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                db = firebase.firestore();
+            } catch (error) {
+                console.error("Firebase init error:", error);
+                showOfflineAlert();
+            }
+        }
+
+        function initLenis() {
+            try {
+                const lenis = new Lenis({ duration: 1.2, smooth: true });
+                function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+                requestAnimationFrame(raf);
+            } catch (e) {
+                console.log("Lenis not available");
+            }
+        }
+
+        function initConnectivityMonitor() {
+            // Initial check
+            updateConnectionStatus();
+
+            window.addEventListener('online', () => {
+                isOnline = true;
+                updateConnectionStatus();
+                hideOfflineAlert();
+                // Try to sync if we have pending data
+                if (currentQCOId) {
+                    saveToFirebase(true);
+                }
+            });
+
+            window.addEventListener('offline', () => {
+                isOnline = false;
+                updateConnectionStatus();
+                showOfflineAlert();
+            });
+
+            // Periodic check ( navigator.onLine can be unreliable about actual internet vs just network)
+            setInterval(() => {
+                if (navigator.onLine !== isOnline) {
+                    isOnline = navigator.onLine;
+                    updateConnectionStatus();
+                    if (!isOnline) showOfflineAlert();
+                    else hideOfflineAlert();
+                }
+            }, 5000);
+        }
+
+        function updateConnectionStatus() {
+            const indicator = document.getElementById('connectionStatus');
+            if (!isOnline) {
+                indicator.classList.remove('hidden');
+                showOfflineAlert();
+            } else {
+                indicator.classList.add('hidden');
+            }
+        }
+
+        function showOfflineAlert() {
+            const banner = document.getElementById('offlineBanner');
+            if (banner) banner.classList.add('show');
+        }
+
+        function hideOfflineAlert() {
+            const banner = document.getElementById('offlineBanner');
+            if (banner) banner.classList.remove('show');
+        }
+
+        // --- Authentication ---
+
+        function togglePassword() {
+            const input = document.getElementById('passwordInput');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                input.type = 'password';
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        }
+
+        function handleLogin() {
+            const dept = document.getElementById('deptSelect').value;
+            const password = document.getElementById('passwordInput').value;
+            const errorDiv = document.getElementById('loginError');
+
+            if (!dept) {
+                errorDiv.textContent = 'Please select a department';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            if (!password) {
+                errorDiv.textContent = 'Please enter password';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            if (!isOnline) {
+                errorDiv.textContent = 'Internet connection required for first login';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            if (DEPT_PASSWORDS[dept] === password) {
+                currentDepartment = dept;
+                sessionStorage.setItem('currentDepartment', dept);
+                errorDiv.classList.add('hidden');
+                showMainApp();
+            } else {
+                errorDiv.textContent = 'Invalid password for selected department';
+                errorDiv.classList.remove('hidden');
+                const panel = document.querySelector('.glass-panel');
+                if (panel) {
+                    panel.animate([
+                        { transform: 'translateX(0)' },
+                        { transform: 'translateX(-10px)' },
+                        { transform: 'translateX(10px)' },
+                        { transform: 'translateX(0)' }
+                    ], { duration: 300 });
+                }
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('currentDepartment');
+            sessionStorage.removeItem('currentQCOId');
+            currentDepartment = null;
+            currentQCOId = null;
+            if (countdownInterval) clearInterval(countdownInterval);
+            location.reload();
+        }
+
+        function showLoginScreen() {
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('mainApp').classList.add('hidden');
+            gsap.from('.glass-panel', { y: 30, opacity: 0, duration: 0.8, ease: 'power3.out' });
+        }
+
+        function showMainApp() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            const app = document.getElementById('mainApp');
+            app.classList.remove('hidden');
+
+            const deptNames = {
+                'PLANNING': 'Planning Dept',
+                'TECHNICAL': 'Technical',
+                'FABRIC_STORE': 'Fabric & Trims',
+                'QUALITY': 'Quality',
+                'IE': 'IE Dept',
+                'MAINTENANCE': 'Maintenance',
+                'CUTTING': 'Cutting',
+                'PRODUCTION': 'Production',
+                'ME': 'Mfg Excellence'
+            };
+
+            // Removed - these elements don't exist in the new design
+
+            document.getElementById('deptBadge').textContent = currentDepartment;
+            const color = DEPT_COLORS[currentDepartment];
+            document.getElementById('deptBadge').className = `px-2 py-0.5 rounded text-[10px] font-bold bg-${color}-100 text-${color}-700 uppercase tracking-wider`;
+
+            gsap.to(app, { opacity: 1, duration: 0.5 });
+
+            loadChangeoverList();
+
+            const savedQCO = sessionStorage.getItem('currentQCOId');
+            if (savedQCO) {
+                handleQCOChange(savedQCO);
+            }
+        }
+
+        // --- QCO Management ---
+
+        async function loadChangeoverList() {
+            if (!db) return;
+            try {
+                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(50).get();
+                const selector = document.getElementById('qcoSelector');
+                selector.innerHTML = '<option value="">Select QCO...</option>';
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    const qcoNum = data.qcoNumber || doc.id.substring(0, 8);
+                    const style = data.upcomingStyle || 'Unknown';
+                    option.textContent = `${qcoNum} - ${style}`;
+                    option.dataset.qcoNumber = qcoNum;
+                    selector.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Error loading QCO list:", error);
+            }
+        }
+
+        function handleSearchKeypress(e) {
+            if (e.key === 'Enter') searchQCO();
+        }
+
+        async function searchQCO() {
+            if (!isOnline) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Offline',
+                    text: 'Search requires internet connection',
+                    confirmButtonColor: '#0ea5e9'
+                });
+                return;
+            }
+
+            const searchVal = document.getElementById('qcoSearchInput').value.trim().toUpperCase();
+            if (!searchVal || !db) return;
+
+            try {
+                // Try exact match on qcoNumber
+                let snapshot = await db.collection('changeovers')
+                    .where('qcoNumber', '==', searchVal)
+                    .limit(1)
+                    .get();
+
+                // If not found, try partial match (starts with)
+                if (snapshot.empty) {
+                    snapshot = await db.collection('changeovers')
+                        .orderBy('qcoNumber')
+                        .startAt(searchVal)
+                        .endAt(searchVal + '\uf8ff')
+                        .limit(1)
+                        .get();
+                }
+
+                if (!snapshot.empty) {
+                    const doc = snapshot.docs[0];
+                    const selector = document.getElementById('qcoSelector');
+
+                    // Check if already exists in dropdown
+                    let exists = false;
+                    for (let i = 0; i < selector.options.length; i++) {
+                        if (selector.options[i].value === doc.id) {
+                            selector.selectedIndex = i;
+                            exists = true;
+                            break;
+                        }
+                    }
+
+                    if (!exists) {
+                        const data = doc.data();
+                        const option = document.createElement('option');
+                        option.value = doc.id;
+                        option.textContent = `${data.qcoNumber || doc.id} - ${data.upcomingStyle || 'Unknown'}`;
+                        option.selected = true;
+                        selector.appendChild(option);
+                    }
+
+                    handleQCOChange(doc.id);
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'QCO Found',
+                        text: `Loaded ${doc.data().qcoNumber || doc.id}`,
+                        timer: 1500,
+                        showConfirmButton: false,
+                        position: 'top-end',
+                        toast: true
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Not Found',
+                        text: 'No changeover found matching this number',
+                        confirmButtonColor: '#0ea5e9'
+                    });
+                }
+            } catch (error) {
+                console.error("Search error:", error);
+            }
+        }
+
+        async function handleQCOChange(qcoId) {
+            if (!qcoId) {
+                cleanupQCO();
+                return;
+            }
+
+            currentQCOId = qcoId;
+            sessionStorage.setItem('currentQCOId', qcoId);
+
+            const selector = document.getElementById('qcoSelector');
+            const selectedOption = selector.options[selector.selectedIndex];
+            const qcoNum = selectedOption ? selectedOption.dataset.qcoNumber || selectedOption.text : qcoId;
+
+            // Update UI to show loading
+            document.getElementById('stagesContainer').innerHTML = `
+                <div class="flex flex-col items-center justify-center py-16 md:py-20">
+                    <div class="spinner mb-4 w-8 h-8 border-slate-300 border-t-blue-500"></div>
+                    <p class="text-slate-500 font-medium">Loading checklist...</p>
+                </div>
+            `;
+
+            await loadData(qcoNum);
+        }
+
+        function cleanupQCO() {
+            currentQCOId = null;
+            sessionStorage.removeItem('currentQCOId');
+            document.getElementById('dateInfoCard').classList.add('hidden');
+            document.getElementById('countdownContainer').classList.add('hidden');
+            document.getElementById('mobileCountdownContainer').classList.add('hidden');
+            if (countdownInterval) clearInterval(countdownInterval);
+
+            document.getElementById('stagesContainer').innerHTML = `
+                <div class="text-center py-12 md:py-20 text-slate-400">
+                    <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="search" class="w-8 h-8 opacity-50"></i>
+                    </div>
+                    <p class="text-base md:text-lg font-medium">Select a QCO Number to load checklist</p>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        // --- Data Loading & Countdown ---
+
+        function mergeDepartmentData(saved, template) {
+            return template.map(dept => {
+                const savedDept = saved.find(d => d.id === dept.id);
+                if (!savedDept) return dept;
+
+                return {
+                    ...dept,
+                    stages: dept.stages.map(stage => {
+                        const savedStage = savedDept.stages.find(s => s.id === stage.id);
+                        if (!savedStage) return stage;
+
+                        return {
+                            ...stage,
+                            status: savedStage.status || stage.status,
+                            items: stage.items.map(item => {
+                                const savedItem = savedStage.items.find(i => i.id === item.id);
+                                return savedItem || item;
+                            })
+                        };
+                    })
+                };
+            });
+        }
+
+        async function loadData(qcoDisplayName) {
+            if (!currentQCOId) return;
+
+            try {
+                let data;
+
+                if (isOnline && db) {
+                    const doc = await db.collection('changeovers').doc(currentQCOId).get();
+                    if (doc.exists) {
+                        data = doc.data();
+                        // Cache locally
+                        localStorage.setItem(`qco_data_${currentQCOId}`, JSON.stringify(data));
+                    } else {
+                        throw new Error('Document not found');
+                    }
+                } else {
+                    // Offline fallback
+                    const cached = localStorage.getItem(`qco_data_${currentQCOId}`);
+                    if (cached) {
+                        data = JSON.parse(cached);
+                        showOfflineAlert();
+                    } else {
+                        throw new Error('No cached data available');
+                    }
+                }
+
+                if (data) {
+                    // Setup departments data
+                    if (data.departments && Array.isArray(data.departments)) {
+                        fullDepartmentsData = mergeDepartmentData(data.departments, getDefaultStructure());
+                    } else {
+                        fullDepartmentsData = getDefaultStructure();
+                        if (isOnline) await saveToFirebase(true);
+                    }
+
+                    // Setup date and countdown
+                    setupCountdown(data.scheduledDate, data);
+
+                    renderDepartmentStages();
+                    updateProgress();
+                }
+            } catch (error) {
+                console.error("Load error:", error);
+                document.getElementById('stagesContainer').innerHTML = `
+                    <div class="text-center py-12 md:py-20 text-red-500 px-4">
+                        <i data-lucide="alert-circle" class="w-12 h-12 mx-auto mb-4"></i>
+                        <p class="text-lg font-medium">Error loading data</p>
+                        <p class="text-sm text-slate-500 mt-2">${error.message}</p>
+                        ${!isOnline ? '<p class="text-xs text-amber-600 mt-2">You are offline. Please check your connection.</p>' : ''}
+                    </div>
+                `;
+                lucide.createIcons();
+            }
+        }
+
+        function setupCountdown(scheduledDate, qcoData) {
+            const dateCard = document.getElementById('dateInfoCard');
+
+
+
+
+            const dateText = document.getElementById('scheduledDateText');
+            const remainingText = document.getElementById('remainingTimeText');
+
+
+
+
+
+            if (!scheduledDate) {
+                if (dateCard) dateCard.classList.add('hidden');
+
+
+
+                return;
+            }
+
+            if (dateCard) dateCard.classList.remove('hidden');
+
+
+
+
+            if (countdownInterval) clearInterval(countdownInterval);
+
+            const targetTime = scheduledDate.toDate ? scheduledDate.toDate().getTime() : new Date(scheduledDate).getTime();
+
+            // Format scheduled date
+            const dateObj = new Date(targetTime);
+            if (dateText) {
+                dateText.textContent = dateObj.toLocaleString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit'
+                });
+            }
+
+            function update() {
+                const now = new Date().getTime();
+                const diff = targetTime - now;
+
+                if (diff <= 0) {
+                    if (remainingText) remainingText.textContent = "Started";
+
+
+
+                    return;
+                }
+
+                const totalHours = Math.floor(diff / (1000 * 60 * 60));
+                const days = Math.floor(totalHours / 24);
+                const hours = totalHours % 24;
+
+                const displayText = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
+
+                if (remainingText) remainingText.textContent = displayText;
+
+
+
+
+                currentRemainingHours = diff / (1000 * 60 * 60);
+
+                // Database update logic (throttled)
+                if (isOnline && db && qcoData) {
+                    const now = Date.now();
+                    const lastUpdate = qcoData.lastCountdownUpdate ?
+                        (qcoData.lastCountdownUpdate.toDate ? qcoData.lastCountdownUpdate.toDate().getTime() : new Date(qcoData.lastCountdownUpdate).getTime())
+                        : 0;
+
+                    let updateInterval = 2 * 60 * 60 * 1000; // 2 hours
+                    if (currentRemainingHours <= 4) updateInterval = 20 * 60 * 1000; // 20 mins
+
+                    if (now - lastUpdate > updateInterval) {
+                        db.collection('changeovers').doc(currentQCOId).update({
+                            remainingHours: currentRemainingHours,
+                            lastCountdownUpdate: firebase.firestore.FieldValue.serverTimestamp()
+                        }).catch(e => console.error("Countdown sync error", e));
+                    }
+                }
+            }
+
+            update();
+            countdownInterval = setInterval(update, 60000); // Update UI every minute
+        }
+
+        function getDefaultStructure() {
+            return [
+                {
+                    "id": "PLANNING",
+                    "name": "Planning Department",
+                    "icon": "calendar",
+                    "color": "blue",
+                    "stages": [
+                        {
+                            "id": "PLANNING_S1",
+                            "name": "Style & Order Handover",
+                            "targetTime": 10,
+                            "status": "pending",
+                            "items": [
+                                {
+                                    "id": "PLANNING_S1_1",
+                                    "text": "GS / AR / QA sample received",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "PLANNING_S1_2",
+                                    "text": "Style name, buyer, order qty,",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "PLANNING_S1_3",
+                                    "text": " line allocation",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "PLANNING_S1_4",
+                                    "text": "Planned changeover date & time",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "PLANNING_S1_5",
+                                    "text": "Order Priority aligned with master plan",
+                                    "completed": false
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "FABRIC_STORE",
+                    "name": "Fabric & Trims",
+                    "icon": "archive",
+                    "color": "cyan",
+                    "stages": [
+                        {
+                            "id": "STORE_-_FABRIC_&_TRIMS_S1",
+                            "name": "Fabric Readiness",
+                            "targetTime": 10,
+                            "status": "pending",
+                            "items": [
+                                {
+                                    "id": "FABRIC_STORE_S1_1",
+                                    "text": "Bulk fabric available in-house",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "FABRIC_STORE_S1_2",
+                                    "text": "Fabric quantity matching order requirement",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "FABRIC_STORE_S1_3",
+                                    "text": "Fabric lots segregated and identified",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "FABRIC_STORE_S1_4",
+                                    "text": "All sewing trims available",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "FABRIC_STORE_S1_5",
+                                    "text": "Approved trim card available",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "FABRIC_STORE_S1_6",
+                                    "text": "Sewing threads available in approved shade",
+                                    "completed": false
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "TECHNICAL",
+                    "name": "Technical Department",
+                    "icon": "clipboard-list",
+                    "color": "pink",
+                    "stages": [
+                        {
+                            "id": "TECHNICAL_S1",
+                            "name": "Sample Development",
+                            "targetTime": 10,
+                            "status": "pending",
+                            "items": [
+                                {
+                                    "id": "TECHNICAL_S1_1",
+                                    "text": "PP Sample Approval",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "TECHNICAL_S1_2",
+                                    "text": "Construction details finalized",
+                                    "completed": false
+                                }
+                            ]
+                        },
+                        {
+                            "id": "TECHNICAL_S2",
+                            "name": "Size Set & Technical Freeze",
+                            "targetTime": 10,
+                            "status": "pending",
+                            "items": [
+                                {
+                                    "id": "TECHNICAL_S2_1",
+                                    "text": "Size set samples completed",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "TECHNICAL_S2_2",
+                                    "text": "Critical operations identified",
+                                    "completed": false
+                                }
+                            ]
+                        },
+                        {
+                            "id": "TECHNICAL_S3",
+                            "name": "Technical Communication",
+                            "targetTime": 10,
+                            "status": "pending",
+                            "items": [
+                                {
+                                    "id": "TECHNICAL_S3_1",
+                                    "text": "Technical details shared with IE, QA & Production",
+                                    "completed": false
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "QUALITY",
+                    "name": "Quality Department",
+                    "icon": "check-circle",
+                    "color": "red",
+                    "stages": [
+                        {
+                            "id": "QUALITY_ASSURANCE_S1",
+                            "name": "Technical & Risk Validation",
+                            "targetTime": 10,
+                            "status": "pending",
+                            "items": [
+                                {
+                                    "id": "QUALITY_S1_1",
+                                    "text": "Inline quality plan prepared",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "QUALITY_S1_2",
+                                    "text": "Additional checkpoints added for new styles",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "QUALITY_S1_3",
+                                    "text": "Quality checkpoints aligned with OB",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "QUALITY_S1_4",
+                                    "text": "Risk areas identified from sampling",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "QUALITY_S1_5",
+                                    "text": "Quality standards defined for new style",
+                                    "completed": false
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "IE",
+                    "name": "IE Department",
+                    "icon": "activity",
+                    "color": "purple",
+                    "stages": [
+                        {
+                            "id": "IE_S1",
+                            "name": "Method & Layout Preparation",
+                            "targetTime": 10,
+                            "status": "pending",
+                            "items": [
+                                {
+                                    "id": "IE_S1_1",
+                                    "text": "Operation Bulletin finalized",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "IE_S1_2",
+                                    "text": "SAM validated",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "IE_S1_3",
+                                    "text": "Line layout finalized",
+                                    "completed": false
+                                }
+                            ]
+                        },
+                        {
+                            "id": "IE_S2",
+                            "name": "Capacity & Skill Planning",
+                            "targetTime": 10,
+                            "status": "pending",
+                            "items": [
+                                {
+                                    "id": "IE_S2_1",
+                                    "text": "Bottleneck operations identified",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "IE_S2_2",
+                                    "text": "Machine & attachment requirement finalized",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "IE_S2_3",
+                                    "text": "Operator skill requirement mapped",
+                                    "completed": false
+                                }
+                            ]
+                        },
+                        {
+                            "id": "IE_S3",
+                            "name": "Readiness Build-up",
+                            "targetTime": 10,
+                            "status": "pending",
+                            "items": [
+                                {
+                                    "id": "IE_S3_1",
+                                    "text": "Critical Operations highlighted",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "IE_S3_2",
+                                    "text": "Line Balance machine identified",
+                                    "completed": false
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "MAINTENANCE",
+                    "name": "Maintenance Department",
+                    "icon": "wrench",
+                    "color": "amber",
+                    "stages": [
+                        {
+                            "id": "MAINTENANCE_S1",
+                            "name": "Machine Readiness",
+                            "targetTime": 10,
+                            "status": "pending",
+                            "items": [
+                                {
+                                    "id": "MAINTENANCE_S1_1",
+                                    "text": "Required machines available",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "MAINTENANCE_S1_2",
+                                    "text": "Machine setting completed",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "MAINTENANCE_S1_3",
+                                    "text": "Special machines required - identified?",
+                                    "completed": false
+                                }
+                            ]
+                        },
+                        {
+                            "id": "MAINTENANCE_S2",
+                            "name": "Pre-Setting & Support",
+                            "targetTime": 10,
+                            "status": "pending",
+                            "items": [
+                                {
+                                    "id": "MAINTENANCE_S2_1",
+                                    "text": "Machine pre-set checklist completed",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "MAINTENANCE_S2_2",
+                                    "text": "Attachments & folders verified",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "MAINTENANCE_S2_3",
+                                    "text": "Machine lights fitted",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "MAINTENANCE_S2_4",
+                                    "text": "Spare parts availability - guage sets, needles,presser footsFeed dogs, looper and belt check",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "MAINTENANCE_S2_5",
+                                    "text": "Mechanic kit prepared",
+                                    "completed": false
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "CUTTING",
+                    "name": "Cutting Department",
+                    "icon": "scissors",
+                    "color": "indigo",
+                    "stages": [
+                        {
+                            "id": "CUTTING_S1",
+                            "name": "Pilot Cutting",
+                            "targetTime": 10,
+                            "status": "pending",
+                            "items": [
+                                {
+                                    "id": "CUTTING_S1_1",
+                                    "text": "Pilot cutting completed",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "CUTTING_S1_2",
+                                    "text": "First lay date and time confirmed",
+                                    "completed": false
+                                }
+                            ]
+                        },
+                        {
+                            "id": "CUTTING_S2",
+                            "name": "Cutting Validation",
+                            "targetTime": 10,
+                            "status": "pending",
+                            "items": [
+                                {
+                                    "id": "CUTTING_S2_1",
+                                    "text": "Size Ratio and bundling sequence confirmed",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "CUTTING_S2_2",
+                                    "text": "Fusing complete/planned",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "CUTTING_S2_3",
+                                    "text": "Bundles issued as per layout requirement",
+                                    "completed": false
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "PRODUCTION",
+                    "name": "Production Department",
+                    "icon": "factory",
+                    "color": "emerald",
+                    "stages": [
+                        {
+                            "id": "PRODUCTION_S1",
+                            "name": "Line Clearance",
+                            "targetTime": 10,
+                            "status": "pending",
+                            "items": [
+                                {
+                                    "id": "PRODUCTION_S1_1",
+                                    "text": "Previous style reconciliation completed",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "PRODUCTION_S1_2",
+                                    "text": "Previous style WIP cleared",
+                                    "completed": false
+                                }
+                            ]
+                        },
+                        {
+                            "id": "PRODUCTION_S2",
+                            "name": "Manpower Readiness",
+                            "targetTime": 10,
+                            "status": "pending",
+                            "items": [
+                                {
+                                    "id": "PRODUCTION_S2_1",
+                                    "text": "Operator allocation completed",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "PRODUCTION_S2_2",
+                                    "text": "Critical operation training completed",
+                                    "completed": false
+                                }
+                            ]
+                        },
+                        {
+                            "id": "PRODUCTION_S3",
+                            "name": "Line Preparation",
+                            "targetTime": 10,
+                            "status": "pending",
+                            "items": [
+                                {
+                                    "id": "PRODUCTION_S3_1",
+                                    "text": "Green seal sample available",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "PRODUCTION_S3_2",
+                                    "text": "Technical details communicated to operators (training)",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "PRODUCTION_S3_3",
+                                    "text": "Machine release timing aligned with IE and Maintenance",
+                                    "completed": false
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": "ME",
+                    "name": "Manufacturing Excellence",
+                    "icon": "settings-2",
+                    "color": "rose",
+                    "stages": [
+                        {
+                            "id": "ME_-_MANUFACTURING_EXCELLENCE_S1",
+                            "name": "QCO Governance",
+                            "targetTime": 10,
+                            "status": "pending",
+                            "items": [
+                                {
+                                    "id": "ME_S1_1",
+                                    "text": "QCO checklist tracking initiated",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "ME_S1_2",
+                                    "text": "Cross-functional readiness reviewed",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "ME_S1_3",
+                                    "text": "Pre-setting completion confirmed/Follow up of external activities",
+                                    "completed": false
+                                }
+                            ]
+                        },
+                        {
+                            "id": "ME_-_MANUFACTURING_EXCELLENCE_S2",
+                            "name": "Go-Live Control",
+                            "targetTime": 10,
+                            "status": "pending",
+                            "items": [
+                                {
+                                    "id": "ME_S2_1",
+                                    "text": "SOP verified and check started",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "ME_S2_2",
+                                    "text": "Line start authorised",
+                                    "completed": false
+                                },
+                                {
+                                    "id": "ME_S2_3",
+                                    "text": "QCO formally closed",
+                                    "completed": false
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ];
+        }
+
+        // --- Rendering & Interaction ---
+
+        function renderDepartmentStages() {
+            const deptData = fullDepartmentsData.find(d => d.id === currentDepartment);
+            const container = document.getElementById('stagesContainer');
+
+            if (!deptData) {
+                container.innerHTML = '<div class="text-center text-red-500 p-4">Department data not found</div>';
+                return;
+            }
+
+            const color = DEPT_COLORS[currentDepartment];
+
+            const html = deptData.stages.map((stage, idx) => {
+                const completedCount = stage.items.filter(i => i.completed).length;
+                const totalCount = stage.items.length;
+                const isComplete = completedCount === totalCount;
+
+                return `
+                    <div class="glass-card overflow-hidden ${isComplete ? 'border-emerald-400 bg-emerald-50/30' : 'border-transparent'}" 
+                         style="animation: slide-up 0.4s ease-out ${idx * 0.1}s both;">
+                        
+                        <!-- Stage Header -->
+                        <div class="p-4 md:p-6 border-b border-slate-200/60 ${isComplete ? 'bg-emerald-100/50' : `bg-${color}-50/50`}">
+                            <div class="flex justify-between items-start mb-3">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="w-8 h-8 md:w-10 md:h-10 rounded-xl ${isComplete ? 'bg-emerald-500 text-white' : `dept-${color} text-slate-900`} flex items-center justify-center shadow-lg flex-shrink-0">
+                                        <span class="text-sm md:text-lg font-bold">${idx + 1}</span>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <h3 class="text-base md:text-lg font-heading font-bold text-slate-900 leading-tight truncate">${stage.name}</h3>
+                                        <p class="text-[10px] md:text-xs text-slate-500 font-medium uppercase tracking-wider">Target: ${stage.targetTime} min</p>
+                                    </div>
+                                </div>
+                                <div class="text-right flex-shrink-0 ml-2">
+                                    <span class="text-xl md:text-2xl font-bold ${isComplete ? 'text-emerald-600' : 'text-slate-700'}">${completedCount}/${totalCount}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="h-2 bg-white/60 rounded-full overflow-hidden">
+                                <div class="h-full ${isComplete ? 'bg-emerald-500' : `bg-${color}-500`} rounded-full transition-all duration-500" 
+                                     style="width: ${(completedCount / totalCount) * 100}%"></div>
+                            </div>
+                        </div>
+
+                        <!-- Checklist Items -->
+                        <div class="p-3 md:p-6 space-y-2 md:space-y-3 bg-white/40">
+                            ${stage.items.map((item) => `
+                                <div onclick="toggleItem('${stage.id}', '${item.id}')" 
+                                     class="checklist-item flex items-start gap-3 p-3 md:p-4 rounded-xl cursor-pointer border-2 ${item.completed ? 'bg-emerald-50/80 border-emerald-200' : 'bg-white/60 border-transparent hover:border-slate-200 hover:bg-white'} touch-manipulation">
+                                    
+                                    <div class="touch-checkbox rounded-lg border-2 flex items-center justify-center shrink-0 transition-all duration-200
+                                         ${item.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 bg-white'}">
+                                        ${item.completed ? '<i data-lucide="check" class="w-5 h-5"></i>' : ''}
+                                    </div>
+                                    
+                                    <div class="flex-1 min-w-0 py-1">
+                                        <p class="text-sm md:text-base font-medium leading-snug ${item.completed ? 'text-slate-400 line-through' : 'text-slate-700'}">
+                                            ${item.text}
+                                        </p>
+                                        ${item.timestamp ? `
+                                            <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                                                <i data-lucide="clock" class="w-3 h-3"></i>
+                                                ${new Date(item.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                            </p>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <!-- Stage Actions -->
+                        ${!isComplete ? `
+                            <div class="px-3 pb-3 md:px-6 md:pb-6 bg-white/40">
+                                <button onclick="completeStage('${stage.id}')" 
+                                    class="w-full py-3 md:py-3.5 rounded-xl bg-slate-900 text-white font-bold shadow-lg hover:shadow-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 touch-manipulation">
+                                    <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400"></i>
+                                    Mark Stage Complete
+                                </button>
+                            </div>
+                        ` : `
+                            <div class="px-6 pb-6 bg-emerald-50/50 flex items-center justify-center gap-2 text-emerald-700 font-bold py-3">
+                                <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                                Stage Completed
+                            </div>
+                        `}
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = html;
+            lucide.createIcons();
+            updateProgress();
+        }
+
+        function toggleItem(stageId, itemId) {
+            const dept = fullDepartmentsData.find(d => d.id === currentDepartment);
+            const stage = dept.stages.find(s => s.id === stageId);
+            const item = stage.items.find(i => i.id === itemId);
+
+            item.completed = !item.completed;
+            item.timestamp = item.completed ? new Date().toISOString() : null;
+
+            const allDone = stage.items.every(i => i.completed);
+            stage.status = allDone ? 'completed' : stage.items.some(i => i.completed) ? 'in-progress' : 'pending';
+
+            debouncedSave();
+            renderDepartmentStages();
+        }
+
+        function completeStage(stageId) {
+            const dept = fullDepartmentsData.find(d => d.id === currentDepartment);
+            const stage = dept.stages.find(s => s.id === stageId);
+
+            stage.items.forEach(i => {
+                if (!i.completed) {
+                    i.completed = true;
+                    i.timestamp = new Date().toISOString();
+                }
+            });
+            stage.status = 'completed';
+
+            debouncedSave();
+            renderDepartmentStages();
+
+            const allStagesComplete = dept.stages.every(s => s.status === 'completed');
+            if (allStagesComplete) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'All Stages Complete!',
+                    text: `${dept.name} checklist is now fully completed.`,
+                    confirmButtonColor: '#10b981'
+                });
+            }
+        }
+
+        function updateProgress() {
+            const dept = fullDepartmentsData.find(d => d.id === currentDepartment);
+            if (!dept) return;
+
+            let totalItems = 0;
+            let completedItems = 0;
+
+            dept.stages.forEach(stage => {
+                totalItems += stage.items.length;
+                completedItems += stage.items.filter(i => i.completed).length;
+            });
+
+            const percent = totalItems === 0 ? 0 : Math.round((completedItems / totalItems) * 100);
+            const completedStages = dept.stages.filter(s => s.status === 'completed').length;
+
+            document.getElementById('progressText').textContent = `${percent}%`;
+            document.getElementById('mainProgress').style.width = `${percent}%`;
+            document.getElementById('stageProgress').textContent = `${completedStages}/${dept.stages.length}`;
+            document.getElementById('itemProgress').textContent = `${completedItems}/${totalItems}`;
+            document.title = `${percent}% - ${currentDepartment}`;
+        }
+
+        // --- Persistence ---
+
+        async function saveToFirebase(silent = false) {
+            if (!currentQCOId) return false;
+
+            // If offline, show status and exit (data will be in localStorage via backup)
+            if (!isOnline || !db) {
+                showSavingState();
+                // Save to localStorage as backup
+                localStorage.setItem(`dept_backup_${currentQCOId}`, JSON.stringify(fullDepartmentsData));
+                setTimeout(() => {
+                    document.getElementById('saveStatus').innerHTML = '<div class="w-1.5 h-1.5 bg-amber-500 rounded-full mr-1"></div><span class="hidden sm:inline">Offline</span>';
+                }, 500);
+                return false;
+            }
+
+            try {
+                await db.runTransaction(async (transaction) => {
+                    const docRef = db.collection('changeovers').doc(currentQCOId);
+                    const doc = await transaction.get(docRef);
+
+                    let currentData = doc.exists ? doc.data().departments || [] : [];
+
+                    const deptIndex = currentData.findIndex(d => d.id === currentDepartment);
+                    const ourDept = fullDepartmentsData.find(d => d.id === currentDepartment);
+
+                    if (deptIndex >= 0) {
+                        currentData[deptIndex] = ourDept;
+                    } else {
+                        currentData.push(ourDept);
+                    }
+
+                    transaction.set(docRef, {
+                        departments: currentData,
+                        lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+                        lastUpdatedBy: currentDepartment,
+                        [`lastUpdated_${currentDepartment}`]: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                });
+
+                if (!silent) showSavedState();
+                // Clear backup on successful save
+                localStorage.removeItem(`dept_backup_${currentQCOId}`);
+                return true;
+            } catch (error) {
+                console.error("Save error:", error);
+                // Save to localStorage for later sync
+                localStorage.setItem(`dept_backup_${currentQCOId}`, JSON.stringify(fullDepartmentsData));
+                if (!silent) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Sync Failed',
+                        text: 'Changes saved locally. Will sync when online.',
+                        confirmButtonColor: '#0ea5e9'
+                    });
+                }
+                return false;
+            }
+        }
+
+        function debouncedSave() {
+            if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+            showSavingState();
+            autoSaveTimeout = setTimeout(() => saveToFirebase(), 1500);
+        }
+
+        async function manualSave() {
+            if (!currentQCOId) {
+                Swal.fire({ icon: 'warning', title: 'No QCO Selected', text: 'Select a changeover first' });
+                return;
+            }
+
+            const btn = document.querySelector('button[onclick="manualSave()"]');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<div class="spinner w-4 h-4 border-white border-t-transparent mr-2"></div> Saving...';
+
+            await saveToFirebase(true);
+            btn.innerHTML = original;
+
+            if (isOnline) {
+                showSavedState();
+                setTimeout(() => {
+                    document.getElementById('saveStatus').classList.add('hidden');
+                }, 2000);
+            }
+        }
+
+        function showSavingState() {
+            const status = document.getElementById('saveStatus');
+            status.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin text-emerald-500 mr-1"></i><span class="hidden sm:inline">Saving...</span>';
+            status.classList.remove('hidden');
+            status.classList.add('flex');
+            lucide.createIcons();
+        }
+
+        function showSavedState() {
+            const status = document.getElementById('saveStatus');
+            status.innerHTML = '<div class="w-1.5 h-1.5 bg-emerald-500 rounded-full live-dot mr-1"></div><span class="hidden sm:inline">Saved</span>';
+            status.classList.remove('hidden');
+            status.classList.add('flex');
+        }
+    </script>
+</body>
+
+</html>

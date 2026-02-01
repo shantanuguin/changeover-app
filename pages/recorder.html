@@ -445,6 +445,11 @@
             if (!qcoId) return;
             localStorage.setItem('currentQCOId', qcoId);
             currentQCOId = qcoId;
+
+            // Clear current view to prevent interaction with stale data
+            document.getElementById('operationsSection').classList.add('hidden');
+            document.getElementById('operationsList').innerHTML = ''; // Clear list
+
             loadData(); // Reload operations and data for new QCO
         }
 
@@ -462,7 +467,7 @@
 
                     // Load Operations List for Tracking
                     if (data.operationsList && Array.isArray(data.operationsList)) {
-                        renderOperationsList(data.operationsList, data.operationTimings || {});
+                        renderOperationsList(data.operationsList, data.operationTimings || {}, currentQCOId);
                     } else {
                         document.getElementById('operationsSection').classList.add('hidden');
                     }
@@ -473,7 +478,7 @@
             }
         }
 
-        function renderOperationsList(operations, timings) {
+        function renderOperationsList(operations, timings, qcoId) {
             const section = document.getElementById('operationsSection');
             const list = document.getElementById('operationsList');
 
@@ -509,20 +514,9 @@
                     ? ((new Date(endTime) - new Date(startTime)) / 60000).toFixed(2)
                     : null;
 
-                // Debug logging
-                if (index === 0) {
-                    console.log('Operation debug:', {
-                        opName,
-                        opType: typeof op,
-                        opSMV,
-                        standardTime,
-                        actualTime,
-                        timing
-                    });
-                }
-
                 let rowHtml = '';
 
+                // Common button logic - always pass qcoId!
                 if (endTime && actualTime !== null) {
                     // Completed - show all controls
                     const isOnTime = standardTime ? parseFloat(actualTime) <= parseFloat(standardTime) : true;
@@ -559,11 +553,11 @@
                                 class="flex-1 sm:flex-none px-3 py-2 text-xs rounded-lg border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all min-w-[120px]">
                             
                             <div class="flex items-center gap-2 ml-auto sm:ml-0">
-                                <button onclick="saveOperationDetails('${index}', '${safeOpName}')" 
+                                <button onclick="saveOperationDetails('${qcoId}', '${index}', '${safeOpName}')" 
                                     class="p-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all flex-shrink-0" title="Save Info">
                                     <i data-lucide="save" class="w-4 h-4"></i>
                                 </button>
-                                <button onclick="openEditModal('${index}', '${safeOpName}')" 
+                                <button onclick="openEditModal('${qcoId}', '${index}', '${safeOpName}')" 
                                     class="px-4 py-2 rounded-lg bg-white border-2 border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 hover:border-slate-300 transition-all whitespace-nowrap">
                                     <i data-lucide="edit-3" class="w-3 h-3 inline mr-1"></i> Edit
                                 </button>
@@ -585,7 +579,7 @@
                                 ${standardTime ? `<span class="text-[10px] font-medium text-slate-500">Allowed: ${standardTime}m</span>` : ''}
                             </div>
                         </div>
-                        <button onclick="endOperation('${index}', '${safeOpName}', ${opSMV})" 
+                        <button onclick="endOperation('${qcoId}', '${index}', '${safeOpName}', ${opSMV})" 
                             class="px-6 py-2 rounded-lg bg-rose-500 text-white text-xs font-bold hover:bg-rose-600 transition-all shadow-sm ml-auto">
                             End
                         </button>
@@ -605,7 +599,7 @@
                                 ${standardTime ? `<span class="text-[10px] font-medium text-slate-500">Allowed: ${standardTime}m</span>` : ''}
                             </div>
                         </div>
-                        <button onclick="startOperation('${index}', '${safeOpName}')" 
+                        <button onclick="startOperation('${qcoId}', '${index}', '${safeOpName}')" 
                             class="px-6 py-2 rounded-lg bg-emerald-500 text-white text-xs font-bold hover:bg-emerald-600 transition-all shadow-sm ml-auto">
                             Start
                         </button>
@@ -626,9 +620,9 @@
 
         let currentEditOp = null;
 
-        async function openEditModal(index, opName) {
-            if (!currentQCOId) return;
-            currentEditOp = { index, opName };
+        async function openEditModal(qcoId, index, opName) {
+            if (!qcoId) return;
+            currentEditOp = { index, opName, qcoId };
 
             try {
                 // Get current values from UI
@@ -636,7 +630,7 @@
                 const currentRemarks = document.getElementById(`remarks_${index}`) ? document.getElementById(`remarks_${index}`).value : '';
 
                 // Get original data for timestamps
-                const doc = await db.collection('changeovers').doc(currentQCOId).get();
+                const doc = await db.collection('changeovers').doc(qcoId).get();
                 const data = doc.data();
                 const timing = data.operationTimings && data.operationTimings[opName];
 
@@ -677,7 +671,8 @@
         }
 
         async function saveEditModal() {
-            if (!currentQCOId || !currentEditOp) return;
+            if (!currentEditOp || !currentEditOp.qcoId) return;
+            const qcoId = currentEditOp.qcoId;
 
             try {
                 const opName = currentEditOp.opName;
@@ -704,12 +699,12 @@
                 // Get standard time to preserve or recalculate if needed? 
                 // Mostly just update what changed.
                 // Re-fetching original to be safe about preserving other fields
-                const doc = await db.collection('changeovers').doc(currentQCOId).get();
+                const doc = await db.collection('changeovers').doc(qcoId).get();
                 const data = doc.data();
                 const existing = data.operationTimings[opName] || {};
 
                 const fieldPath = new firebase.firestore.FieldPath('operationTimings', opName);
-                await db.collection('changeovers').doc(currentQCOId).update(fieldPath, {
+                await db.collection('changeovers').doc(qcoId).update(fieldPath, {
                     ...existing,
                     start: startISO,
                     end: endISO,
@@ -823,11 +818,11 @@
             }
         }
 
-        async function startOperation(index, opName) {
-            if (!currentQCOId) return;
+        async function startOperation(qcoId, index, opName) {
+            if (!qcoId) return;
             try {
                 // Fetch current data to find the last operation's end time
-                const doc = await db.collection('changeovers').doc(currentQCOId).get();
+                const doc = await db.collection('changeovers').doc(qcoId).get();
                 const data = doc.data();
                 const timings = data.operationTimings || {};
 
@@ -854,7 +849,7 @@
 
                 const fieldPath = new firebase.firestore.FieldPath('operationTimings', opName);
 
-                await db.collection('changeovers').doc(currentQCOId).update(
+                await db.collection('changeovers').doc(qcoId).update(
                     fieldPath, { start: timestamp }
                 );
 
@@ -866,13 +861,13 @@
             }
         }
 
-        async function endOperation(index, opName, opSMV) {
-            if (!currentQCOId) return;
+        async function endOperation(qcoId, index, opName, opSMV) {
+            if (!qcoId) return;
             try {
                 const endTimestamp = new Date().toISOString();
 
                 // Get the start time from current data
-                const doc = await db.collection('changeovers').doc(currentQCOId).get();
+                const doc = await db.collection('changeovers').doc(qcoId).get();
                 const data = doc.data();
                 const timing = data.operationTimings && data.operationTimings[opName];
                 const startTimestamp = timing ? timing.start : null;
@@ -892,7 +887,7 @@
 
                 // Update Firebase with all timing data
                 const fieldPath = new firebase.firestore.FieldPath('operationTimings', opName);
-                await db.collection('changeovers').doc(currentQCOId).update(
+                await db.collection('changeovers').doc(qcoId).update(
                     fieldPath, {
                     start: startTimestamp,
                     end: endTimestamp,
@@ -908,14 +903,14 @@
             }
         }
 
-        async function saveOperationDetails(index, opName) {
-            if (!currentQCOId) return;
+        async function saveOperationDetails(qcoId, index, opName) {
+            if (!qcoId) return;
             try {
                 const department = document.getElementById(`dept_${index}`).value;
                 const remarks = document.getElementById(`remarks_${index}`).value;
 
                 // Get existing timing data
-                const doc = await db.collection('changeovers').doc(currentQCOId).get();
+                const doc = await db.collection('changeovers').doc(qcoId).get();
                 const data = doc.data();
                 const existingTiming = data.operationTimings && data.operationTimings[opName];
 
@@ -926,7 +921,7 @@
 
                 // Update with department and remarks
                 const fieldPath = new firebase.firestore.FieldPath('operationTimings', opName);
-                await db.collection('changeovers').doc(currentQCOId).update(
+                await db.collection('changeovers').doc(qcoId).update(
                     fieldPath, {
                     ...existingTiming,
                     department: department,

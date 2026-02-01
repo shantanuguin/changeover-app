@@ -103,7 +103,7 @@
         }
 
         .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
+            width: 10px;
         }
 
         .custom-scrollbar::-webkit-scrollbar-track {
@@ -472,498 +472,498 @@
 
         // --- Data Structure: Departments & Stages ---
         const defaultStructure = [
-    {
-        "id": "PLANNING",
-        "name": "Planning Department",
-        "icon": "calendar",
-        "color": "blue",
-        "stages": [
             {
-                "id": "PLANNING_S1",
-                "name": "Style & Order Handover",
-                "targetTime": 10,
-                "status": "pending",
-                "items": [
+                "id": "PLANNING",
+                "name": "Planning Department",
+                "icon": "calendar",
+                "color": "blue",
+                "stages": [
                     {
-                        "id": "PLANNING_S1_1",
-                        "text": "GS / AR / QA sample received",
-                        "completed": false
-                    },
-                    {
-                        "id": "PLANNING_S1_2",
-                        "text": "Style name, buyer, order qty,",
-                        "completed": false
-                    },
-                    {
-                        "id": "PLANNING_S1_3",
-                        "text": " line allocation",
-                        "completed": false
-                    },
-                    {
-                        "id": "PLANNING_S1_4",
-                        "text": "Planned changeover date & time",
-                        "completed": false
-                    },
-                    {
-                        "id": "PLANNING_S1_5",
-                        "text": "Order Priority aligned with master plan",
-                        "completed": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": "FABRIC_STORE",
-        "name": "Fabric & Trims",
-        "icon": "archive",
-        "color": "cyan",
-        "stages": [
-            {
-                "id": "STORE_-_FABRIC_&_TRIMS_S1",
-                "name": "Fabric Readiness",
-                "targetTime": 10,
-                "status": "pending",
-                "items": [
-                    {
-                        "id": "FABRIC_STORE_S1_1",
-                        "text": "Bulk fabric available in-house",
-                        "completed": false
-                    },
-                    {
-                        "id": "FABRIC_STORE_S1_2",
-                        "text": "Fabric quantity matching order requirement",
-                        "completed": false
-                    },
-                    {
-                        "id": "FABRIC_STORE_S1_3",
-                        "text": "Fabric lots segregated and identified",
-                        "completed": false
-                    },
-                    {
-                        "id": "FABRIC_STORE_S1_4",
-                        "text": "All sewing trims available",
-                        "completed": false
-                    },
-                    {
-                        "id": "FABRIC_STORE_S1_5",
-                        "text": "Approved trim card available",
-                        "completed": false
-                    },
-                    {
-                        "id": "FABRIC_STORE_S1_6",
-                        "text": "Sewing threads available in approved shade",
-                        "completed": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": "TECHNICAL",
-        "name": "Technical Department",
-        "icon": "clipboard-list",
-        "color": "pink",
-        "stages": [
-            {
-                "id": "TECHNICAL_S1",
-                "name": "Sample Development",
-                "targetTime": 10,
-                "status": "pending",
-                "items": [
-                    {
-                        "id": "TECHNICAL_S1_1",
-                        "text": "PP Sample Approval",
-                        "completed": false
-                    },
-                    {
-                        "id": "TECHNICAL_S1_2",
-                        "text": "Construction details finalized",
-                        "completed": false
+                        "id": "PLANNING_S1",
+                        "name": "Style & Order Handover",
+                        "targetTime": 10,
+                        "status": "pending",
+                        "items": [
+                            {
+                                "id": "PLANNING_S1_1",
+                                "text": "GS / AR / QA sample received",
+                                "completed": false
+                            },
+                            {
+                                "id": "PLANNING_S1_2",
+                                "text": "Style name, buyer, order qty,",
+                                "completed": false
+                            },
+                            {
+                                "id": "PLANNING_S1_3",
+                                "text": " line allocation",
+                                "completed": false
+                            },
+                            {
+                                "id": "PLANNING_S1_4",
+                                "text": "Planned changeover date & time",
+                                "completed": false
+                            },
+                            {
+                                "id": "PLANNING_S1_5",
+                                "text": "Order Priority aligned with master plan",
+                                "completed": false
+                            }
+                        ]
                     }
                 ]
             },
             {
-                "id": "TECHNICAL_S2",
-                "name": "Size Set & Technical Freeze",
-                "targetTime": 10,
-                "status": "pending",
-                "items": [
+                "id": "FABRIC_STORE",
+                "name": "Fabric & Trims",
+                "icon": "archive",
+                "color": "cyan",
+                "stages": [
                     {
-                        "id": "TECHNICAL_S2_1",
-                        "text": "Size set samples completed",
-                        "completed": false
-                    },
-                    {
-                        "id": "TECHNICAL_S2_2",
-                        "text": "Critical operations identified",
-                        "completed": false
+                        "id": "STORE_-_FABRIC_&_TRIMS_S1",
+                        "name": "Fabric Readiness",
+                        "targetTime": 10,
+                        "status": "pending",
+                        "items": [
+                            {
+                                "id": "FABRIC_STORE_S1_1",
+                                "text": "Bulk fabric available in-house",
+                                "completed": false
+                            },
+                            {
+                                "id": "FABRIC_STORE_S1_2",
+                                "text": "Fabric quantity matching order requirement",
+                                "completed": false
+                            },
+                            {
+                                "id": "FABRIC_STORE_S1_3",
+                                "text": "Fabric lots segregated and identified",
+                                "completed": false
+                            },
+                            {
+                                "id": "FABRIC_STORE_S1_4",
+                                "text": "All sewing trims available",
+                                "completed": false
+                            },
+                            {
+                                "id": "FABRIC_STORE_S1_5",
+                                "text": "Approved trim card available",
+                                "completed": false
+                            },
+                            {
+                                "id": "FABRIC_STORE_S1_6",
+                                "text": "Sewing threads available in approved shade",
+                                "completed": false
+                            }
+                        ]
                     }
                 ]
             },
             {
-                "id": "TECHNICAL_S3",
-                "name": "Technical Communication",
-                "targetTime": 10,
-                "status": "pending",
-                "items": [
+                "id": "TECHNICAL",
+                "name": "Technical Department",
+                "icon": "clipboard-list",
+                "color": "pink",
+                "stages": [
                     {
-                        "id": "TECHNICAL_S3_1",
-                        "text": "Technical details shared with IE, QA & Production",
-                        "completed": false
+                        "id": "TECHNICAL_S1",
+                        "name": "Sample Development",
+                        "targetTime": 10,
+                        "status": "pending",
+                        "items": [
+                            {
+                                "id": "TECHNICAL_S1_1",
+                                "text": "PP Sample Approval",
+                                "completed": false
+                            },
+                            {
+                                "id": "TECHNICAL_S1_2",
+                                "text": "Construction details finalized",
+                                "completed": false
+                            }
+                        ]
+                    },
+                    {
+                        "id": "TECHNICAL_S2",
+                        "name": "Size Set & Technical Freeze",
+                        "targetTime": 10,
+                        "status": "pending",
+                        "items": [
+                            {
+                                "id": "TECHNICAL_S2_1",
+                                "text": "Size set samples completed",
+                                "completed": false
+                            },
+                            {
+                                "id": "TECHNICAL_S2_2",
+                                "text": "Critical operations identified",
+                                "completed": false
+                            }
+                        ]
+                    },
+                    {
+                        "id": "TECHNICAL_S3",
+                        "name": "Technical Communication",
+                        "targetTime": 10,
+                        "status": "pending",
+                        "items": [
+                            {
+                                "id": "TECHNICAL_S3_1",
+                                "text": "Technical details shared with IE, QA & Production",
+                                "completed": false
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "QUALITY",
+                "name": "Quality Department",
+                "icon": "check-circle",
+                "color": "red",
+                "stages": [
+                    {
+                        "id": "QUALITY_ASSURANCE_S1",
+                        "name": "Technical & Risk Validation",
+                        "targetTime": 10,
+                        "status": "pending",
+                        "items": [
+                            {
+                                "id": "QUALITY_S1_1",
+                                "text": "Inline quality plan prepared",
+                                "completed": false
+                            },
+                            {
+                                "id": "QUALITY_S1_2",
+                                "text": "Additional checkpoints added for new styles",
+                                "completed": false
+                            },
+                            {
+                                "id": "QUALITY_S1_3",
+                                "text": "Quality checkpoints aligned with OB",
+                                "completed": false
+                            },
+                            {
+                                "id": "QUALITY_S1_4",
+                                "text": "Risk areas identified from sampling",
+                                "completed": false
+                            },
+                            {
+                                "id": "QUALITY_S1_5",
+                                "text": "Quality standards defined for new style",
+                                "completed": false
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "IE",
+                "name": "IE Department",
+                "icon": "activity",
+                "color": "purple",
+                "stages": [
+                    {
+                        "id": "IE_S1",
+                        "name": "Method & Layout Preparation",
+                        "targetTime": 10,
+                        "status": "pending",
+                        "items": [
+                            {
+                                "id": "IE_S1_1",
+                                "text": "Operation Bulletin finalized",
+                                "completed": false
+                            },
+                            {
+                                "id": "IE_S1_2",
+                                "text": "SAM validated",
+                                "completed": false
+                            },
+                            {
+                                "id": "IE_S1_3",
+                                "text": "Line layout finalized",
+                                "completed": false
+                            }
+                        ]
+                    },
+                    {
+                        "id": "IE_S2",
+                        "name": "Capacity & Skill Planning",
+                        "targetTime": 10,
+                        "status": "pending",
+                        "items": [
+                            {
+                                "id": "IE_S2_1",
+                                "text": "Bottleneck operations identified",
+                                "completed": false
+                            },
+                            {
+                                "id": "IE_S2_2",
+                                "text": "Machine & attachment requirement finalized",
+                                "completed": false
+                            },
+                            {
+                                "id": "IE_S2_3",
+                                "text": "Operator skill requirement mapped",
+                                "completed": false
+                            }
+                        ]
+                    },
+                    {
+                        "id": "IE_S3",
+                        "name": "Readiness Build-up",
+                        "targetTime": 10,
+                        "status": "pending",
+                        "items": [
+                            {
+                                "id": "IE_S3_1",
+                                "text": "Critical Operations highlighted",
+                                "completed": false
+                            },
+                            {
+                                "id": "IE_S3_2",
+                                "text": "Line Balance machine identified",
+                                "completed": false
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "MAINTENANCE",
+                "name": "Maintenance Department",
+                "icon": "wrench",
+                "color": "amber",
+                "stages": [
+                    {
+                        "id": "MAINTENANCE_S1",
+                        "name": "Machine Readiness",
+                        "targetTime": 10,
+                        "status": "pending",
+                        "items": [
+                            {
+                                "id": "MAINTENANCE_S1_1",
+                                "text": "Required machines available",
+                                "completed": false
+                            },
+                            {
+                                "id": "MAINTENANCE_S1_2",
+                                "text": "Machine setting completed",
+                                "completed": false
+                            },
+                            {
+                                "id": "MAINTENANCE_S1_3",
+                                "text": "Special machines required - identified?",
+                                "completed": false
+                            }
+                        ]
+                    },
+                    {
+                        "id": "MAINTENANCE_S2",
+                        "name": "Pre-Setting & Support",
+                        "targetTime": 10,
+                        "status": "pending",
+                        "items": [
+                            {
+                                "id": "MAINTENANCE_S2_1",
+                                "text": "Machine pre-set checklist completed",
+                                "completed": false
+                            },
+                            {
+                                "id": "MAINTENANCE_S2_2",
+                                "text": "Attachments & folders verified",
+                                "completed": false
+                            },
+                            {
+                                "id": "MAINTENANCE_S2_3",
+                                "text": "Machine lights fitted",
+                                "completed": false
+                            },
+                            {
+                                "id": "MAINTENANCE_S2_4",
+                                "text": "Spare parts availability - guage sets, needles,presser footsFeed dogs, looper and belt check",
+                                "completed": false
+                            },
+                            {
+                                "id": "MAINTENANCE_S2_5",
+                                "text": "Mechanic kit prepared",
+                                "completed": false
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "CUTTING",
+                "name": "Cutting Department",
+                "icon": "scissors",
+                "color": "indigo",
+                "stages": [
+                    {
+                        "id": "CUTTING_S1",
+                        "name": "Pilot Cutting",
+                        "targetTime": 10,
+                        "status": "pending",
+                        "items": [
+                            {
+                                "id": "CUTTING_S1_1",
+                                "text": "Pilot cutting completed",
+                                "completed": false
+                            },
+                            {
+                                "id": "CUTTING_S1_2",
+                                "text": "First lay date and time confirmed",
+                                "completed": false
+                            }
+                        ]
+                    },
+                    {
+                        "id": "CUTTING_S2",
+                        "name": "Cutting Validation",
+                        "targetTime": 10,
+                        "status": "pending",
+                        "items": [
+                            {
+                                "id": "CUTTING_S2_1",
+                                "text": "Size Ratio and bundling sequence confirmed",
+                                "completed": false
+                            },
+                            {
+                                "id": "CUTTING_S2_2",
+                                "text": "Fusing complete/planned",
+                                "completed": false
+                            },
+                            {
+                                "id": "CUTTING_S2_3",
+                                "text": "Bundles issued as per layout requirement",
+                                "completed": false
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "PRODUCTION",
+                "name": "Production Department",
+                "icon": "factory",
+                "color": "emerald",
+                "stages": [
+                    {
+                        "id": "PRODUCTION_S1",
+                        "name": "Line Clearance",
+                        "targetTime": 10,
+                        "status": "pending",
+                        "items": [
+                            {
+                                "id": "PRODUCTION_S1_1",
+                                "text": "Previous style reconciliation completed",
+                                "completed": false
+                            },
+                            {
+                                "id": "PRODUCTION_S1_2",
+                                "text": "Previous style WIP cleared",
+                                "completed": false
+                            }
+                        ]
+                    },
+                    {
+                        "id": "PRODUCTION_S2",
+                        "name": "Manpower Readiness",
+                        "targetTime": 10,
+                        "status": "pending",
+                        "items": [
+                            {
+                                "id": "PRODUCTION_S2_1",
+                                "text": "Operator allocation completed",
+                                "completed": false
+                            },
+                            {
+                                "id": "PRODUCTION_S2_2",
+                                "text": "Critical operation training completed",
+                                "completed": false
+                            }
+                        ]
+                    },
+                    {
+                        "id": "PRODUCTION_S3",
+                        "name": "Line Preparation",
+                        "targetTime": 10,
+                        "status": "pending",
+                        "items": [
+                            {
+                                "id": "PRODUCTION_S3_1",
+                                "text": "Green seal sample available",
+                                "completed": false
+                            },
+                            {
+                                "id": "PRODUCTION_S3_2",
+                                "text": "Technical details communicated to operators (training)",
+                                "completed": false
+                            },
+                            {
+                                "id": "PRODUCTION_S3_3",
+                                "text": "Machine release timing aligned with IE and Maintenance",
+                                "completed": false
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "id": "ME",
+                "name": "Manufacturing Excellence",
+                "icon": "settings-2",
+                "color": "rose",
+                "stages": [
+                    {
+                        "id": "ME_-_MANUFACTURING_EXCELLENCE_S1",
+                        "name": "QCO Governance",
+                        "targetTime": 10,
+                        "status": "pending",
+                        "items": [
+                            {
+                                "id": "ME_S1_1",
+                                "text": "QCO checklist tracking initiated",
+                                "completed": false
+                            },
+                            {
+                                "id": "ME_S1_2",
+                                "text": "Cross-functional readiness reviewed",
+                                "completed": false
+                            },
+                            {
+                                "id": "ME_S1_3",
+                                "text": "Pre-setting completion confirmed/Follow up of external activities",
+                                "completed": false
+                            }
+                        ]
+                    },
+                    {
+                        "id": "ME_-_MANUFACTURING_EXCELLENCE_S2",
+                        "name": "Go-Live Control",
+                        "targetTime": 10,
+                        "status": "pending",
+                        "items": [
+                            {
+                                "id": "ME_S2_1",
+                                "text": "SOP verified and check started",
+                                "completed": false
+                            },
+                            {
+                                "id": "ME_S2_2",
+                                "text": "Line start authorised",
+                                "completed": false
+                            },
+                            {
+                                "id": "ME_S2_3",
+                                "text": "QCO formally closed",
+                                "completed": false
+                            }
+                        ]
                     }
                 ]
             }
-        ]
-    },
-    {
-        "id": "QUALITY",
-        "name": "Quality Department",
-        "icon": "check-circle",
-        "color": "red",
-        "stages": [
-            {
-                "id": "QUALITY_ASSURANCE_S1",
-                "name": "Technical & Risk Validation",
-                "targetTime": 10,
-                "status": "pending",
-                "items": [
-                    {
-                        "id": "QUALITY_S1_1",
-                        "text": "Inline quality plan prepared",
-                        "completed": false
-                    },
-                    {
-                        "id": "QUALITY_S1_2",
-                        "text": "Additional checkpoints added for new styles",
-                        "completed": false
-                    },
-                    {
-                        "id": "QUALITY_S1_3",
-                        "text": "Quality checkpoints aligned with OB",
-                        "completed": false
-                    },
-                    {
-                        "id": "QUALITY_S1_4",
-                        "text": "Risk areas identified from sampling",
-                        "completed": false
-                    },
-                    {
-                        "id": "QUALITY_S1_5",
-                        "text": "Quality standards defined for new style",
-                        "completed": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": "IE",
-        "name": "IE Department",
-        "icon": "activity",
-        "color": "purple",
-        "stages": [
-            {
-                "id": "IE_S1",
-                "name": "Method & Layout Preparation",
-                "targetTime": 10,
-                "status": "pending",
-                "items": [
-                    {
-                        "id": "IE_S1_1",
-                        "text": "Operation Bulletin finalized",
-                        "completed": false
-                    },
-                    {
-                        "id": "IE_S1_2",
-                        "text": "SAM validated",
-                        "completed": false
-                    },
-                    {
-                        "id": "IE_S1_3",
-                        "text": "Line layout finalized",
-                        "completed": false
-                    }
-                ]
-            },
-            {
-                "id": "IE_S2",
-                "name": "Capacity & Skill Planning",
-                "targetTime": 10,
-                "status": "pending",
-                "items": [
-                    {
-                        "id": "IE_S2_1",
-                        "text": "Bottleneck operations identified",
-                        "completed": false
-                    },
-                    {
-                        "id": "IE_S2_2",
-                        "text": "Machine & attachment requirement finalized",
-                        "completed": false
-                    },
-                    {
-                        "id": "IE_S2_3",
-                        "text": "Operator skill requirement mapped",
-                        "completed": false
-                    }
-                ]
-            },
-            {
-                "id": "IE_S3",
-                "name": "Readiness Build-up",
-                "targetTime": 10,
-                "status": "pending",
-                "items": [
-                    {
-                        "id": "IE_S3_1",
-                        "text": "Critical Operations highlighted",
-                        "completed": false
-                    },
-                    {
-                        "id": "IE_S3_2",
-                        "text": "Line Balance machine identified",
-                        "completed": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": "MAINTENANCE",
-        "name": "Maintenance Department",
-        "icon": "wrench",
-        "color": "amber",
-        "stages": [
-            {
-                "id": "MAINTENANCE_S1",
-                "name": "Machine Readiness",
-                "targetTime": 10,
-                "status": "pending",
-                "items": [
-                    {
-                        "id": "MAINTENANCE_S1_1",
-                        "text": "Required machines available",
-                        "completed": false
-                    },
-                    {
-                        "id": "MAINTENANCE_S1_2",
-                        "text": "Machine setting completed",
-                        "completed": false
-                    },
-                    {
-                        "id": "MAINTENANCE_S1_3",
-                        "text": "Special machines required - identified?",
-                        "completed": false
-                    }
-                ]
-            },
-            {
-                "id": "MAINTENANCE_S2",
-                "name": "Pre-Setting & Support",
-                "targetTime": 10,
-                "status": "pending",
-                "items": [
-                    {
-                        "id": "MAINTENANCE_S2_1",
-                        "text": "Machine pre-set checklist completed",
-                        "completed": false
-                    },
-                    {
-                        "id": "MAINTENANCE_S2_2",
-                        "text": "Attachments & folders verified",
-                        "completed": false
-                    },
-                    {
-                        "id": "MAINTENANCE_S2_3",
-                        "text": "Machine lights fitted",
-                        "completed": false
-                    },
-                    {
-                        "id": "MAINTENANCE_S2_4",
-                        "text": "Spare parts availability - guage sets, needles,presser footsFeed dogs, looper and belt check",
-                        "completed": false
-                    },
-                    {
-                        "id": "MAINTENANCE_S2_5",
-                        "text": "Mechanic kit prepared",
-                        "completed": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": "CUTTING",
-        "name": "Cutting Department",
-        "icon": "scissors",
-        "color": "indigo",
-        "stages": [
-            {
-                "id": "CUTTING_S1",
-                "name": "Pilot Cutting",
-                "targetTime": 10,
-                "status": "pending",
-                "items": [
-                    {
-                        "id": "CUTTING_S1_1",
-                        "text": "Pilot cutting completed",
-                        "completed": false
-                    },
-                    {
-                        "id": "CUTTING_S1_2",
-                        "text": "First lay date and time confirmed",
-                        "completed": false
-                    }
-                ]
-            },
-            {
-                "id": "CUTTING_S2",
-                "name": "Cutting Validation",
-                "targetTime": 10,
-                "status": "pending",
-                "items": [
-                    {
-                        "id": "CUTTING_S2_1",
-                        "text": "Size Ratio and bundling sequence confirmed",
-                        "completed": false
-                    },
-                    {
-                        "id": "CUTTING_S2_2",
-                        "text": "Fusing complete/planned",
-                        "completed": false
-                    },
-                    {
-                        "id": "CUTTING_S2_3",
-                        "text": "Bundles issued as per layout requirement",
-                        "completed": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": "PRODUCTION",
-        "name": "Production Department",
-        "icon": "factory",
-        "color": "emerald",
-        "stages": [
-            {
-                "id": "PRODUCTION_S1",
-                "name": "Line Clearance",
-                "targetTime": 10,
-                "status": "pending",
-                "items": [
-                    {
-                        "id": "PRODUCTION_S1_1",
-                        "text": "Previous style reconciliation completed",
-                        "completed": false
-                    },
-                    {
-                        "id": "PRODUCTION_S1_2",
-                        "text": "Previous style WIP cleared",
-                        "completed": false
-                    }
-                ]
-            },
-            {
-                "id": "PRODUCTION_S2",
-                "name": "Manpower Readiness",
-                "targetTime": 10,
-                "status": "pending",
-                "items": [
-                    {
-                        "id": "PRODUCTION_S2_1",
-                        "text": "Operator allocation completed",
-                        "completed": false
-                    },
-                    {
-                        "id": "PRODUCTION_S2_2",
-                        "text": "Critical operation training completed",
-                        "completed": false
-                    }
-                ]
-            },
-            {
-                "id": "PRODUCTION_S3",
-                "name": "Line Preparation",
-                "targetTime": 10,
-                "status": "pending",
-                "items": [
-                    {
-                        "id": "PRODUCTION_S3_1",
-                        "text": "Green seal sample available",
-                        "completed": false
-                    },
-                    {
-                        "id": "PRODUCTION_S3_2",
-                        "text": "Technical details communicated to operators (training)",
-                        "completed": false
-                    },
-                    {
-                        "id": "PRODUCTION_S3_3",
-                        "text": "Machine release timing aligned with IE and Maintenance",
-                        "completed": false
-                    }
-                ]
-            }
-        ]
-    },
-    {
-        "id": "ME",
-        "name": "Manufacturing Excellence",
-        "icon": "settings-2",
-        "color": "rose",
-        "stages": [
-            {
-                "id": "ME_-_MANUFACTURING_EXCELLENCE_S1",
-                "name": "QCO Governance",
-                "targetTime": 10,
-                "status": "pending",
-                "items": [
-                    {
-                        "id": "ME_S1_1",
-                        "text": "QCO checklist tracking initiated",
-                        "completed": false
-                    },
-                    {
-                        "id": "ME_S1_2",
-                        "text": "Cross-functional readiness reviewed",
-                        "completed": false
-                    },
-                    {
-                        "id": "ME_S1_3",
-                        "text": "Pre-setting completion confirmed/Follow up of external activities",
-                        "completed": false
-                    }
-                ]
-            },
-            {
-                "id": "ME_-_MANUFACTURING_EXCELLENCE_S2",
-                "name": "Go-Live Control",
-                "targetTime": 10,
-                "status": "pending",
-                "items": [
-                    {
-                        "id": "ME_S2_1",
-                        "text": "SOP verified and check started",
-                        "completed": false
-                    },
-                    {
-                        "id": "ME_S2_2",
-                        "text": "Line start authorised",
-                        "completed": false
-                    },
-                    {
-                        "id": "ME_S2_3",
-                        "text": "QCO formally closed",
-                        "completed": false
-                    }
-                ]
-            }
-        ]
-    }
-];
+        ];
 
         // --- Global State ---
         let db, auth;
