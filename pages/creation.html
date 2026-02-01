@@ -1974,6 +1974,13 @@
                             <option value="31">Line 31 - ADIDAS</option>
                             <option value="32">Line 32 - ALO</option>
                         </select>
+                        <div id="subLineContainer" class="hidden mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <label class="block text-sm font-medium text-blue-800 mb-2">Select Exact Line Number <span
+                                    class="text-red-500">*</span></label>
+                            <div class="flex space-x-6" id="subLineOptions">
+                                <!-- Radio buttons will be injected here -->
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Processing Options -->
@@ -2802,54 +2809,53 @@
         }
 
         // QCO Number Management
-        async function getNextQCONumber() {
-            if (!isFirebaseConnected) {
-                // Fallback to local counter
+        // QCO Number Management
+        async function getNextQCONumber(lineNumber, currentStyle, upcomingStyle) {
+            if (!lineNumber || !currentStyle || !upcomingStyle) {
+                console.error("Missing data for QCO ID generation");
+                // Fallback to local counter if data missing
                 const localQCO = localStorage.getItem('qcoCounter') || 10000;
                 const next = parseInt(localQCO) + 1;
                 localStorage.setItem('qcoCounter', next);
                 return `QVJCO${next}`;
             }
 
-            try {
-                const settingsRef = db.collection('system').doc('qcoSettings');
-                const doc = await settingsRef.get();
+            const cleanLine = lineNumber.toString();
+            // Get last 3 digits, remove any non-alphanumeric chars if needed, but requirements say "Last 3 digits"
+            // We assume implies last 3 characters of the string.
+            const curLast3 = currentStyle.length > 3 ? currentStyle.slice(-3) : currentStyle.padStart(3, '0');
+            const nextLast3 = upcomingStyle.length > 3 ? upcomingStyle.slice(-3) : upcomingStyle.padStart(3, '0');
 
-                if (doc.exists) {
-                    const data = doc.data();
+            // Base ID for query
+            const idPrefix = `${cleanLine}${curLast3}${nextLast3}`;
 
-                    // Check for available recycled numbers first
-                    if (data.availableNumbers && data.availableNumbers.length > 0) {
-                        // Sort and get smallest
-                        const available = [...data.availableNumbers].sort((a, b) => a - b);
-                        const nextNum = available[0];
+            if (isFirebaseConnected) {
+                try {
+                    // Query for existing changeovers with same parameters to determine sequence
+                    // We query by the structured fields to be precise
+                    const snapshot = await db.collection('changeovers')
+                        .where('lineNumber', '==', cleanLine)
+                        .where('currentStyle', '==', currentStyle)
+                        .where('upcomingStyle', '==', upcomingStyle)
+                        .get();
 
-                        // Remove from available
-                        await settingsRef.update({
-                            availableNumbers: firebase.firestore.FieldValue.arrayRemove(nextNum)
-                        });
+                    const count = snapshot.size;
+                    const nextSeq = (count + 1).toString().padStart(2, '0');
 
-                        addFirebaseLog(`Reused QCO number: ${nextNum}`, 'info');
-                        return `QVJCO${nextNum}`;
-                    } else {
-                        // Increment counter
-                        const current = data.lastNumber || 10000;
-                        const next = current + 1;
-                        await settingsRef.update({ lastNumber: next });
-                        addFirebaseLog(`Generated new QCO number: ${next}`, 'info');
-                        return `QVJCO${next}`;
-                    }
-                } else {
-                    await settingsRef.set({ lastNumber: 10001, availableNumbers: [] });
-                    return "QVJCO10001";
+                    const newId = `${cleanLine}${curLast3}${nextLast3}${nextSeq}`;
+                    addFirebaseLog(`Generated new QCO number: ${newId}`, 'info');
+                    return newId;
+
+                } catch (error) {
+                    addFirebaseLog(`Error generating QCO number: ${error.message}`, 'error');
+                    return `${cleanLine}${curLast3}${nextLast3}01`; // Default to 01 on error
                 }
-            } catch (error) {
-                addFirebaseLog(`Error generating QCO number: ${error.message}`, 'error');
-                // Fallback
-                const localQCO = localStorage.getItem('qcoCounter') || 10000;
-                const next = parseInt(localQCO) + 1;
-                localStorage.setItem('qcoCounter', next);
-                return `QVJCO${next}`;
+            } else {
+                // Offline handling - maybe just random or timestamp? 
+                // User asked for specific format which requires DB check for sequence.
+                // We will append a timestamp for uniqueness in offline mode to avoid collision
+                const nextSeq = "01";
+                return `${cleanLine}${curLast3}${nextLast3}${nextSeq}`;
             }
         }
 
@@ -5554,8 +5560,49 @@ Shantanu & Sampreeti`;
             setupFileUpload('upcomingFile', 'upcomingFileDropZone', 'upcomingFileInfo', 'upcomingFileName', 'upcomingFileSize', 'removeUpcomingFile');
 
             // Line selection handler
+            // Line selection handler
             document.getElementById('lineSelect').addEventListener('change', function () {
-                selectedLine = this.value;
+                const value = this.value;
+                selectedLine = value;
+
+                const subLineContainer = document.getElementById('subLineContainer');
+                const subLineOptions = document.getElementById('subLineOptions');
+
+                // Reset editability
+                const supervisorInput = document.getElementById('supervisorName');
+                const rqcInput = document.getElementById('rqcName');
+                supervisorInput.readOnly = true;
+                rqcInput.readOnly = true;
+
+                if (value.includes('+') || value.includes('/')) {
+                    // Show sub-selector
+                    subLineContainer.classList.remove('hidden');
+                    const parts = value.split(/[+/]/);
+                    subLineOptions.innerHTML = parts.map(p => `
+                        <label class="inline-flex items-center cursor-pointer p-2 rounded hover:bg-white border border-transparent hover:border-blue-200 transition-all">
+                            <input type="radio" name="specificLine" value="${p}" class="form-radio h-4 w-4 text-blue-600" onchange="updateSelectedLine(this.value)">
+                            <span class="ml-2 font-medium text-gray-700">${p}</span>
+                        </label>
+                    `).join('');
+
+                    // Enable editing for complex lines
+                    supervisorInput.readOnly = false;
+                    rqcInput.readOnly = false;
+                    supervisorInput.classList.remove('bg-gray-50');
+                    supervisorInput.classList.add('bg-white', 'border-blue-300');
+                    rqcInput.classList.remove('bg-gray-50');
+                    rqcInput.classList.add('bg-white', 'border-blue-300');
+
+                } else {
+                    subLineContainer.classList.add('hidden');
+                    subLineOptions.innerHTML = '';
+
+                    supervisorInput.classList.add('bg-gray-50');
+                    supervisorInput.classList.remove('bg-white', 'border-blue-300');
+                    rqcInput.classList.add('bg-gray-50');
+                    rqcInput.classList.remove('bg-white', 'border-blue-300');
+                }
+
                 updatePersonnelInfo();
                 checkGenerateButton();
                 updateRecentActivity(`Line ${selectedLine} selected`);
@@ -5710,11 +5757,8 @@ Shantanu & Sampreeti`;
         }
 
         async function processFiles() {
-            // Generate QCO Number first
-            currentQCONumber = await getNextQCONumber();
-
             // Log activity
-            logActivity(`${currentUser.name} started processing OB files for QCO ${currentQCONumber}`, 'analysis');
+            logActivity(`${currentUser.name} started processing OB files`, 'analysis');
 
             // Original implementation
             const currentFile = document.getElementById('currentFile').files[0];
@@ -5737,6 +5781,10 @@ Shantanu & Sampreeti`;
             }).then(async data => {
                 upcomingOBData = data;
                 updateProgress(70, 'Processing upcoming style...');
+
+                // Generate QCO Number NOW (after styles are known)
+                currentQCONumber = await getNextQCONumber(selectedLine, currentOBData.style, upcomingOBData.style);
+
                 renderResults();
                 updateProgress(90, 'Generating reports...');
 
@@ -5845,6 +5893,11 @@ Shantanu & Sampreeti`;
             document.getElementById('nextTotalMachines').textContent = upcomingOBData.machines ?
                 Object.values(upcomingOBData.machines).reduce((a, b) => a + b, 0) : "--";
             document.getElementById('nextChangeDate').textContent = new Date().toLocaleDateString();
+        }
+
+        function updateSelectedLine(val) {
+            selectedLine = val;
+            console.log("Specific line selected:", selectedLine);
         }
 
         function updateChangeSummary() {
