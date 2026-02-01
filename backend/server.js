@@ -98,16 +98,16 @@ function initializeTransporter() {
             pass: process.env.SMTP_PASSWORD
         },
         tls: {
-            ciphers: 'SSLv3'
+            // Remove SSLv3 as it is insecure and often blocked. 
+            // Let Nodemailer/Node.js negotiate the best version (preferring TLS 1.2+)
+            rejectUnauthorized: false
         }
     };
 
     // Sidney Apparels specific settings
     if (smtpConfig.host.includes('sidneyapparels.com')) {
         smtpConfig.requireTLS = true;
-        smtpConfig.tls = {
-            rejectUnauthorized: false
-        };
+        // The above setting ensures TLS is used if possible.
     }
 
     transporter = nodemailer.createTransport(smtpConfig);

@@ -948,8 +948,14 @@
             const panel = document.getElementById('settingsPanel');
             const settings = JSON.parse(localStorage.getItem('appSettings')) || {};
 
+            // Default Backend URL logic
+            const defaultBackendUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+                ? "http://localhost:3000"
+                : window.location.origin;
+
             // Load Values
-            document.getElementById('settingBackendUrl').value = settings.backendUrl || 'http://localhost:3000';
+            document.getElementById('settingBackendUrl').value = settings.backendUrl || defaultBackendUrl;
+            document.getElementById('settingBackendUrl').placeholder = defaultBackendUrl;
             document.getElementById('settingMeetingTime').value = settings.defaultMeetingTime || '09:00';
             document.getElementById('settingAutoSave').checked = settings.autoSave !== false;
 
