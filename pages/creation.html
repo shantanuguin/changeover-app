@@ -1677,20 +1677,27 @@
                     </div>
                 </div>
                 <div class="p-6 border-t border-gray-200 bg-gray-50 flex justify-between items-center">
-                    <div id="modalAdminActions" class="hidden flex gap-2">
-                        <button onclick="editCurrentChangeover()"
-                            class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">
-                            <i class="fas fa-edit mr-2"></i> Edit
-                        </button>
-                        <button onclick="deleteCurrentChangeover()"
-                            class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
-                            <i class="fas fa-trash mr-2"></i> Delete
+                    <div class="flex gap-2">
+                        <div id="modalAdminActions" class="hidden flex gap-2">
+                            <button onclick="editCurrentChangeover()"
+                                class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 shadow-sm transition-colors duration-200 flex items-center">
+                                <i class="fas fa-edit mr-2"></i> Edit
+                            </button>
+                            <button onclick="deleteCurrentChangeover()"
+                                class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 shadow-sm transition-colors duration-200 flex items-center">
+                                <i class="fas fa-trash mr-2"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 items-center">
+                        <div id="modalUserActions" class="flex gap-2">
+                            <!-- User dynamic buttons injected here -->
+                        </div>
+                        <button onclick="closeChangeoverModal()"
+                            class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 shadow-sm transition-colors duration-200 font-medium">
+                            Close
                         </button>
                     </div>
-                    <button onclick="closeChangeoverModal()"
-                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
-                        Close
-                    </button>
                 </div>
             </div>
         </div>
@@ -3471,6 +3478,8 @@
         let currentFile = null;
         let upcomingFile = null;
         let isEditingUser = false;
+        let currentEmailData = null;
+        let currentReviewQCOId = null; // Track which QCO is being reviewed for email
 
         // Default users (will be saved to localStorage as fallback)
         const defaultUsers = [
@@ -3735,6 +3744,14 @@
                 passwordInput.value = '';
                 errorElement.classList.add('hidden');
 
+                // Check for Planning Role - Strict Redirect
+                if (user.role === 'planning') {
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    localStorage.setItem('sessionActive', 'true');
+                    window.location.replace('schedule.html');
+                    return;
+                }
+
                 // Show success notification
                 showNotification(`Welcome, ${user.name}!`, 'success');
             } else {
@@ -3829,30 +3846,70 @@
         function updateUIForUser() {
             const isAdmin = currentUser && currentUser.role === 'admin';
 
-            // Show/hide admin tabs
-            if (isAdmin) {
-                document.getElementById('adminTabs').classList.remove('hidden');
-                document.getElementById('adminMobileLinks').classList.remove('hidden');
+            // ALWAYS show the tabs container, but selectively hide/show tabs
+            const tabsContainer = document.getElementById('adminTabs');
+            if (tabsContainer) {
+                tabsContainer.classList.remove('hidden');
 
-                // Show admin sections if they were previously active
-                const activeAdminTab = localStorage.getItem('activeAdminTab');
-                if (activeAdminTab) {
-                    switchToAdminTab(activeAdminTab);
-                }
-            } else {
-                document.getElementById('adminTabs').classList.add('hidden');
-                document.getElementById('adminMobileLinks').classList.add('hidden');
+                // Process each tab button
+                document.querySelectorAll('.admin-tab').forEach(tab => {
+                    const tabId = tab.getAttribute('data-tab');
 
-                // Hide all admin sections
-                document.querySelectorAll('.admin-section').forEach(section => {
-                    section.classList.add('hidden');
+                    if (tabId === 'changeoverManagementSection') {
+                        // Changeover records visible to ALL
+                        tab.classList.remove('hidden');
+                        tab.style.display = ''; // Ensure display isn't none
+                    } else {
+                        // Other tabs only for Admin
+                        if (isAdmin) {
+                            tab.classList.remove('hidden');
+                            tab.style.display = '';
+                        } else {
+                            tab.classList.add('hidden');
+                            tab.style.display = 'none'; // Force hide
+                        }
+                    }
+                });
+            }
+
+            // Mobile Links handling
+            const adminMobileLinks = document.getElementById('adminMobileLinks');
+            if (adminMobileLinks) {
+                adminMobileLinks.classList.remove('hidden');
+
+                // We need to manage individual mobile links significantly if they are just <a> tags
+                // For now, let's just show the container but hide children if needed
+                const links = adminMobileLinks.querySelectorAll('a');
+                links.forEach(link => {
+                    const href = link.getAttribute('href');
+                    if (href === '#changeoverManagementSection') {
+                        link.classList.remove('hidden');
+                        link.style.display = 'block';
+                    } else {
+                        if (isAdmin) {
+                            link.classList.remove('hidden');
+                            link.style.display = 'block';
+                        } else {
+                            link.classList.add('hidden');
+                            link.style.display = 'none';
+                        }
+                    }
                 });
             }
 
             // Update user badge if admin
             if (isAdmin) {
-                document.getElementById('currentUserName').innerHTML =
-                    `${currentUser.name} <span class="ml-2 badge badge-warning">Admin</span>`;
+                const nameEl = document.getElementById('currentUserName');
+                if (nameEl) {
+                    nameEl.innerHTML = `${currentUser.name} <span class="ml-2 badge badge-warning">Admin</span>`;
+                }
+            }
+
+            // If not admin and Changeover tab is available, make it active by default 
+            // if we are landing here and no other tab is active
+            if (!isAdmin) {
+                // If they are on an admin section that is hidden, switch to changeover or hide sections
+                // This logic is handled by the tabs click, but let's ensure Changeover is the default view if they click a tab
             }
         }
 
@@ -3898,6 +3955,282 @@
         }
 
         function loadChangeoverManagement() {
+            refreshChangeoverData();
+        }
+
+        let currentModalChangeoverId = null;
+
+        async function refreshChangeoverData() {
+            let changeovers = [];
+            const listContainer = document.getElementById('changeoverList');
+            const noDataMsg = document.getElementById('noChangeovers');
+
+            listContainer.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-blue-500 text-2xl"></i><p class="mt-2 text-gray-500">Loading records...</p></div>';
+            noDataMsg.classList.add('hidden');
+
+            if (isFirebaseConnected) {
+                try {
+                    const changeoversCollection = db.collection('changeovers');
+                    const querySnapshot = await changeoversCollection
+                        .orderBy('createdAt', 'desc')
+                        .limit(50)
+                        .get();
+
+                    changeovers = querySnapshot.docs.map(doc => {
+                        const data = doc.data();
+                        return {
+                            id: doc.id,
+                            ...data
+                        };
+                    });
+                    addFirebaseLog(`Loaded ${changeovers.length} changeovers from Firebase`, 'success');
+                } catch (error) {
+                    addFirebaseLog(`Error loading changeovers from Firebase: ${error.message}`, 'error');
+                    // Fallback to local storage
+                    changeovers = JSON.parse(localStorage.getItem('changeovers')) || [];
+                }
+            } else {
+                changeovers = JSON.parse(localStorage.getItem('changeovers')) || [];
+            }
+
+            // Client-side filtering
+            const searchQCO = document.getElementById('searchQCO').value.toLowerCase();
+            const filterLine = document.getElementById('filterLine').value;
+
+            const filteredChangeovers = changeovers.filter(co => {
+                const matchesSearch = (co.qcoNumber || '').toLowerCase().includes(searchQCO) ||
+                    (co.currentStyle || '').toLowerCase().includes(searchQCO) ||
+                    (co.upcomingStyle || '').toLowerCase().includes(searchQCO);
+                const matchesLine = filterLine ? (co.lineNumber === filterLine) : true;
+                return matchesSearch && matchesLine;
+            });
+
+            listContainer.innerHTML = '';
+
+            if (filteredChangeovers.length === 0) {
+                noDataMsg.classList.remove('hidden');
+                return;
+            }
+
+            filteredChangeovers.forEach(co => {
+                const card = document.createElement('div');
+                card.className = 'changeover-card p-4 hover:bg-gray-50 cursor-pointer transition-colors';
+
+                const createdDate = co.createdAt ? new Date(co.createdAt).toLocaleDateString() : 'N/A';
+                const emailStatus = co.emailSent ? '<span class="text-green-600 font-bold text-xs"><i class="fas fa-check-circle"></i> Email Sent</span>' : '<span class="text-gray-400 font-bold text-xs"><i class="fas fa-clock"></i> Draft</span>';
+
+                // Determine if user can edit (Admin only) or verify (All)
+                // We show "View" for everyone
+
+                card.onclick = () => viewChangeover(co.id);
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="qco-code text-sm">${co.qcoNumber || 'N/A'}</span>
+                            <span class="ml-2 text-xs font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded">Line ${co.lineNumber}</span>
+                        </div>
+                        <div>${emailStatus}</div>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm text-gray-700 mb-1">
+                        <span class="font-medium">${co.currentStyle || '?'}</span>
+                        <i class="fas fa-arrow-right text-gray-400 text-xs"></i>
+                        <span class="font-medium">${co.upcomingStyle || '?'}</span>
+                    </div>
+                    <div class="flex justify-between items-end mt-2">
+                        <div class="text-xs text-gray-500">
+                            <i class="fas fa-user mr-1"></i> ${co.createdBy || 'System'}
+                            <span class="mx-1">•</span>
+                            <i class="fas fa-calendar mr-1"></i> ${createdDate}
+                        </div>
+                        <button class="text-blue-600 hover:text-blue-800 text-sm font-medium" onclick="event.stopPropagation(); viewChangeover('${co.id}')">
+                            View Details
+                        </button>
+                    </div>
+                `;
+
+                listContainer.appendChild(card);
+            });
+        }
+
+        async function viewChangeover(id) {
+            currentModalChangeoverId = id;
+
+            // Find the record
+            let record = null;
+            if (isFirebaseConnected) {
+                try {
+                    const doc = await db.collection('changeovers').doc(id).get();
+                    if (doc.exists) {
+                        record = { id: doc.id, ...doc.data() };
+                    }
+                } catch (e) {
+                    console.error("Error fetching record", e);
+                }
+            }
+
+            // Fallback to local filtering if not found or no firebase
+            if (!record) {
+                const localData = JSON.parse(localStorage.getItem('changeovers')) || [];
+                record = localData.find(r => r.id === id);
+            }
+
+            if (!record) {
+                showNotification("Record not found", "error");
+                return;
+            }
+
+            // Populate Modal
+            document.getElementById('modalQCOCode').textContent = record.qcoNumber || 'N/A';
+            document.getElementById('modalLine').textContent = record.lineNumber || '-';
+
+            document.getElementById('modalCurrentStyle').textContent = record.currentStyle || '-';
+            document.getElementById('modalCurrentSMV').textContent = record.currentSMV || '-';
+            document.getElementById('modalCurrentTarget').textContent = record.currentTarget || '-';
+
+            document.getElementById('modalUpcomingStyle').textContent = record.upcomingStyle || '-';
+            document.getElementById('modalUpcomingSMV').textContent = record.upcomingSMV || '-';
+            document.getElementById('modalUpcomingTarget').textContent = record.upcomingTarget || '-';
+
+            document.getElementById('modalCreatedDate').textContent = record.createdAt ? new Date(record.createdAt).toLocaleString() : '-';
+            document.getElementById('modalEmailSent').textContent = record.emailSent ? new Date(record.emailSent).toLocaleString() : 'Not Sent';
+
+            // Machine Summary
+            if (record.machineSummary && record.machineSummary.length > 0) {
+                const summaryHtml = record.machineSummary.map(m =>
+                    `<div class="flex justify-between text-xs py-1 border-b last:border-0 border-gray-200">
+                        <span>${m.machine}</span>
+                        <span class="${m.surplus > 0 ? 'text-green-600' : 'text-red-600'} font-bold">
+                            ${m.surplus > 0 ? '-' + m.surplus : '+' + m.required}
+                        </span>
+                      </div>`
+                ).join('');
+                document.getElementById('modalMachineSummary').innerHTML = summaryHtml || 'No machine changes.';
+            } else {
+                document.getElementById('modalMachineSummary').textContent = 'No machine data available.';
+            }
+
+            // Show Admin Actions only for Admin
+            const adminActions = document.getElementById('modalAdminActions');
+            if (currentUser && currentUser.role === 'admin') {
+                adminActions.classList.remove('hidden');
+            } else {
+                adminActions.classList.add('hidden');
+            }
+
+            // Verify Email Button Logic (User Actions)
+            const userActionsContainer = document.getElementById('modalUserActions');
+            userActionsContainer.innerHTML = ''; // Clear previous
+
+            // Only show Review button if email exists AND hasn't been sent yet
+            if (record.emailBodyHtml && !record.emailSent) {
+                userActionsContainer.innerHTML = `
+                    <button onclick="reviewSavedEmail('${record.id}')" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm transition-colors duration-200 flex items-center">
+                        <i class="fas fa-envelope-open-text mr-2"></i> Review Saved Email
+                    </button>
+                `;
+            } else if (record.emailSent) {
+                // Optional: visual indicator in footer? 
+                // The user said "then you see that the email has been sent for this too"
+                // The main modal body already receives 'modalEmailSent' update.
+                // We can add a "Sent" badge here too if desired, but hiding the button handles the main request.
+                userActionsContainer.innerHTML = `
+                    <span class="text-green-600 font-medium px-3 py-2 flex items-center bg-green-50 rounded-lg border border-green-200">
+                        <i class="fas fa-check-circle mr-2"></i> Sent
+                    </span>
+                `;
+            }
+
+            // Show Modal
+            document.getElementById('changeoverModal').classList.remove('hidden');
+        }
+
+        // Removed createEmailActionsContainer as it's no longer needed (in HTML now)
+
+        async function reviewSavedEmail(id) {
+            currentReviewQCOId = id; // Track tracking ID
+
+            // Fetch record again to be sure (or use cached if reliable)
+            let record = null;
+            if (currentModalChangeoverId === id) {
+                // We likely have it, but viewChangeover scope is closed. 
+                // Re-fetch to be safe and simple
+            }
+
+            if (isFirebaseConnected) {
+                const doc = await db.collection('changeovers').doc(id).get();
+                if (doc.exists) record = { id: doc.id, ...doc.data() };
+            }
+
+            if (!record) {
+                const localData = JSON.parse(localStorage.getItem('changeovers')) || [];
+                record = localData.find(r => r.id === id);
+            }
+
+            if (!record || !record.emailBodyHtml) {
+                showNotification("No saved email found for this record.", "error");
+                return;
+            }
+
+            // Populate SMTP Modal
+            document.getElementById('modalSenderEmail').value = "management.trainee@sidneyapparels.com";
+            document.getElementById('modalRecipients').value = Array.isArray(record.emailRecipients) ? record.emailRecipients.join(', ') : record.emailRecipients;
+            document.getElementById('modalSubject').value = record.emailSubject;
+
+            // We need to inject the HTML body somewhere if we want to preview it, 
+            // but the SMTP modal mainly expects us to just send.
+            // For now, let's assume we proceed to send. 
+            // If we want to preview *again* in the big editor, we'd need to switch views.
+            // But the user asked for a "pop up modal... option to send ... populated".
+
+            // Critical: The current sendEmailViaNodemailer reads from the PREVIEW divs (innerHTML) in the backgrounds.
+            // We must populate those hidden preview divs so `sendEmailViaNodemailer` can grab them.
+
+            document.getElementById('emailPreviewContent').innerHTML = record.emailBodyHtml;
+            document.getElementById('plainTextEmail').value = "Please use HTML view."; // Fallback
+
+            // Show SMTP Modal
+            closeChangeoverModal();
+            document.getElementById('smtpModal').classList.remove('hidden');
+        }
+
+        function closeChangeoverModal() {
+            document.getElementById('changeoverModal').classList.add('hidden');
+            currentModalChangeoverId = null;
+        }
+
+        function deleteCurrentChangeover() {
+            if (!currentModalChangeoverId) return;
+            if (!confirm("Are you sure you want to delete this Changeover Record? This cannot be undone.")) return;
+
+            if (isFirebaseConnected) {
+                db.collection('changeovers').doc(currentModalChangeoverId).delete().then(() => {
+                    showNotification("Record deleted successfully", "success");
+                    closeChangeoverModal();
+                    refreshChangeoverData();
+                }).catch(err => {
+                    showNotification("Error deleting: " + err.message, "error");
+                });
+            } else {
+                let localData = JSON.parse(localStorage.getItem('changeovers')) || [];
+                localData = localData.filter(r => r.id !== currentModalChangeoverId);
+                localStorage.setItem('changeovers', JSON.stringify(localData));
+                showNotification("Record deleted locally", "success");
+                closeChangeoverModal();
+                refreshChangeoverData();
+            }
+        }
+
+        function editCurrentChangeover() {
+            // Placeholder for edit functionality - for now just notify
+            if (!currentModalChangeoverId) return;
+            // To implement robust editing, we would replace text fields with inputs in the modal
+            // For this iteration, we focus on View/Delete logic as requested primarily
+            showNotification("Edit functionality coming in next update. Use Delete & Re-create if strict editing needed.", "info");
+        }
+
+        function filterChangeovers() {
             refreshChangeoverData();
         }
 
@@ -4547,6 +4880,31 @@
 
             // Log activity
             logActivity(`${currentUser.name} generated changeover email for Line ${selectedLine} (${typeof emailTemplate !== 'undefined' ? emailTemplate : 'standard'})`, 'email');
+
+            // --- SAVE EMAIL DATA TO QCO RECORD ---
+            currentEmailData = {
+                emailSubject: subject,
+                emailRecipients: recipients,
+                emailBodyHtml: htmlContent,
+                emailGeneratedAt: new Date().toISOString()
+            };
+
+            if (currentQCONumber) {
+                // Save to local storage
+                let localChangeovers = JSON.parse(localStorage.getItem('changeovers') || '[]');
+                const idx = localChangeovers.findIndex(co => co.qcoNumber === currentQCONumber);
+                if (idx !== -1) {
+                    localChangeovers[idx] = { ...localChangeovers[idx], ...currentEmailData };
+                    localStorage.setItem('changeovers', JSON.stringify(localChangeovers));
+                }
+
+                // Save to Firebase (Update only if doc likely exists)
+                if (isFirebaseConnected) {
+                    db.collection('changeovers').doc(currentQCONumber).update(currentEmailData)
+                        .then(() => console.log("Email data saved to QCO record via update"))
+                        .catch(err => console.log("Skipping email update - doc likely being created"));
+                }
+            }
         }
 
         function generateHtmlEmailContent(criticalMachines, machinesToRelease, meetingDate, lineData, formattedDate, sign, smvChange, targetChange, machineList, releaseList, lineEmails) {
@@ -5086,25 +5444,35 @@ Shantanu & Sampreeti`;
                     logActivity(`${currentUser.name} successfully sent email via backend with ${emailAttachments.length} attachments`, 'email_smtp_success');
 
                     // Update changeover record with email sent date
-                    if (currentQCONumber) {
+                    const targetQCOId = currentQCONumber || currentReviewQCOId;
+
+                    if (targetQCOId) {
                         const emailSentData = {
                             emailSent: new Date().toISOString()
                         };
+
                         if (isFirebaseConnected) {
-                            await db.collection('changeovers').doc(currentQCONumber).update(emailSentData);
+                            await db.collection('changeovers').doc(targetQCOId).update(emailSentData)
+                                .then(() => console.log("Updated emailSent timestamp"));
                         }
+
                         // Update local
                         let localChangeovers = JSON.parse(localStorage.getItem('changeovers') || '[]');
-                        const idx = localChangeovers.findIndex(co => co.qcoNumber === currentQCONumber);
+                        const idx = localChangeovers.findIndex(co => co.qcoNumber === targetQCOId);
                         if (idx !== -1) {
-                            localChangeovers[idx].emailSent = emailSentData.emailSent;
+                            localChangeovers[idx] = { ...localChangeovers[idx], ...emailSentData };
                             localStorage.setItem('changeovers', JSON.stringify(localChangeovers));
                         }
+
+                        // Refresh data to update UI (e.g. show "Sent" badge instead of button)
+                        await refreshChangeoverData();
                     }
 
                     // Close modal after 2 seconds
                     setTimeout(() => {
                         closeSmtpModal();
+                        // Reset review ID
+                        currentReviewQCOId = null;
                     }, 2000);
                 } else {
                     statusElement.innerHTML = `<div class="text-red-600"><i class="fas fa-times-circle mr-2"></i>Failed to send email: ${result.message || result.error}</div>`;
@@ -5273,42 +5641,66 @@ Shantanu & Sampreeti`;
             });
         }
 
-        function startEditUser(userId) {
+        async function startEditUser(userId) {
             let user = null;
 
             // Find user in local storage first
-            const users = JSON.parse(localStorage.getItem('systemUsers'));
+            const users = JSON.parse(localStorage.getItem('systemUsers')) || [];
             user = users.find(u => u.id.toString() === userId.toString());
 
+            // If not found locally, try Firebase
             if (!user && isFirebaseConnected) {
-                // Will load from Firebase in real implementation
+                try {
+                    const doc = await db.collection('users').doc(userId).get();
+                    if (doc.exists) {
+                        user = { id: doc.id, ...doc.data() };
+                    }
+                } catch (error) {
+                    console.error("Error fetching user for edit:", error);
+                }
             }
 
             if (!user) {
-                showNotification('User not found', 'error');
+                showNotification('User not found. Try refreshing the page.', 'error');
                 return;
             }
 
             isEditingUser = true;
 
-            // Populate form
-            document.getElementById('editUserId').value = userId;
-            document.getElementById('newUserName').value = user.name;
-            document.getElementById('newUserEmail').value = user.email || '';
-            document.getElementById('newUserRole').value = user.role;
+            // Populate form safely
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.value = val || '';
+            };
+
+            setVal('editUserId', userId);
+            setVal('newUserName', user.name);
+            setVal('newUserEmail', user.email);
+            setVal('newUserRole', user.role || 'user');
 
             // Password field - optional when editing
-            document.getElementById('newUserPassword').placeholder = 'Leave blank to keep current password';
-            document.getElementById('confirmPasswordDiv').classList.add('hidden');
-            document.getElementById('passwordHint').classList.remove('hidden');
+            const pwdInput = document.getElementById('newUserPassword');
+            if (pwdInput) pwdInput.placeholder = 'Leave blank to keep current password';
+
+            const confirmDiv = document.getElementById('confirmPasswordDiv');
+            if (confirmDiv) confirmDiv.classList.add('hidden');
+
+            const hint = document.getElementById('passwordHint');
+            if (hint) hint.classList.remove('hidden');
 
             // Update buttons
-            document.getElementById('userFormTitle').textContent = 'Edit User';
-            document.getElementById('saveUserBtn').innerHTML = '<i class="fas fa-save mr-2"></i> Update User';
-            document.getElementById('cancelEditBtn').classList.remove('hidden');
+            const title = document.getElementById('userFormTitle');
+            if (title) title.textContent = 'Edit User';
+
+            const saveBtn = document.getElementById('saveUserBtn');
+            if (saveBtn) saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i> Update User';
+
+            const cancelBtn = document.getElementById('cancelEditBtn');
+            if (cancelBtn) cancelBtn.classList.remove('hidden');
 
             // Scroll to form
-            document.getElementById('newUserName').scrollIntoView({ behavior: 'smooth' });
+            const nameInput = document.getElementById('newUserName');
+            if (nameInput) nameInput.scrollIntoView({ behavior: 'smooth' });
         }
 
         function cancelEdit() {
@@ -6027,6 +6419,7 @@ Shantanu & Sampreeti`;
                     })) : [],
                     createdBy: currentUser.name,
                     createdAt: new Date().toISOString(),
+                    ...(currentEmailData || {}),
                     emailSent: null
                 };
 
