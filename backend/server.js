@@ -269,7 +269,13 @@ app.get('/api/test-smtp', emailLimiter, async (req, res) => {
             message: 'SMTP connection successful',
             details: {
                 host: process.env.SMTP_SERVER || 'default',
-                items: 'Configuration OK'
+                items: 'Configuration OK',
+                configCheck: {
+                    host: (process.env.SMTP_SERVER || '').substring(0, 4) + '***',
+                    user: (process.env.SMTP_USERNAME || '').substring(0, 4) + '***',
+                    port: process.env.SMTP_PORT,
+                    secure: process.env.SMTP_SECURE
+                }
             }
         });
     } catch (error) {
@@ -278,7 +284,13 @@ app.get('/api/test-smtp', emailLimiter, async (req, res) => {
             success: false,
             message: 'SMTP connection failed',
             error: error.message,
-            code: error.code
+            code: error.code,
+            configCheck: {
+                host: (process.env.SMTP_SERVER || '').substring(0, 4) + '***',
+                user: (process.env.SMTP_USERNAME || '').substring(0, 4) + '***',
+                port: process.env.SMTP_PORT,
+                secure: process.env.SMTP_SECURE
+            }
         });
     }
 });
@@ -329,16 +341,20 @@ app.post('/api/send-email', emailLimiter, async (req, res) => {
         }
 
         // Prepare email options
+        // FIX: Force From address to match SMTP credentials to avoid 550 5.7.60 error
+        const authenticatedSender = process.env.SMTP_USERNAME;
+
         const mailOptions = {
             from: {
                 name: process.env.SMTP_DISPLAY_NAME || 'Changeover Meeting System',
-                address: from
+                address: authenticatedSender // MUST match config
             },
             to: Array.isArray(to) ? to : to.split(',').map(email => email.trim()),
             subject: subject,
             html: html,
             text: html.replace(/<[^>]*>/g, ' '), // Convert HTML to plain text
-            replyTo: replyTo || from,
+            // Use the requested 'from' as Reply-To so replies go to the right person (e.g. Planning)
+            replyTo: replyTo || from || authenticatedSender,
             headers: {
                 'X-Application': 'Changeover Meeting Initiator',
                 'X-Priority': '1', // High priority
@@ -544,17 +560,21 @@ app.post('/api/send-bulk', emailLimiter, async (req, res) => {
         const errors = [];
 
         // Send to each recipient
+        // Send to each recipient
+        const authenticatedSender = process.env.SMTP_USERNAME; // Define once
+
         for (const recipient of recipients) {
             try {
                 const mailOptions = {
                     from: {
                         name: process.env.SMTP_DISPLAY_NAME || 'Changeover Meeting System',
-                        address: from
+                        address: authenticatedSender
                     },
                     to: recipient,
                     subject: subject,
                     html: html,
                     text: html.replace(/<[^>]*>/g, ' '),
+                    replyTo: from || authenticatedSender, // Redirect replies
                     headers: {
                         'X-Application': 'Changeover Meeting Initiator'
                     }

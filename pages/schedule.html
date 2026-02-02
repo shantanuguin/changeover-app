@@ -635,6 +635,7 @@
         let currentQCOId = null;
         let currentQCOData = null;
         let allChangeovers = [];
+        let isFirebaseConnected = false;
 
         // --- Initialization ---
         document.addEventListener('DOMContentLoaded', async () => {
@@ -670,6 +671,7 @@
                 }
                 db = firebase.firestore();
                 auth = firebase.auth();
+                isFirebaseConnected = true;
                 console.log("Firebase initialized successfully");
             } catch (error) {
                 console.error("Firebase initialization error:", error);
