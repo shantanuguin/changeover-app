@@ -2546,6 +2546,10 @@
                 <button onclick="sendEmailViaNodemailer()" class="flex-1 btn-smtp py-2 rounded-lg">
                     <i class="fas fa-paper-plane mr-2"></i> Send Email
                 </button>
+                <button onclick="testSMTPConnection()"
+                    class="px-4 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200">
+                    <i class="fas fa-server mr-2"></i> Test Server
+                </button>
                 <button onclick="closeSmtpModal()"
                     class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
                     Cancel
@@ -5109,6 +5113,36 @@ Shantanu & Sampreeti`;
                 statusElement.innerHTML = `<div class="text-red-600"><i class="fas fa-times-circle mr-2"></i>Connection error: ${error.message}</div>`;
                 showNotification(`Connection error: ${error.message}`, 'error');
                 logActivity(`${currentUser.name} backend connection error: ${error.message}`, 'email_smtp_error');
+            }
+        }
+
+        async function testSMTPConnection() {
+            const settings = JSON.parse(localStorage.getItem('appSettings')) || defaultSettings;
+            const backendUrl = settings.backendUrl || BACKEND_URL;
+            const statusElement = document.getElementById('smtpSendStatus');
+
+            statusElement.innerHTML = '<div class="text-blue-600"><i class="fas fa-spinner fa-spin mr-2"></i>Testing SMTP Configuration...</div>';
+            statusElement.classList.remove('hidden');
+
+            try {
+                const response = await fetch(`${backendUrl}/api/test-smtp`);
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    statusElement.innerHTML = '<div class="text-green-600"><i class="fas fa-check-circle mr-2"></i>SMTP Connection Successful! Server is ready.</div>';
+                    showNotification('SMTP Server is configured correctly', 'success');
+                } else {
+                    let errorMsg = data.message || 'Unknown Error';
+                    if (data.error && data.error.includes('environment variables')) {
+                        errorMsg = 'Server Missing Credentials (SMTP_USERNAME/PASSWORD)';
+                    }
+                    statusElement.innerHTML = `<div class="text-red-600"><i class="fas fa-times-circle mr-2"></i>${errorMsg}</div>`;
+                    throw new Error(errorMsg);
+                }
+            } catch (error) {
+                console.error("SMTP Test Failed:", error);
+                statusElement.innerHTML = `<div class="text-red-600"><i class="fas fa-times-circle mr-2"></i>Test Failed: ${error.message}</div>`;
+                showNotification(`Test Failed: ${error.message}. Check Vercel Env Vars.`, 'error');
             }
         }
 

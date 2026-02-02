@@ -246,18 +246,39 @@ app.get('/api/health', (req, res) => {
 });
 
 // Test SMTP connection
+// Test SMTP connection (Enhanced)
 app.get('/api/test-smtp', emailLimiter, async (req, res) => {
     try {
+        // Diagnostic check for environment variables
+        if (!process.env.SMTP_USERNAME || !process.env.SMTP_PASSWORD) {
+            return res.status(500).json({
+                success: false,
+                message: 'SMTP Configuration Missing',
+                error: 'SMTP_USERNAME or SMTP_PASSWORD not set in environment variables',
+                details: {
+                    hasHost: !!process.env.SMTP_SERVER,
+                    hasUser: !!process.env.SMTP_USERNAME,
+                    hasPass: !!process.env.SMTP_PASSWORD
+                }
+            });
+        }
+
         await transporter.verify();
         res.json({
             success: true,
-            message: 'SMTP connection successful'
+            message: 'SMTP connection successful',
+            details: {
+                host: process.env.SMTP_SERVER || 'default',
+                items: 'Configuration OK'
+            }
         });
     } catch (error) {
+        console.error('SMTP Verify Error:', error);
         res.status(500).json({
             success: false,
             message: 'SMTP connection failed',
-            error: error.message
+            error: error.message,
+            code: error.code
         });
     }
 });
