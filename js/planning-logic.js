@@ -106,13 +106,19 @@ export const isQuantity = (str) => {
 
 const lookupLineBySupervisor = (supName) => {
     if (!supName) return "Unassigned";
-    const upper = supName.toUpperCase();
+    const upper = supName.toUpperCase().trim();
 
     // Direct match
     if (SUPERVISOR_TO_LINE[upper]) return SUPERVISOR_TO_LINE[upper];
 
-    // Fuzzy / Partial match
-    const match = Object.keys(SUPERVISOR_TO_LINE).find(key => upper.includes(key) || key.includes(upper));
+    // Fuzzy / Partial match: e.g., "WASANA" should match "WASANA-1"
+    // We look for keys that start with the input or vice versa, stripping trailing digits/markers
+    const match = Object.keys(SUPERVISOR_TO_LINE).find(key => {
+        const cleanKey = key.split(/[- ]/)[0].trim(); // Get "WASANA" from "WASANA-1"
+        const cleanUpper = upper.split(/[- ]/)[0].trim();
+        return (cleanKey === cleanUpper && cleanKey.length > 2) || key.includes(upper) || upper.includes(key);
+    });
+
     if (match) return SUPERVISOR_TO_LINE[match];
 
     return supName; // Fallback to name itself if no mapping found
