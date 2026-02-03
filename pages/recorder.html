@@ -390,6 +390,7 @@
         }
 
         function openBreakModal() {
+            console.log("Opening Break Modal. Current schedule state:", currentLineSchedule);
             const modal = document.getElementById('breakModal');
             const container = document.getElementById('breakListContainer');
             const title = document.getElementById('breakModalTitle');
@@ -586,17 +587,34 @@
                     const lineIdLabel = document.getElementById('lineIdLabel');
                     if (lineIdLabel) lineIdLabel.textContent = `Line: ${lineKey}`;
 
+                    // --- Robustness: Normalization ---
+                    lineKey = lineKey.toString().trim().toUpperCase();
+                    if (/^\d+[A-Z]?$/.test(lineKey) && !lineKey.startsWith('S-')) {
+                        const numPart = lineKey.match(/\d+/)[0];
+                        const letterPart = lineKey.match(/[A-Z]$/) ? lineKey.match(/[A-Z]$/)[0] : '';
+                        lineKey = "S-" + numPart.padStart(2, '0') + letterPart;
+                    } else if (lineKey.startsWith('S-')) {
+                        const sub = lineKey.substring(2);
+                        if (/^\d+[A-Z]?$/.test(sub)) {
+                            const numPart = sub.match(/\d+/)[0];
+                            const letterPart = sub.match(/[A-Z]$/) ? sub.match(/[A-Z]$/)[0] : '';
+                            lineKey = "S-" + numPart.padStart(2, '0') + letterPart;
+                        }
+                    }
+                    console.log("Final LineKey used for schedule lookup:", lineKey);
+
                     if (!currentLineSchedule || currentLineSchedule.lineKey !== lineKey) {
                         try {
                             const schedDoc = await db.collection('line_schedules').doc(lineKey).get();
                             if (schedDoc.exists) {
                                 currentLineSchedule = { lineKey, ...schedDoc.data() };
-                                console.log("Loaded schedule for", lineKey, currentLineSchedule);
+                                console.log("Loaded schedule from Firebase for", lineKey, currentLineSchedule);
                             } else if (RAW_LINE_SCHEDULES[lineKey]) {
                                 // Fallback: Use hardcoded schedule
                                 currentLineSchedule = { lineKey, ...RAW_LINE_SCHEDULES[lineKey] };
-                                console.log("Using hardcoded fallback schedule for", lineKey);
+                                console.log("Using hardcoded fallback schedule for", lineKey, currentLineSchedule);
                             } else {
+                                console.warn("No schedule found (Firebase or Fallback) for", lineKey);
                                 currentLineSchedule = null;
                             }
                         } catch (err) {
