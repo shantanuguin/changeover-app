@@ -1,5 +1,0 @@
-{
-  "name": "ChangeoverAI Planner",
-  "description": "Production-grade, offline-first garment style changeover planning tool. Features intelligent Excel ingestion, heuristic style detection, and physics-based interactive timelines.",
-  "requestFramePermissions": []
-}
