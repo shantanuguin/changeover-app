@@ -982,6 +982,11 @@
 
                 showSaveStatus();
 
+                // Trigger Style Progression Logic
+                if (typeof updateStyleProgression === 'function') {
+                    updateStyleProgression();
+                }
+
                 Swal.fire({
                     icon: 'success',
                     title: 'Schedule Saved!',
@@ -1696,6 +1701,162 @@ Sidney Apparels QCO Portal
                     html: `Connection Test Failed.<br><br><b>Reason:</b> ${error.message}<br><br>If on Vercel, ensure Environment Variables are set.`,
                     confirmButtonColor: '#ef4444'
                 });
+            }
+        }
+
+        // ==========================================
+        // SMART SCHEDULING & PROGRESSION
+        // ==========================================
+
+        async function checkSupervisorConflicts() {
+            const dateInput = document.getElementById('scheduleDate');
+            if (!dateInput.value || !currentQCOData) return;
+
+            const selectedDate = new Date(dateInput.value);
+            const selectedDateStr = selectedDate.toDateString();
+
+            // Identify Supervisor
+            let line = currentQCOData.lineNumber || '';
+            if (!line && currentQCOId.startsWith('L')) {
+                const match = currentQCOId.match(/^L(\d+)/);
+                if (match) line = match[1];
+            }
+
+            // Find personnel key
+            let supervisorName = null;
+            let lookupLine = line.replace(/^Line\s*/i, '');
+            if (personnelData[lookupLine]) {
+                supervisorName = personnelData[lookupLine].supervisor;
+            } else {
+                const foundKey = Object.keys(personnelData).find(key => {
+                    const parts = key.split(/[\+\/]/).map(p => p.trim());
+                    return parts.includes(lookupLine);
+                });
+                if (foundKey) supervisorName = personnelData[foundKey].supervisor;
+            }
+
+            if (!supervisorName) return;
+
+            const startOfDay = new Date(selectedDate); startOfDay.setHours(0, 0, 0, 0);
+            const endOfDay = new Date(selectedDate); endOfDay.setHours(23, 59, 59, 999);
+
+            try {
+                // Client-side filter on 'allChangeovers'
+                const conflicts = allChangeovers.filter(q => {
+                    if (q.id === currentQCOId) return false;
+                    if (!q.hasSchedule || !q.scheduledDate) return false;
+
+                    const qDate = q.scheduledDate.toDate ? q.scheduledDate.toDate() : new Date(q.scheduledDate);
+                    // Match same day
+                    if (qDate.toDateString() !== selectedDateStr) return false;
+
+                    // Resolve line -> supervisor for that QCO
+                    let qLine = q.lineNumber || '';
+                    if (!qLine && q.id.startsWith('L')) {
+                        const m = q.id.match(/^L(\d+)/);
+                        if (m) qLine = m[1];
+                    }
+                    let qLookup = qLine.replace(/^Line\s*/i, '');
+                    let qSup = null;
+                    if (personnelData[qLookup]) qSup = personnelData[qLookup].supervisor;
+                    else {
+                        const k = Object.keys(personnelData).find(key => key.split(/[\+\/]/).map(p => p.trim()).includes(qLookup));
+                        if (k) qSup = personnelData[k].supervisor;
+                    }
+
+                    return qSup === supervisorName;
+                });
+
+                const tipBox = document.querySelector('.bg-amber-50\\/80');
+                if (tipBox && conflicts.length > 0) {
+                    tipBox.className = 'bg-red-50 border border-red-100 rounded-xl p-4 flex gap-3 animate-pulse transition-all duration-300';
+                    tipBox.innerHTML = `
+                        <i data-lucide="alert-triangle" class="w-5 h-5 text-red-500 mt-0.5"></i>
+                        <div>
+                            <h4 class="font-semibold text-red-800 text-sm mb-1">Schedule Conflict Detected</h4>
+                            <p class="text-sm text-red-700 leading-relaxed">
+                                Supervisor <strong>${supervisorName}</strong> has ${conflicts.length} other changeover(s) on this date (e.g. ${conflicts[0].qcoNumber || 'QCO'}).
+                            </p>
+                        </div>
+                     `;
+                    if (window.lucide) lucide.createIcons();
+                } else if (tipBox) {
+                    // Reset
+                    tipBox.className = 'bg-amber-50/80 border border-amber-100 rounded-xl p-4 flex gap-3';
+                    tipBox.innerHTML = `
+                        <i data-lucide="lightbulb" class="w-5 h-5 text-amber-500 mt-0.5"></i>
+                        <div>
+                            <h4 class="font-semibold text-amber-800 text-sm mb-1">Scheduling Tip</h4>
+                            <p class="text-sm text-amber-700 leading-relaxed">
+                                Ensure all departments have completed their pre-checks before the scheduled time. 
+                                The system will track actual vs planned start times.
+                            </p>
+                        </div>
+                    `;
+                    if (window.lucide) lucide.createIcons();
+                }
+            } catch (e) {
+                console.warn("Conflict check error", e);
+            }
+        }
+
+        // Attach listener safely
+        const dateInputEl = document.getElementById('scheduleDate');
+        if (dateInputEl) {
+            dateInputEl.addEventListener('change', checkSupervisorConflicts);
+        }
+
+        async function updateStyleProgression() {
+            if (!currentQCOData || !currentQCOId) return;
+
+            // Try to deduce line if missing
+            let currentLine = currentQCOData.lineNumber;
+            if (!currentLine && currentQCOId.startsWith('L')) {
+                const match = currentQCOId.match(/^L(\d+)/);
+                if (match) currentLine = match[1];
+            }
+
+            const nextStyleName = currentQCOData.upcomingStyle;
+
+            if (!currentLine || !nextStyleName) return;
+
+            console.log("Running Style Progression...");
+
+            try {
+                // Find next QCO: strictly created AFTER this one
+                let startTimeFilter = new Date(0);
+                if (currentQCOData.createdAt) {
+                    startTimeFilter = currentQCOData.createdAt.toDate ? currentQCOData.createdAt.toDate() : new Date(currentQCOData.createdAt);
+                }
+
+                const snapshot = await db.collection('changeovers')
+                    .where('lineNumber', '==', currentLine)
+                    .orderBy('createdAt', 'asc')
+                    .startAfter(startTimeFilter)
+                    .limit(1)
+                    .get();
+
+                if (!snapshot.empty) {
+                    const nextQCO = snapshot.docs[0];
+                    console.log(`Updating Next QCO (${nextQCO.id}) Current Style to: ${nextStyleName}`);
+
+                    await db.collection('changeovers').doc(nextQCO.id).update({
+                        currentRunningStyle: nextStyleName,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    if (window.Swal) {
+                        const Toast = Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 3000 });
+                        Toast.fire({
+                            icon: 'info',
+                            title: 'Chain Updated',
+                            text: `Next changeover style updated automatically`
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error("Progression Error:", e);
+                // Don't block UI if this fails
             }
         }
 

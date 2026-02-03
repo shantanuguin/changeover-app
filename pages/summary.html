@@ -434,6 +434,7 @@
 
         // --- Global State ---
         let db, auth;
+        let currentLineSchedule = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             // Strict Auth Check (Immediate)
@@ -758,6 +759,27 @@
 
                 const data = doc.data();
 
+                // --- Load Line Schedule ---
+                // Extract Line Key (e.g., "S-01" from "S-01-ABC-DEF-01")
+                const qcoNum = data.qcoNumber || "";
+                const parts = qcoNum.split('-');
+                if (parts.length >= 2) {
+                    const lineKey = parts.slice(0, 2).join('-');
+                    if (!currentLineSchedule || currentLineSchedule.lineKey !== lineKey) {
+                        try {
+                            const schedDoc = await db.collection('line_schedules').doc(lineKey).get();
+                            if (schedDoc.exists) {
+                                currentLineSchedule = { lineKey, ...schedDoc.data() };
+                                console.log("Loaded schedule for", lineKey, currentLineSchedule);
+                            } else {
+                                currentLineSchedule = null;
+                            }
+                        } catch (err) {
+                            console.error("Error loading schedule:", err);
+                        }
+                    }
+                }
+
                 // Store raw data & Load Saved Parameters
                 currentReportData.metadata = data;
                 currentReportData.operations = [];
@@ -797,10 +819,18 @@
                 if (data.operationTimings) {
                     Object.entries(data.operationTimings).forEach(([name, details]) => {
                         if (details.actualTime) {
+                            // Re-calculate net time if start/end exist, to ensure consistency with latest schedule
+                            let finalActualTime = parseFloat(details.actualTime);
+
+                            if (details.start && details.end && currentLineSchedule) {
+                                const netMins = getNetDuration(details.start, details.end, currentLineSchedule);
+                                finalActualTime = parseFloat(netMins.toFixed(2));
+                            }
+
                             currentReportData.operations.push({
                                 name: name,
-                                dept: details.department || 'MAINTENANCE', // Default to Maintenance if unassigned
-                                duration: parseFloat(details.actualTime),
+                                dept: details.department || 'MAINTENANCE',
+                                duration: finalActualTime,
                                 start: details.start,
                                 end: details.end
                             });
@@ -1216,6 +1246,50 @@
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Report");
             XLSX.writeFile(wb, `SSLR_Report_${currentQCOId || 'Generic'}.xlsx`);
+        }
+        // --- Helper Functions ---
+
+        /**
+         * Calculates net duration in minutes, excluding break times.
+         * Assumes breaks are in "HH:MM" 24h format.
+         */
+        function getNetDuration(startISO, endISO, schedule) {
+            const start = new Date(startISO);
+            const end = new Date(endISO);
+            let totalMinutes = (end - start) / 60000;
+
+            if (!schedule || !schedule.breaks || !Array.isArray(schedule.breaks)) {
+                return totalMinutes;
+            }
+
+            // Check if a time (Date) falls within today's break window
+            const getBreakOverlay = (breakStartStr, breakEndStr) => {
+                const bStart = new Date(start);
+                const [sh, sm] = breakStartStr.split(':').map(Number);
+                bStart.setHours(sh, sm, 0, 0);
+
+                const bEnd = new Date(start);
+                const [eh, em] = breakEndStr.split(':').map(Number);
+                bEnd.setHours(eh, em, 0, 0);
+
+                const overlapStart = new Date(Math.max(start, bStart));
+                const overlapEnd = new Date(Math.min(end, bEnd));
+
+                if (overlapStart < overlapEnd) {
+                    return (overlapEnd - overlapStart) / 60000;
+                }
+                return 0;
+            };
+
+            let totalDeduction = 0;
+            schedule.breaks.forEach(brk => {
+                const deduction = getBreakOverlay(brk.start, brk.end);
+                if (deduction > 0) {
+                    totalDeduction += deduction;
+                }
+            });
+
+            return Math.max(0, totalMinutes - totalDeduction);
         }
     </script>
 </body>

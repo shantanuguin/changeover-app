@@ -324,6 +324,7 @@
         let db, auth;
         let currentQCOId = null;
         let allChangeovers = [];
+        let currentLineSchedule = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             // Strict Auth Check (Immediate)
@@ -469,6 +470,27 @@
                 if (doc.exists) {
                     const data = doc.data();
 
+                    // --- Load Line Schedule ---
+                    // Extract Line Key (e.g., "S-01" from "S-01-ABC-DEF-01")
+                    const qcoNum = data.qcoNumber || "";
+                    const parts = qcoNum.split('-');
+                    if (parts.length >= 2) {
+                        const lineKey = parts.slice(0, 2).join('-');
+                        if (!currentLineSchedule || currentLineSchedule.lineKey !== lineKey) {
+                            try {
+                                const schedDoc = await db.collection('line_schedules').doc(lineKey).get();
+                                if (schedDoc.exists) {
+                                    currentLineSchedule = { lineKey, ...schedDoc.data() };
+                                    console.log("Loaded schedule for", lineKey, currentLineSchedule);
+                                } else {
+                                    currentLineSchedule = null;
+                                }
+                            } catch (err) {
+                                console.error("Error loading schedule:", err);
+                            }
+                        }
+                    }
+
                     // Calculate and display Target COPT
                     updateTargetCOPTDisplay(data);
 
@@ -483,6 +505,60 @@
                 console.error("Error loading data:", e);
                 alert("Failed to load QCO data. Please refresh the page.");
             }
+        }
+
+        /**
+         * Calculates net duration in minutes, excluding break times.
+         * Assumes breaks are in "HH:MM" 24h format.
+         */
+        function getNetDuration(startISO, endISO, schedule) {
+            const start = new Date(startISO);
+            const end = new Date(endISO);
+            let totalMinutes = (end - start) / 60000;
+
+            if (!schedule || !schedule.breaks || !Array.isArray(schedule.breaks)) {
+                return totalMinutes;
+            }
+
+            // Helper to parsing "HH:MM" to minutes from midnight
+            const getMins = (timeStr) => {
+                const [h, m] = timeStr.split(':').map(Number);
+                return h * 60 + m;
+            };
+
+            // Check if a time (Date) falls within today's break window
+            const getBreakOverlay = (breakStartStr, breakEndStr) => {
+                // Construct break times for the *same day* as the operation start/end
+                // limitation: assumes operations don't cross midnight for now, or breaks are daily repeated.
+                // using 'start' date as base.
+                const bStart = new Date(start);
+                const [sh, sm] = breakStartStr.split(':').map(Number);
+                bStart.setHours(sh, sm, 0, 0);
+
+                const bEnd = new Date(start);
+                const [eh, em] = breakEndStr.split(':').map(Number);
+                bEnd.setHours(eh, em, 0, 0);
+
+                // Find overlap between [start, end] and [bStart, bEnd]
+                const overlapStart = new Date(Math.max(start, bStart));
+                const overlapEnd = new Date(Math.min(end, bEnd));
+
+                if (overlapStart < overlapEnd) {
+                    return (overlapEnd - overlapStart) / 60000;
+                }
+                return 0;
+            };
+
+            let totalDeduction = 0;
+            schedule.breaks.forEach(brk => {
+                const deduction = getBreakOverlay(brk.start, brk.end);
+                if (deduction > 0) {
+                    console.log(`Deducting ${deduction.toFixed(2)}m for break ${brk.start}-${brk.end}`);
+                    totalDeduction += deduction;
+                }
+            });
+
+            return Math.max(0, totalMinutes - totalDeduction);
         }
 
         function renderOperationsList(operations, timings, qcoId) {
@@ -888,7 +964,9 @@
                 }
 
                 // Calculate actual time in minutes (2 decimals)
-                const actualTimeMinutes = ((new Date(endTimestamp) - new Date(startTimestamp)) / 60000).toFixed(2);
+                // Use getNetDuration to account for breaks
+                const netMinutes = getNetDuration(startTimestamp, endTimestamp, currentLineSchedule);
+                const actualTimeMinutes = netMinutes.toFixed(2);
 
                 // Calculate standard time (SMV × 10, 2 decimals)
                 const standardTimeMinutes = opSMV !== null && opSMV !== undefined

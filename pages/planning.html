@@ -332,15 +332,26 @@
                     </p>
                 </div>
 
-                <!-- View Controls (Normally Hidden) -->
-                <div class="flex gap-3 mb-2 opacity-0 -translate-y-4 transition-all duration-300 transform"
-                    id="viewControls" style="opacity: 0; display: none;">
-                    <button onclick="switchView('dashboard')" id="btn-dashboard"
-                        class="px-6 py-3 rounded-2xl bg-slate-900 text-white font-semibold shadow-xl shadow-blue-900/20 hover:scale-105 transition-all">Dashboard</button>
-                    <button onclick="switchView('timeline')" id="btn-timeline"
-                        class="px-6 py-3 rounded-2xl bg-white/60 text-slate-600 font-semibold hover:bg-white hover:text-blue-600 transition-all">Timeline</button>
-                    <button onclick="switchView('grid')" id="btn-grid"
-                        class="px-6 py-3 rounded-2xl bg-white/60 text-slate-600 font-semibold hover:bg-white hover:text-blue-600 transition-all">Grid</button>
+                <div class="flex flex-col items-end gap-4">
+                    <!-- Search Bar (Initially Hidden) -->
+                    <div id="searchContainer" class="hidden relative group animate-[fadeIn_0.5s_ease-out]">
+                        <i data-lucide="search"
+                            class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 group-focus-within:text-blue-500 transition-colors"></i>
+                        <input type="text" id="planSearch" onkeyup="window.PlanningLogic.handleSearch(this.value)"
+                            placeholder="Search Name, Line, Supervisor..."
+                            class="pl-12 pr-4 py-3 rounded-2xl bg-white border border-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 w-72 transition-all">
+                    </div>
+
+                    <!-- View Controls (Normally Hidden) -->
+                    <div class="flex gap-3 opacity-0 transition-all duration-300 transform translate-y-4"
+                        id="viewControls" style="display: none;">
+                        <button onclick="switchView('dashboard')" id="btn-dashboard"
+                            class="px-6 py-3 rounded-2xl bg-slate-900 text-white font-semibold shadow-xl shadow-blue-900/20 hover:scale-105 transition-all">Dashboard</button>
+                        <button onclick="switchView('timeline')" id="btn-timeline"
+                            class="px-6 py-3 rounded-2xl bg-white/60 text-slate-600 font-semibold hover:bg-white hover:text-blue-600 transition-all">Timeline</button>
+                        <button onclick="switchView('grid')" id="btn-grid"
+                            class="px-6 py-3 rounded-2xl bg-white/60 text-slate-600 font-semibold hover:bg-white hover:text-blue-600 transition-all">Grid</button>
+                    </div>
                 </div>
             </div>
 
