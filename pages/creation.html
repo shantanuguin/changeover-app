@@ -2152,7 +2152,7 @@
                             <div>
                                 <h3 class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Changeover
                                     Reference Number</h3>
-                                <div class="qco-highlight" id="qcoNumberDisplay">L-XXXX-XXXX-XX</div>
+                                <div class="qco-highlight" id="qcoNumberDisplay">S-X-XXX-XXX-XX</div>
                             </div>
                             <div class="text-right">
                                 <p class="text-xs text-gray-500">Created by</p>
@@ -2323,7 +2323,7 @@
                                 <h2 class="text-xl font-bold text-gray-800 mb-2">Changeover Meeting Email</h2>
                                 <p class="text-sm text-gray-600">Auto-generated based on machine analysis and personnel
                                     allocation</p>
-                                <div class="mt-2 qco-highlight" id="emailQCONumber">L-XXXX-XXXX-XX</div>
+                                <div class="mt-2 qco-highlight" id="emailQCONumber">S-X-XXX-XXX-XX</div>
                             </div>
                             <div class="flex space-x-3 flex-wrap gap-2">
                                 <button onclick="sendEmailSMTP()" class="email-action-btn btn-smtp">
@@ -2829,7 +2829,7 @@
                     addFirebaseLog('Generating QCO number via Firebase transaction...', 'info');
 
                     // Construct the Unique Key for this specific combo
-                    const uniqueKey = `L${cleanLine}-${curLast3}-${nextLast3}`;
+                    const uniqueKey = `S${cleanLine}-${curLast3}-${nextLast3}`;
                     const sequenceRef = db.collection('qco_sequences').doc(uniqueKey);
 
                     const nextSeq = await db.runTransaction(async (transaction) => {
@@ -2848,9 +2848,9 @@
                         return seq;
                     });
 
-                    // Format: L + Line + Cur3 + Next3 + Seq (01, 02... 99, 100...)
+                    // Format: S-Line-Cur3-Next3-Seq (01, 02... 99, 100...)
                     const seqStr = nextSeq.toString().padStart(2, '0');
-                    const newId = `L${cleanLine}${curLast3}${nextLast3}${seqStr}`;
+                    const newId = `S-${cleanLine}-${curLast3}-${nextLast3}-${seqStr}`;
 
                     addFirebaseLog(`Generated synced QCO number: ${newId}`, 'success');
                     return newId;
@@ -2859,7 +2859,7 @@
                     addFirebaseLog(`Error in QCO sync transaction: ${error.message}`, 'error');
                     // Fallback to querying changeovers if transaction fails
                     // Try to count existing changeovers for this specific combination
-                    const prefix = `L${cleanLine}${curLast3}${nextLast3}`;
+                    const prefix = `S-${cleanLine}-${curLast3}-${nextLast3}-`;
                     /* 
                        Note: A true "startsWith" query in Firestore requires a range query.
                        We query for IDs >= prefix and < prefix + last_char_increment
@@ -2880,12 +2880,12 @@
                 }
             } else {
                 // Offline fallback - use localStorage per combo
-                const uniqueKey = `qco_seq_L${cleanLine}-${curLast3}-${nextLast3}`;
+                const uniqueKey = `qco_seq_S${cleanLine}-${curLast3}-${nextLast3}`;
                 const localSeq = localStorage.getItem(uniqueKey) || 0;
                 const next = parseInt(localSeq) + 1;
                 localStorage.setItem(uniqueKey, next);
                 const seqStr = next.toString().padStart(2, '0');
-                return `L${cleanLine}${curLast3}${nextLast3}${seqStr}`;
+                return `S-${cleanLine}-${curLast3}-${nextLast3}-${seqStr}`;
             }
         }
 
