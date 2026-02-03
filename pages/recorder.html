@@ -531,9 +531,20 @@
                     const data = doc.data();
 
                     // --- Extract Line ID and Load Schedule ---
-                    const qcoNum = data.qcoNumber || "";
-                    const parts = qcoNum.split('-');
-                    let lineKey = parts.length >= 2 ? parts.slice(0, 2).join('-') : "Unknown";
+                    // Fix: Prioritize 'lineNumber' field from data, fallback to QCO number parsing
+                    let lineKey = data.lineNumber || "Unknown";
+
+                    if (lineKey === "Unknown" && data.qcoNumber) {
+                        const parts = data.qcoNumber.split('-');
+                        // Handle formats like "S-01-..." or "01-..."
+                        if (parts.length >= 2) {
+                            if (parts[0].toUpperCase() === 'S') {
+                                lineKey = parts.slice(0, 2).join('-');
+                            } else {
+                                lineKey = parts[0];
+                            }
+                        }
+                    }
 
                     // Display Line ID in UI
                     const lineIdLabel = document.getElementById('lineIdLabel');
