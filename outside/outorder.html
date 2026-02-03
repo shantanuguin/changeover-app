@@ -360,6 +360,42 @@
         let currentLineSchedule = null;
         let shiftMode = localStorage.getItem('shiftMode') || 'day';
 
+        const RAW_LINE_SCHEDULES = {
+            "S-01": { supervisor: "WASANA-1", breaks: [{ start: "09:30", end: "09:45" }, { start: "12:30", end: "13:00" }, { start: "16:45", end: "17:00" }] },
+            "S-01A": { supervisor: "WASANA-2", breaks: [{ start: "09:30", end: "09:45" }, { start: "12:30", end: "13:00" }, { start: "16:50", end: "17:05" }] },
+            "S-02": { supervisor: "SOHRAB", breaks: [{ start: "09:10", end: "09:25" }, { start: "12:10", end: "12:40" }, { start: "16:20", end: "16:35" }] },
+            "S-03": { supervisor: "SOHEL", breaks: [{ start: "09:20", end: "09:35" }, { start: "12:20", end: "12:50" }, { start: "16:30", end: "16:45" }] },
+            "S-04": { supervisor: "AHMAD", breaks: [{ start: "09:20", end: "09:35" }, { start: "12:20", end: "12:50" }, { start: "16:30", end: "16:45" }] },
+            "S-05": { supervisor: "OMAR FARUK", breaks: [{ start: "09:00", end: "09:15" }, { start: "12:00", end: "12:30" }, { start: "16:15", end: "16:30" }] },
+            "S-06": { supervisor: "SUMI", breaks: [{ start: "09:40", end: "09:55" }, { start: "12:40", end: "13:10" }, { start: "16:50", end: "17:05" }] },
+            "S-07": { supervisor: "NAGENDRA", breaks: [{ start: "09:30", end: "09:45" }, { start: "12:30", end: "13:00" }, { start: "16:50", end: "17:05" }] },
+            "S-07A": { supervisor: "KAMAL-2", breaks: [{ start: "09:40", end: "09:55" }, { start: "12:40", end: "13:10" }, { start: "16:50", end: "17:05" }] },
+            "S-08": { supervisor: "BALISTER", breaks: [{ start: "09:10", end: "09:25" }, { start: "12:10", end: "12:40" }, { start: "16:20", end: "16:35" }] },
+            "S-09": { supervisor: "MONJURUL", breaks: [{ start: "09:40", end: "09:55" }, { start: "12:40", end: "13:10" }, { start: "16:50", end: "17:05" }] },
+            "S-10": { supervisor: "RAJKUMAR", breaks: [{ start: "09:45", end: "10:00" }, { start: "13:00", end: "13:30" }, { start: "17:00", end: "17:15" }] },
+            "S-11": { supervisor: "KAMAL-1", breaks: [{ start: "09:40", end: "09:55" }, { start: "12:40", end: "13:10" }, { start: "16:50", end: "17:05" }] },
+            "S-12": { supervisor: "DARMENDRA", breaks: [{ start: "09:00", end: "09:15" }, { start: "12:00", end: "12:30" }, { start: "16:15", end: "16:30" }] },
+            "S-13": { supervisor: "SUMON", breaks: [{ start: "09:40", end: "09:55" }, { start: "12:50", end: "13:20" }, { start: "16:50", end: "17:05" }] },
+            "S-14": { supervisor: "SHARIF", breaks: [{ start: "09:00", end: "09:15" }, { start: "12:00", end: "12:30" }, { start: "16:15", end: "16:30" }] },
+            "S-15": { supervisor: "MUNSEF", breaks: [{ start: "09:30", end: "09:45" }, { start: "12:30", end: "13:00" }, { start: "16:45", end: "17:00" }] },
+            "S-16": { supervisor: "RAHAMAN", breaks: [{ start: "09:50", end: "10:05" }, { start: "13:20", end: "13:50" }, { start: "17:00", end: "17:15" }] },
+            "S-17": { supervisor: "MASUM", breaks: [{ start: "09:50", end: "10:05" }, { start: "13:20", end: "13:50" }, { start: "17:00", end: "17:15" }] },
+            "S-18": { supervisor: "DIANA", breaks: [{ start: "09:50", end: "10:05" }, { start: "13:20", end: "13:50" }, { start: "17:00", end: "17:15" }] },
+            "S-19": { supervisor: "ALAMGIR", breaks: [{ start: "09:20", end: "09:35" }, { start: "12:20", end: "12:50" }, { start: "16:30", end: "16:45" }] },
+            "S-20": { supervisor: "KAZAL", breaks: [{ start: "09:00", end: "09:15" }, { start: "11:50", end: "12:20" }, { start: "16:15", end: "16:30" }] },
+            "S-21": { supervisor: "DEVRAJ", breaks: [{ start: "09:45", end: "10:00" }, { start: "12:50", end: "13:20" }, { start: "16:50", end: "17:05" }] },
+            "S-22": { supervisor: "ASHRAFUL", breaks: [{ start: "09:20", end: "09:35" }, { start: "12:20", end: "12:50" }, { start: "16:30", end: "16:45" }] },
+            "S-23": { supervisor: "RUMA", breaks: [{ start: "09:40", end: "09:55" }, { start: "12:50", end: "13:20" }, { start: "16:50", end: "17:05" }] },
+            "S-24": { supervisor: "NASIR", breaks: [{ start: "09:10", end: "09:25" }, { start: "12:10", end: "12:40" }, { start: "16:20", end: "16:35" }] },
+            "S-25": { supervisor: "AKBAR", breaks: [{ start: "09:50", end: "10:05" }, { start: "13:00", end: "13:30" }, { start: "17:00", end: "17:15" }] },
+            "S-26": { supervisor: "HIMAYAT", breaks: [{ start: "09:45", end: "10:00" }, { start: "13:00", end: "13:30" }, { start: "17:00", end: "17:15" }] },
+            "S-28": { supervisor: "ROOP NARAYAN", breaks: [{ start: "09:40", end: "09:55" }, { start: "12:40", end: "13:10" }, { start: "16:50", end: "17:05" }] },
+            "S-29": { supervisor: "SUBA", breaks: [{ start: "09:00", end: "09:15" }, { start: "11:50", end: "12:20" }, { start: "16:15", end: "16:30" }] },
+            "S-30": { supervisor: "RAJIB", breaks: [{ start: "09:20", end: "09:35" }, { start: "12:10", end: "12:40" }, { start: "16:20", end: "16:35" }] },
+            "S-31": { supervisor: "AKASH", breaks: [{ start: "09:00", end: "09:15" }, { start: "11:50", end: "12:20" }, { start: "16:15", end: "16:30" }] },
+            "S-32": { supervisor: "KALU CHARAN", breaks: [{ start: "09:45", end: "10:00" }, { start: "12:50", end: "13:20" }, { start: "16:50", end: "17:05" }] }
+        };
+
         function handleShiftChange(val) {
             shiftMode = val;
             localStorage.setItem('shiftMode', val);
@@ -577,6 +613,10 @@
                             if (schedDoc.exists) {
                                 currentLineSchedule = { lineKey, ...schedDoc.data() };
                                 console.log("Loaded schedule for", lineKey, currentLineSchedule);
+                            } else if (RAW_LINE_SCHEDULES[lineKey]) {
+                                // Fallback: Use hardcoded schedule
+                                currentLineSchedule = { lineKey, ...RAW_LINE_SCHEDULES[lineKey] };
+                                console.log("Using hardcoded fallback schedule for", lineKey);
                             } else {
                                 currentLineSchedule = null;
                             }
