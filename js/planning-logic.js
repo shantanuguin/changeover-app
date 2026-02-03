@@ -415,13 +415,8 @@ const renderDashboard = () => {
     // --- Update KPI Cards ---
     document.getElementById('stat-styles').textContent = uniqueStyles.size;
     document.getElementById('stat-target').textContent = (totalTarget / 1000).toFixed(1) + 'k';
-    document.getElementById('stat-manpower').textContent = Math.round(totalManpower / (data.length || 1)); // Avg instead of total? Or total? React used Avg MP calc differently. Sticking to total for now if matching label, but label says "Total Manpower" in HTML. Wait, React said "Avg Line Manpower".
-    // Actually, let's match React logic for the 3rd card:
-    const card3Label = document.querySelector('#stat-manpower').parentElement.parentElement.querySelector('p');
-    if (card3Label) card3Label.textContent = "AVG LINE MANPOWER";
     document.getElementById('stat-manpower').textContent = avgManpowerPerStyle;
-
-    document.getElementById('anomaly-count').textContent = `${anomalies.length} issues`;
+    document.getElementById('anomaly-count').textContent = anomalies.length;
 
     // --- Render Critical Items (Anomalies + Remarks) ---
     const anomalyList = document.getElementById('anomaly-list');
@@ -432,128 +427,113 @@ const renderDashboard = () => {
     remarks.forEach(r => criticalItems.push({ type: 'warning', message: r.text, ...r }));
 
     if (criticalItems.length === 0) {
-        anomalyList.innerHTML = '<div class="text-slate-500 text-sm italic">No issues found.</div>';
+        anomalyList.innerHTML = '<div class="text-slate-400 text-center py-12 italic">No critical anomalies or remarks found.</div>';
     } else {
-        criticalItems.slice(0, 50).forEach(item => {
+        criticalItems.slice(0, 100).forEach(item => {
             const isErr = item.type === 'error';
             const div = document.createElement('div');
-            div.className = `flex items-start p-3 mb-2 rounded-lg text-xs border ${isErr ? 'bg-red-50 border-red-100 text-red-800' : 'bg-amber-50 border-amber-100 text-amber-800'}`;
+            div.className = `flex items-start p-4 rounded-2xl text-sm border transition-all hover:bg-white group ${isErr ? 'bg-rose-50/50 border-rose-100 text-rose-800' : 'bg-amber-50/50 border-amber-100 text-amber-800'}`;
             div.innerHTML = `
-                <i data-lucide="${isErr ? 'alert-circle' : 'message-square'}" class="w-4 h-4 mr-2 mt-0.5 ${isErr ? 'text-red-500' : 'text-amber-500'}"></i>
-                <div>
-                    <span class="font-bold block ${isErr ? 'text-red-700' : 'text-amber-700'}">${item.styleName} (${item.line})</span>
-                    <span class="opacity-90">${item.message}</span>
+                <div class="w-8 h-8 rounded-full flex items-center justify-center mr-3 mt-0.5 shrink-0 ${isErr ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'}">
+                    <i data-lucide="${isErr ? 'alert-circle' : 'message-square'}" class="w-4 h-4"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">${item.styleName}</span>
+                        <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-white/80 border border-slate-100 text-slate-500 uppercase tracking-wider">${item.line}</span>
+                    </div>
+                    <p class="text-slate-600 leading-relaxed">${item.message}</p>
                 </div>`;
             anomalyList.appendChild(div);
         });
     }
 
-    // --- NEW: Style Daily Targets Matrix (Insert into DOM dynamically if not exists) ---
-    let matrixContainer = document.getElementById('dashboard-matrix');
-    if (!matrixContainer) {
-        // Create container if missing (it is missing in original HTML)
-        const dashboardView = document.getElementById('view-dashboard');
-        // We need to insert it BEFORE the grid of cards at the bottom? No, typically below the stats.
-        // Let's create a new full-width section.
-        const newSection = document.createElement('div');
-        newSection.id = 'dashboard-matrix';
-        newSection.className = 'col-span-1 md:col-span-4 bg-white/60 p-6 rounded-2xl border border-white/50 h-96 flex flex-col mb-6 glass-card';
-        // Insert after the KPI grid
-        const kpiGrid = dashboardView.querySelector('.grid');
-        kpiGrid.parentNode.insertBefore(newSection, kpiGrid.nextSibling);
-        matrixContainer = newSection;
-    }
-
-    // Render Matrix HTML
-    matrixContainer.innerHTML = `
-        <h4 class="text-slate-800 font-bold mb-4 flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-4 h-4 text-blue-500"></i> Style Daily Targets</h4>
-        <div class="flex-1 overflow-auto rounded-xl border border-slate-200 bg-white/50 custom-scrollbar">
-            <table class="w-full text-left text-xs whitespace-nowrap">
-                <thead class="bg-slate-50 text-slate-500 sticky top-0 z-10 shadow-sm">
-                    <tr>
-                        <th class="p-3 sticky left-0 bg-slate-50 border-r border-slate-200 z-20">Style / Line</th>
-                        <th class="p-3 text-center border-r border-slate-200">MP</th>
-                        ${calendarData.slice(0, 14).map(d => `
-                            <th class="p-3 text-center border-l border-slate-200/50 ${d.isHoliday ? 'text-red-500 bg-red-50/50' : ''}">
-                                <div class="font-bold">${d.date.getDate()}</div>
-                                <div class="text-[9px] uppercase">${d.date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
-                            </th>
-                        `).join('')}
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    ${data.slice(0, 20).map(style => {
-        const styleAvgMp = style.dailyPlans.length ? Math.round(style.totalManpower / style.dailyPlans.length) : 0;
-        return `
-                        <tr class="hover:bg-blue-50/30 transition-colors">
-                            <td class="p-3 font-medium text-slate-700 sticky left-0 bg-white border-r border-slate-100 z-10">
-                                <div class="truncate w-32 font-bold text-blue-900" title="${style.styleName}">${style.styleName}</div>
-                                <div class="text-[10px] text-slate-400 truncate w-32">${style.physicalLine}</div>
-                            </td>
-                            <td class="p-3 text-orange-500 font-mono font-bold text-center border-r border-slate-100">${styleAvgMp}</td>
-                            ${calendarData.slice(0, 14).map(d => {
-            const plan = style.dailyPlans.find(p => p.date.getTime() === d.date.getTime());
-            return `
-                                <td class="p-3 text-center border-l border-slate-100 font-mono text-slate-400 relative group">
-                                    ${plan ? `<span class="text-emerald-600 font-bold">${plan.target}</span>` : '<span class="opacity-20">-</span>'}
-                                </td>`;
-        }).join('')}
-                        </tr>`;
-    }).join('')}
-                </tbody>
-            </table>
-        </div>
-        <div class="mt-2 text-[10px] text-slate-400 text-right">Top 20 Styles • Next 14 Days</div>
-    `;
-
-    // --- NEW: Factory Daily Goals (Insert or Update) ---
-    // In React this was a separate card. In HTML we might need a container.
-    // The previous code put 'anomaly-list' in a card. We can repurpose/add.
-    // Let's create `dashboard-goals` container if missing.
-    let goalsContainer = document.getElementById('dashboard-goals');
-    if (!goalsContainer) {
-        const goalsDiv = document.createElement('div');
-        goalsDiv.id = 'dashboard-goals';
-        goalsDiv.className = 'bg-white rounded-2xl p-6 border border-slate-200 shadow-sm h-80 flex flex-col';
-        // Append to the 2-col grid at bottom.
-        // Currently the bottom grid is: [Anomalies] [ ? ]
-        // The HTML structure has a grid with 2 cols. Left is anomalies. Right is... unassigned?
-        // Let's check `planning.html` structure... 
-        // Logic: Find the grid containing 'anomaly-list' and append to it.
-        const anomalyCard = document.getElementById('anomaly-list').parentElement;
-        const parentGrid = anomalyCard.parentElement;
-        if (parentGrid) {
-            parentGrid.appendChild(goalsDiv);
-        }
-        goalsContainer = goalsDiv;
-    }
-
-    goalsContainer.innerHTML = `
-        <h4 class="text-slate-800 font-bold mb-4 flex items-center gap-2"><i data-lucide="target" class="w-4 h-4 text-emerald-500"></i> Factory Daily Goals</h4>
-        <div class="flex-1 overflow-auto rounded-xl border border-slate-100 bg-slate-50/50 custom-scrollbar">
-            <table class="w-full text-left text-xs">
-                <thead class="bg-white text-slate-500 sticky top-0 shadow-sm">
-                    <tr>
-                        <th class="p-3 font-medium">Date</th>
-                        <th class="p-3 font-medium text-right">Target</th>
-                        <th class="p-3 font-medium text-right">MP</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    ${calendarData.slice(0, 14).map(d => `
-                        <tr class="hover:bg-white transition-colors">
-                            <td class="p-3 font-mono text-slate-600">
-                                <span class="${d.isHoliday ? 'text-red-500' : ''}">${d.date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })}</span>
-                            </td>
-                            <td class="p-3 text-right font-mono text-emerald-600 font-bold">${d.target.toLocaleString()}</td>
-                            <td class="p-3 text-right font-mono text-orange-500">${d.mp.toLocaleString()}</td>
+    // --- Style Daily Targets Matrix ---
+    const matrixContainer = document.getElementById('dashboard-matrix');
+    if (matrixContainer) {
+        matrixContainer.innerHTML = `
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white/50">
+                <h4 class="text-slate-900 font-bold flex items-center gap-2">
+                    <i data-lucide="bar-chart-2" class="w-5 h-5 text-blue-500"></i>
+                    Style Daily Targets
+                </h4>
+            </div>
+            <div class="flex-1 overflow-auto custom-scrollbar p-1">
+                <table class="w-full text-left text-xs whitespace-nowrap border-separate border-spacing-0">
+                    <thead class="bg-slate-50 text-slate-500 sticky top-0 z-10 shadow-sm">
+                        <tr>
+                            <th class="p-4 sticky left-0 bg-slate-50 border-r border-slate-200 z-20 font-bold uppercase tracking-widest text-[10px]">Style / Line</th>
+                            <th class="p-4 text-center border-r border-slate-200 font-bold uppercase tracking-widest text-[10px]">MP</th>
+                            ${calendarData.slice(0, 14).map(d => `
+                                <th class="p-4 text-center border-l border-slate-200/50 ${d.isHoliday ? 'text-rose-500 bg-rose-50/50' : ''}">
+                                    <div class="font-bold">${d.date.getDate()}</div>
+                                    <div class="text-[9px] uppercase tracking-tighter">${d.date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                                </th>
+                            `).join('')}
                         </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        </div>
-    `;
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        ${data.slice(0, 30).map(style => {
+            const styleAvgMp = style.dailyPlans.length ? Math.round(style.totalManpower / style.dailyPlans.length) : 0;
+            return `
+                            <tr class="hover:bg-blue-50/30 transition-all group">
+                                <td class="p-4 font-medium text-slate-700 sticky left-0 bg-white border-r border-slate-100 z-10 group-hover:bg-blue-50 transition-colors">
+                                    <div class="truncate w-40 font-bold text-slate-900 group-hover:text-blue-600 transition-colors" title="${style.styleName}">${style.styleName}</div>
+                                    <div class="text-[10px] text-slate-400 font-mono tracking-tight">${style.physicalLine}</div>
+                                </td>
+                                <td class="p-4 text-orange-500 font-mono font-bold text-center border-r border-slate-100">${styleAvgMp}</td>
+                                ${calendarData.slice(0, 14).map(d => {
+                const plan = style.dailyPlans.find(p => p.date.getTime() === d.date.getTime());
+                return `
+                                    <td class="p-4 text-center border-l border-slate-100 font-mono text-slate-400 relative">
+                                        ${plan ? `<span class="text-emerald-600 font-bold text-sm leading-none">${plan.target}</span>` : '<span class="opacity-10">-</span>'}
+                                    </td>`;
+            }).join('')}
+                            </tr>`;
+        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+            <div class="p-3 bg-slate-50/50 border-t border-slate-100 text-[10px] text-slate-400 text-right font-medium tracking-wide">
+                Showing top 30 styles • Next 14 production days
+            </div>
+        `;
+    }
 
+    // --- Factory Daily Goals ---
+    const goalsContainer = document.getElementById('dashboard-goals');
+    if (goalsContainer) {
+        goalsContainer.innerHTML = `
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white/50">
+                <h4 class="text-slate-900 font-bold flex items-center gap-2">
+                    <i data-lucide="target" class="w-5 h-5 text-emerald-500"></i>
+                    Factory Daily Goals
+                </h4>
+            </div>
+            <div class="flex-1 overflow-auto rounded-xl custom-scrollbar p-2">
+                <table class="w-full text-left text-xs border-separate border-spacing-0">
+                    <thead class="bg-slate-50 text-slate-500 sticky top-0 shadow-sm">
+                        <tr>
+                            <th class="p-4 font-bold uppercase tracking-widest text-[10px] rounded-tl-xl text-slate-400">Date</th>
+                            <th class="p-4 font-bold uppercase tracking-widest text-[10px] text-right text-slate-400">Target</th>
+                            <th class="p-4 font-bold uppercase tracking-widest text-[10px] text-right rounded-tr-xl text-slate-400">MP</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        ${calendarData.slice(0, 14).map(d => `
+                            <tr class="hover:bg-blue-50/30 transition-all group">
+                                <td class="p-4 font-mono text-slate-700">
+                                    <span class="${d.isHoliday ? 'text-rose-500 font-bold' : 'group-hover:text-blue-600 transition-colors'}">${d.date.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' })}</span>
+                                </td>
+                                <td class="p-4 text-right font-mono text-emerald-600 font-bold text-sm">${d.target.toLocaleString()}</td>
+                                <td class="p-4 text-right font-mono text-orange-500 font-medium">${d.mp.toLocaleString()}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
     if (window.lucide) window.lucide.createIcons();
 };
 

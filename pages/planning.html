@@ -384,62 +384,110 @@
             <div id="contentArea" class="hidden space-y-8">
 
                 <!-- Dashboard View -->
-                <div id="view-dashboard" class="view-section">
+                <div id="view-dashboard" class="view-section space-y-8">
                     <!-- Stats Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <!-- Stat 1 -->
-                        <div class="glass-card p-8">
-                            <div class="flex justify-between items-start mb-6">
+                        <div class="glass-card p-6 flex flex-col justify-between">
+                            <div class="flex justify-between items-start mb-4">
                                 <div
-                                    class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm">
-                                    <i data-lucide="layers" class="w-6 h-6"></i>
+                                    class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shadow-sm">
+                                    <i data-lucide="layers" class="w-5 h-5"></i>
                                 </div>
                                 <span
-                                    class="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold">Total</span>
+                                    class="px-2 py-1 rounded-lg bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider">Styles</span>
                             </div>
-                            <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">Total Styles</h3>
-                            <p class="text-4xl font-heading font-bold text-slate-900" id="stat-styles">0</p>
+                            <div>
+                                <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">Active
+                                    Styles</h3>
+                                <p class="text-3xl font-heading font-bold text-slate-900" id="stat-styles">0</p>
+                            </div>
                         </div>
 
                         <!-- Stat 2 -->
-                        <div class="glass-card p-8">
-                            <div class="flex justify-between items-start mb-6">
+                        <div class="glass-card p-6 flex flex-col justify-between">
+                            <div class="flex justify-between items-start mb-4">
                                 <div
-                                    class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm">
-                                    <i data-lucide="target" class="w-6 h-6"></i>
+                                    class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shadow-sm">
+                                    <i data-lucide="target" class="w-5 h-5"></i>
                                 </div>
                                 <span
-                                    class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold">Target</span>
+                                    class="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wider">Output</span>
                             </div>
-                            <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">Total Pieces</h3>
-                            <p class="text-4xl font-heading font-bold text-slate-900" id="stat-target">0</p>
+                            <div>
+                                <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">Total
+                                    Pieces</h3>
+                                <p class="text-3xl font-heading font-bold text-slate-900" id="stat-target">0</p>
+                            </div>
                         </div>
 
                         <!-- Stat 3 -->
-                        <div class="glass-card p-8">
-                            <div class="flex justify-between items-start mb-6">
+                        <div class="glass-card p-6 flex flex-col justify-between">
+                            <div class="flex justify-between items-start mb-4">
                                 <div
-                                    class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-orange-600 shadow-sm">
-                                    <i data-lucide="users" class="w-6 h-6"></i>
+                                    class="w-10 h-10 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center shadow-sm">
+                                    <i data-lucide="users" class="w-5 h-5"></i>
                                 </div>
                                 <span
-                                    class="px-3 py-1 rounded-full bg-orange-50 text-orange-600 text-xs font-bold">Manpower</span>
+                                    class="px-2 py-1 rounded-lg bg-orange-50 text-orange-600 text-[10px] font-bold uppercase tracking-wider">Labor</span>
                             </div>
-                            <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">Total ManDays
-                            </h3>
-                            <p class="text-4xl font-heading font-bold text-slate-900" id="stat-manpower">0</p>
+                            <div>
+                                <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1"
+                                    id="stat-manpower-label">Avg Manpower</h3>
+                                <p class="text-3xl font-heading font-bold text-slate-900" id="stat-manpower">0</p>
+                            </div>
+                        </div>
+
+                        <!-- Stat 4 (Issues) -->
+                        <div class="glass-card p-6 flex flex-col justify-between">
+                            <div class="flex justify-between items-start mb-4">
+                                <div
+                                    class="w-10 h-10 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center shadow-sm">
+                                    <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                                </div>
+                                <span
+                                    class="px-2 py-1 rounded-lg bg-rose-50 text-rose-600 text-[10px] font-bold uppercase tracking-wider">Alerts</span>
+                            </div>
+                            <div>
+                                <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">Total
+                                    Issues</h3>
+                                <p class="text-3xl font-heading font-bold text-slate-900" id="anomaly-count">0</p>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Anomalies -->
-                    <div class="glass-card p-8">
-                        <div class="flex justify-between items-center mb-6">
-                            <h3 class="text-xl font-heading font-bold text-slate-900">System Anomalies</h3>
-                            <span class="px-3 py-1 bg-rose-100 text-rose-700 text-xs font-bold rounded-full"
-                                id="anomaly-count">0 issues</span>
+                    <!-- Main Dashboard Content -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <!-- Style Matrix (Full Width) -->
+                        <div class="lg:col-span-3">
+                            <div id="dashboard-matrix" class="glass-card overflow-hidden">
+                                <!-- Injected by PlanningLogic.renderDashboard -->
+                            </div>
                         </div>
-                        <div class="max-h-64 overflow-y-auto space-y-3 custom-scrollbar" id="anomaly-list">
-                            <!-- Injected -->
+
+                        <!-- Factory Goals -->
+                        <div class="lg:col-span-1">
+                            <div id="dashboard-goals" class="glass-card h-[500px] flex flex-col overflow-hidden">
+                                <!-- Injected by PlanningLogic.renderDashboard -->
+                            </div>
+                        </div>
+
+                        <!-- Critical Items -->
+                        <div class="lg:col-span-2">
+                            <div class="glass-card h-[500px] flex flex-col overflow-hidden">
+                                <div
+                                    class="p-6 border-b border-slate-100 flex justify-between items-center bg-white/50">
+                                    <h3 class="text-lg font-heading font-bold text-slate-900 flex items-center gap-2">
+                                        <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500"></i>
+                                        System Anomalies & Remarks
+                                    </h3>
+                                </div>
+                                <div class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar" id="anomaly-list">
+                                    <div class="text-slate-400 text-center py-12 italic">
+                                        Upload a file to see anomalies
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
