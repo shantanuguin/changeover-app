@@ -135,6 +135,8 @@
                             class="px-5 py-2.5 rounded-full text-sm font-semibold text-blue-900 bg-blue-100 shadow-sm transition-all">Recorder</a>
                         <a href="summary.html"
                             class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Reports</a>
+                        <a href="planning.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Planning</a>
                     </div>
                 </div>
 
@@ -549,10 +551,13 @@
                         <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto sm:ml-auto">
                             <select id="dept_${index}" class="flex-1 sm:flex-none px-3 py-2 text-xs rounded-lg border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all w-full sm:w-32">
                                 <option value="">Dept...</option>
+                                <option value="Trims" ${department === 'Trims' ? 'selected' : ''}>Trims</option>
+                                <option value="Cutting" ${department === 'Cutting' ? 'selected' : ''}>Cutting</option>
                                 <option value="Production" ${department === 'Production' ? 'selected' : ''}>Production</option>
+                                <option value="Merchandiser" ${department === 'Merchandiser' ? 'selected' : ''}>Merchandiser</option>
+                                <option value="IE" ${department === 'IE' ? 'selected' : ''}>IE</option>
+                                <option value="Technical" ${department === 'Technical' ? 'selected' : ''}>Technical</option>
                                 <option value="Maintenance" ${department === 'Maintenance' ? 'selected' : ''}>Maintenance</option>
-                                <option value="Quality" ${department === 'Quality' ? 'selected' : ''}>Quality</option>
-                                <option value="Engineering" ${department === 'Engineering' ? 'selected' : ''}>Engineering</option>
                             </select>
                             <input type="text" id="remarks_${index}" placeholder="Remarks..." value="${remarks}"
                                 class="flex-1 sm:flex-none px-3 py-2 text-xs rounded-lg border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition-all min-w-[120px]">

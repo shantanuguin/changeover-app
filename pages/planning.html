@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planning Input | QCO Portal</title>
+
+    <!-- Frameworks & Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+    <!-- SheetJS for Excel Processing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <!-- Animation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.1.2/dist/lenis.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Poppins', 'sans-serif']
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Base & Typography */
+        body {
+            background-color: #f8fafc;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            color: #1e293b;
+        }
+
+        /* Hide Default Cursor when Custom is Active */
+        body.custom-cursor-active,
+        body.custom-cursor-active a,
+        body.custom-cursor-active button,
+        body.custom-cursor-active input {
+            cursor: none;
+        }
+
+        /* Glassmorphism Utilities */
+        .glass {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 2rem;
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.05);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* transform-style: preserve-3d; */
+            /* Disabled for complex nested layouts */
+        }
+
+        .glass-card:hover {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            border-color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Custom Cursor */
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #0ea5e9;
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+            mix-blend-mode: multiply;
+        }
+
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            z-index: 9998;
+            pointer-events: none;
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: white;
+            border-radius: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            z-index: 1001;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active+.modal,
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Timeline specific styles */
+        .timeline-grid {
+            display: grid;
+            grid-template-columns: 200px repeat(30, auto);
+            overflow-x: auto;
+        }
+
+        /* Toast Container Helpers */
+        .toast {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body class="relative min-h-screen selection:bg-blue-100 selection:text-blue-900">
+
+    <!-- Auth Check -->
+    <script>
+        const currentUser = JSON.parse(localStorage.getItem('qcoCurrentUser') || 'null');
+        if (!currentUser) {
+            window.location.href = '../index.html';
+        } else if (currentUser.role !== 'admin' && currentUser.role !== 'planning') {
+            alert("Access Restricted");
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+
+    <!-- Custom Cursor -->
+    <div class="cursor-dot hidden md:block"></div>
+    <div class="cursor-outline hidden md:block"></div>
+
+    <!-- Animated Background Blobs -->
+    <div class="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
+        <div
+            class="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-blue-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob">
+        </div>
+        <div
+            class="absolute top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-indigo-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-2000">
+        </div>
+        <div
+            class="absolute bottom-[-20%] left-[20%] w-[60vw] h-[60vw] bg-pink-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-4000">
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-40 glass transition-all duration-300" id="navbar">
+        <div class="max-w-[1600px] mx-auto px-6">
+            <div class="flex justify-between h-24 items-center relative">
+
+                <!-- Centered Navigation -->
+                <div class="hidden xl:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                    <div
+                        class="flex items-center gap-1 bg-white/50 p-1.5 rounded-full border border-white/20 shadow-sm backdrop-blur-md">
+                        <a href="../index.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Home</a>
+                        <a href="dashboard.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Dashboard</a>
+                        <a href="creation.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Creation</a>
+                        <a href="schedule.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Schedule</a>
+                        <a href="checklist.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Checklist</a>
+                        <a href="recorder.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Recorder</a>
+                        <a href="summary.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Reports</a>
+                        <a href="planning.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-blue-900 bg-blue-100 shadow-sm transition-all">Planning</a>
+                    </div>
+                </div>
+
+                <!-- Logo -->
+                <a href="../index.html" class="flex items-center gap-4 group cursor-pointer">
+                    <div
+                        class="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:rotate-12 transition-transform duration-500 ease-out">
+                        <i data-lucide="layers" class="w-6 h-6"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-heading font-bold text-slate-900 text-xl tracking-tight">QCO Portal</span>
+                        <span class="text-xs text-slate-500 font-medium tracking-wide">Manufacturing Excellence</span>
+                    </div>
+                </a>
+
+                <!-- User Profile & Actions -->
+                <div class="flex items-center gap-4">
+                    <div class="relative group">
+                        <button
+                            class="flex items-center gap-3 focus:outline-none p-1.5 pr-3 rounded-full hover:bg-white/60 transition-all border border-transparent hover:border-white/50">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md flex items-center justify-center text-sm font-bold"
+                                id="userInitials">JD</div>
+                            <div class="text-left hidden sm:block">
+                                <p class="text-xs font-bold text-slate-900 leading-tight" id="userName">John Doe</p>
+                                <p class="text-[10px] text-slate-500 leading-tight" id="userRole">Administrator</p>
+                            </div>
+                            <i data-lucide="chevron-down"
+                                class="w-3 h-3 text-slate-400 ml-1 group-hover:text-slate-600 transition-colors"></i>
+                        </button>
+                        <!-- Dropdown -->
+                        <div
+                            class="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all transform origin-top-right z-50">
+                            <div class="p-2">
+                                <button onclick="logout()"
+                                    class="w-full text-left px-4 py-2 rounded-xl text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2">
+                                    <i data-lucide="log-out" class="w-4 h-4"></i> Logout
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="pt-32 pb-12 px-6 opacity-0">
+        <div class="max-w-[1600px] mx-auto">
+
+            <!-- Page Header -->
+            <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                <div>
+                    <h1
+                        class="split-header text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-slate-900 tracking-tight mb-4">
+                        Planning <span
+                            class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Input</span>
+                    </h1>
+                    <p class="text-slate-500 text-lg max-w-2xl leading-relaxed">
+                        Visualize and analyze production schedules efficiently.
+                    </p>
+                </div>
+
+                <!-- View Controls (Normally Hidden) -->
+                <div class="flex gap-3 mb-2 opacity-0 -translate-y-4 transition-all duration-300 transform"
+                    id="viewControls" style="opacity: 0; display: none;">
+                    <button onclick="switchView('dashboard')" id="btn-dashboard"
+                        class="px-6 py-3 rounded-2xl bg-slate-900 text-white font-semibold shadow-xl shadow-blue-900/20 hover:scale-105 transition-all">Dashboard</button>
+                    <button onclick="switchView('timeline')" id="btn-timeline"
+                        class="px-6 py-3 rounded-2xl bg-white/60 text-slate-600 font-semibold hover:bg-white hover:text-blue-600 transition-all">Timeline</button>
+                    <button onclick="switchView('grid')" id="btn-grid"
+                        class="px-6 py-3 rounded-2xl bg-white/60 text-slate-600 font-semibold hover:bg-white hover:text-blue-600 transition-all">Grid</button>
+                </div>
+            </div>
+
+            <!-- File Upload State -->
+            <div id="uploadState"
+                class="glass-card p-12 text-center border-dashed border-2 border-slate-300 hover:border-blue-400 transition-colors">
+                <div
+                    class="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                    <i data-lucide="upload-cloud" class="w-10 h-10"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-slate-900 mb-3">Import Production Schedule</h3>
+                <p class="text-slate-500 mb-8 max-w-md mx-auto">Upload your Excel planning sheet (.xlsx). The system
+                    will automatically parse Supervisor, Target, and Manpower data.</p>
+
+                <label
+                    class="relative inline-flex cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl font-bold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-1 transition-all group">
+                    <i data-lucide="file-spreadsheet" class="w-5 h-5 mr-2 group-hover:animate-bounce"></i>
+                    <span>Select Excel File</span>
+                    <!-- FIXED: Removed onchange attribute to prevent ReferenceError -->
+                    <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden">
+                </label>
+
+                <p id="loadingText"
+                    class="hidden mt-6 text-blue-600 font-bold animate-pulse flex items-center justify-center gap-2">
+                    <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processing workbook...
+                </p>
+            </div>
+
+            <!-- Content Area -->
+            <div id="contentArea" class="hidden space-y-8">
+
+                <!-- Dashboard View -->
+                <div id="view-dashboard" class="view-section">
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <!-- Stat 1 -->
+                        <div class="glass-card p-8">
+                            <div class="flex justify-between items-start mb-6">
+                                <div
+                                    class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm">
+                                    <i data-lucide="layers" class="w-6 h-6"></i>
+                                </div>
+                                <span
+                                    class="px-3 py-1 rounded-full bg-blue-50 text-blue-600 text-xs font-bold">Total</span>
+                            </div>
+                            <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">Total Styles</h3>
+                            <p class="text-4xl font-heading font-bold text-slate-900" id="stat-styles">0</p>
+                        </div>
+
+                        <!-- Stat 2 -->
+                        <div class="glass-card p-8">
+                            <div class="flex justify-between items-start mb-6">
+                                <div
+                                    class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-emerald-600 shadow-sm">
+                                    <i data-lucide="target" class="w-6 h-6"></i>
+                                </div>
+                                <span
+                                    class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold">Target</span>
+                            </div>
+                            <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">Total Pieces</h3>
+                            <p class="text-4xl font-heading font-bold text-slate-900" id="stat-target">0</p>
+                        </div>
+
+                        <!-- Stat 3 -->
+                        <div class="glass-card p-8">
+                            <div class="flex justify-between items-start mb-6">
+                                <div
+                                    class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-orange-600 shadow-sm">
+                                    <i data-lucide="users" class="w-6 h-6"></i>
+                                </div>
+                                <span
+                                    class="px-3 py-1 rounded-full bg-orange-50 text-orange-600 text-xs font-bold">Manpower</span>
+                            </div>
+                            <h3 class="text-slate-500 text-sm font-bold uppercase tracking-wider mb-1">Total ManDays
+                            </h3>
+                            <p class="text-4xl font-heading font-bold text-slate-900" id="stat-manpower">0</p>
+                        </div>
+                    </div>
+
+                    <!-- Anomalies -->
+                    <div class="glass-card p-8">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-heading font-bold text-slate-900">System Anomalies</h3>
+                            <span class="px-3 py-1 bg-rose-100 text-rose-700 text-xs font-bold rounded-full"
+                                id="anomaly-count">0 issues</span>
+                        </div>
+                        <div class="max-h-64 overflow-y-auto space-y-3 custom-scrollbar" id="anomaly-list">
+                            <!-- Injected -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timeline View -->
+                <div id="view-timeline" class="view-section hidden">
+                    <div class="glass-card p-8 overflow-hidden">
+                        <h3 class="text-xl font-heading font-bold text-slate-900 mb-6">Production Timeline</h3>
+                        <div class="overflow-x-auto pb-4 custom-scrollbar">
+                            <div id="timeline-container" class="min-w-max"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grid View -->
+                <div id="view-grid" class="view-section hidden">
+                    <div class="glass-card p-8 overflow-hidden">
+                        <h3 class="text-xl font-heading font-bold text-slate-900 mb-6">Detailed Grid</h3>
+                        <div class="overflow-x-auto">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Line / Supervisor</th>
+                                        <th>Style</th>
+                                        <th>Current Running</th>
+                                        <th class="text-right">Target</th>
+                                        <th class="text-right">Manpower</th>
+                                        <th>Dates</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="grid-body">
+                                    <!-- Injected -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Overlay -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+
+    <!-- Detail Modal -->
+    <div class="modal" id="styleModal">
+        <div class="p-8">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-heading font-bold text-slate-900" id="modal-title">Style Details</h2>
+                    <p class="text-sm text-slate-500 mt-1" id="modal-subtitle">View production info</p>
+                </div>
+                <button onclick="closeModal()"
+                    class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
+                    <i data-lucide="x" class="w-5 h-5 text-slate-600"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                <!-- Info Grid -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <span class="block text-slate-400 text-xs font-bold uppercase mb-1">Supervisor</span>
+                        <span class="font-bold text-slate-900" id="modal-supervisor">-</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <span class="block text-slate-400 text-xs font-bold uppercase mb-1">Unit</span>
+                        <span class="font-bold text-slate-900" id="modal-unit">-</span>
+                    </div>
+                </div>
+
+                <!-- Metrics -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                        <span class="block text-emerald-600 text-xs font-bold uppercase mb-1">Total Target</span>
+                        <span class="font-mono text-2xl font-bold text-emerald-900" id="modal-target">0</span>
+                    </div>
+                    <div class="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                        <span class="block text-orange-600 text-xs font-bold uppercase mb-1">Manpower</span>
+                        <span class="font-mono text-2xl font-bold text-orange-900" id="modal-manpower">0</span>
+                    </div>
+                </div>
+
+                <!-- Daily Table -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase text-slate-400 mb-3">Daily Breakdown</h4>
+                    <div class="border border-slate-200 rounded-xl overflow-hidden">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-50 text-slate-500">
+                                <tr>
+                                    <th class="px-4 py-3 text-left font-semibold">Date</th>
+                                    <th class="px-4 py-3 text-right font-semibold">Target</th>
+                                    <th class="px-4 py-3 text-right font-semibold">MP</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modal-daily-table" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-24 right-6 z-50 flex flex-col gap-2"></div>
+
+    <!-- Logic Script -->
+    <script type="module" src="../js/planning-logic.js"></script>
+
+    <!-- Page Scripts -->
+    <script>
+        // Animations
+        try {
+            gsap.to("#mainApp", { opacity: 1, y: 0, duration: 0.8, ease: "power3.out", delay: 0.2 });
+        } catch (e) {
+            console.error("GSAP Animation failed due to missing library or other error", e);
+            document.getElementById('mainApp').style.opacity = '1';
+        }
+
+        // User Init
+        if (currentUser) {
+            document.getElementById('userInitials').textContent = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+            document.getElementById('userName').textContent = currentUser.name;
+            try {
+                document.getElementById('userRoleDisplay').textContent = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+            } catch (e) { }
+        }
+
+        function logout() {
+            localStorage.removeItem('qcoCurrentUser');
+            window.location.href = '../index.html';
+        }
+
+        // Toast Definitions
+        window.showToast = (message, type = 'info') => {
+            const container = document.getElementById('toastContainer');
+            if (!container) {
+                console.error("Toast container missing! Message:", message);
+                alert(message); // Fallback
+                return;
+            }
+
+            const toast = document.createElement('div');
+            let borderColor = 'border-blue-500';
+            let iconColor = 'text-blue-500';
+            let iconName = 'info';
+
+            if (type === 'success') { borderColor = 'border-green-500'; iconColor = 'text-green-500'; iconName = 'check-circle'; }
+            if (type === 'error') { borderColor = 'border-red-500'; iconColor = 'text-red-500'; iconName = 'alert-circle'; }
+            if (type === 'warning') { borderColor = 'border-orange-500'; iconColor = 'text-orange-500'; iconName = 'alert-triangle'; }
+
+            toast.className = `toast show glass flex items-center gap-3 p-4 mb-4 rounded-xl shadow-lg border-l-4 ${borderColor} bg-white min-w-[300px] transform transition-all duration-300`;
+
+            toast.innerHTML = `
+                <i data-lucide="${iconName}" class="w-5 h-5 ${iconColor}"></i>
+                <span class="text-sm font-semibold text-slate-700">${message}</span>
+            `;
+
+            container.appendChild(toast);
+            if (window.lucide) lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.style.transform = 'translateX(100%)';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 400);
+            }, 5000);
+        };
+
+        // Bridge Functions with Safety Check
+        window.handleFileUpload = (input) => {
+            if (window.PlanningLogic) {
+                window.PlanningLogic.handleFileUpload(input);
+            } else {
+                console.error("PlanningLogic module not loaded");
+                window.showToast("System module not initialized. Please refresh.", "error");
+            }
+        };
+
+        // FIXED: Attach Event Listener via JS ensures function is defined before binding
+        const fileInput = document.getElementById('fileInput');
+        if (fileInput) {
+            fileInput.addEventListener('change', (e) => {
+                window.handleFileUpload(e.target);
+            });
+        }
+
+        // Drag & Drop Logic
+        const dropZone = document.getElementById('uploadState');
+
+        if (dropZone) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight(e) {
+                dropZone.classList.add('border-blue-500', 'bg-blue-50/50');
+                dropZone.classList.remove('border-slate-300');
+            }
+
+            function unhighlight(e) {
+                dropZone.classList.remove('border-blue-500', 'bg-blue-50/50');
+                dropZone.classList.add('border-slate-300');
+            }
+
+            dropZone.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+
+                if (files.length > 0) {
+                    const name = files[0].name.toLowerCase();
+                    if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+                        // Pass an object mimicking input.files
+                        window.handleFileUpload({ files: files });
+                    } else {
+                        window.showToast('Invalid file type. Please upload an Excel file (.xlsx, .xls)', 'error');
+                    }
+                }
+            }
+
+            // Allow clicking the dropzone to trigger input (except if clicking label)
+            dropZone.addEventListener('click', (e) => {
+                if (e.target !== fileInput && !e.target.closest('label')) {
+                    fileInput.click();
+                }
+            });
+        }
+
+        window.switchView = (viewName) => {
+            if (window.PlanningLogic) {
+                window.PlanningLogic.switchView(viewName);
+
+                // Animate Buttons
+                const buttons = ['dashboard', 'timeline', 'grid'];
+                buttons.forEach(b => {
+                    const btn = document.getElementById(`btn-${b}`);
+                    if (b === viewName) {
+                        btn.classList.add('bg-slate-900', 'text-white', 'shadow-xl');
+                        btn.classList.remove('bg-white/60', 'text-slate-600');
+                    } else {
+                        btn.classList.remove('bg-slate-900', 'text-white', 'shadow-xl');
+                        btn.classList.add('bg-white/60', 'text-slate-600');
+                    }
+                });
+            }
+        };
+
+        // Modal Logic
+        window.closeModal = () => {
+            const modal = document.getElementById('styleModal');
+            const overlay = document.getElementById('modalOverlay');
+            modal.classList.remove('active');
+            overlay.classList.remove('active');
+        };
+
+        // Setup Cursor
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorOutline = document.querySelector('.cursor-outline');
+
+        document.body.classList.add('custom-cursor-active');
+
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX;
+            const posY = e.clientY;
+
+            cursorDot.style.left = `${posX}px`;
+            cursorDot.style.top = `${posY}px`;
+
+            // Animate outline with delay
+            cursorOutline.animate({
+                left: `${posX}px`,
+                top: `${posY}px`
+            }, { duration: 500, fill: "forwards" });
+        });
+
+        if (window.lucide) lucide.createIcons();
+    </script>
+</body>
+
+</html>

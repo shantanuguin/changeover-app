@@ -235,6 +235,8 @@
                             class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Recorder</a>
                         <a href="summary.html"
                             class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Reports</a>
+                        <a href="planning.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Planning</a>
                     </div>
                 </div>
 
@@ -1274,6 +1276,9 @@
                 const progress = totalItems === 0 ? 0 : Math.round((completedItems / totalItems) * 100);
                 const isComplete = progress === 100;
 
+                // Calculate Remarks Count
+                const totalRemarks = dept.stages.reduce((acc, s) => acc + s.items.filter(i => i.remarks && i.remarks.trim() !== '').length, 0);
+
                 return `
                     <div onclick="selectDepartment('${dept.id}')" 
                          class="glass-card p-6 cursor-pointer group hover:scale-[1.02] hover:shadow-xl transition-all border-2 ${isComplete ? 'border-emerald-400 bg-emerald-50/30' : 'border-transparent'} relative overflow-hidden"
@@ -1282,8 +1287,13 @@
                         <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-transparent to-slate-100/50 rounded-bl-full -mr-10 -mt-10"></div>
                         
                         <div class="flex items-start justify-between mb-4">
-                            <div class="w-14 h-14 rounded-2xl dept-${dept.color.toLowerCase()} flex items-center justify-center text-slate-900 shadow-lg group-hover:scale-110 transition-transform">
+                            <div class="w-14 h-14 rounded-2xl dept-${dept.color.toLowerCase()} flex items-center justify-center text-slate-900 shadow-lg group-hover:scale-110 transition-transform relative">
                                 <i data-lucide="${dept.icon}" class="w-6 h-6"></i>
+                                ${totalRemarks > 0 ? `
+                                    <div class="absolute -top-2 -right-2 bg-blue-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-md flex items-center gap-0.5 animate-bounce-short">
+                                        <i data-lucide="message-square-text" class="w-3 h-3"></i> ${totalRemarks}
+                                    </div>
+                                ` : ''}
                             </div>
                             <div class="flex flex-col items-end">
                                 <span class="text-2xl font-bold ${isComplete ? 'text-emerald-600' : 'text-slate-700'}">${progress}%</span>
@@ -1335,6 +1345,9 @@
                 const total = stage.items.length;
                 const progress = (completedCount / total) * 100;
 
+                // Calculate Remarks Count for Stage
+                const stageRemarks = stage.items.filter(i => i.remarks && i.remarks.trim() !== '').length;
+
                 let statusColor = 'bg-slate-100 text-slate-500';
                 let statusIcon = 'fa-circle';
                 let borderColor = 'border-transparent';
@@ -1356,8 +1369,15 @@
                         
                         <div class="flex justify-between items-start mb-4">
                             <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Stage ${idx + 1}</span>
-                            <div class="w-8 h-8 rounded-full ${statusColor} flex items-center justify-center">
-                                <i data-lucide="${statusIcon}" class="w-4 h-4"></i>
+                            <div class="flex items-center gap-2">
+                                ${stageRemarks > 0 ? `
+                                    <div class="bg-blue-100 text-blue-600 text-xs font-bold px-2 py-1 rounded-full flex items-center gap-1">
+                                        <i data-lucide="message-square-text" class="w-3 h-3"></i> ${stageRemarks}
+                                    </div>
+                                ` : ''}
+                                <div class="w-8 h-8 rounded-full ${statusColor} flex items-center justify-center">
+                                    <i data-lucide="${statusIcon}" class="w-4 h-4"></i>
+                                </div>
                             </div>
                         </div>
                         
@@ -1395,27 +1415,85 @@
             document.getElementById('modalDeptBadge').className = `px-2 py-0.5 rounded text-xs font-bold bg-${dept.color}-100 text-${dept.color}-700`;
 
             const list = document.getElementById('checklistItems');
-            list.innerHTML = stage.items.map((item, idx) => `
-                <div onclick="toggleItem('${item.id}')" 
-                     class="flex items-start gap-3 p-4 rounded-xl cursor-pointer transition-all border ${item.completed ? 'bg-emerald-50/70 border-emerald-200' : 'bg-white/60 border-transparent hover:bg-white hover:border-slate-200'} group animate-fade-in"
+            list.innerHTML = stage.items.map((item, idx) => {
+                const history = item.history || [];
+                const tickCount = history.filter(h => h.action === 'checked').length;
+                const untickCount = history.filter(h => h.action === 'unchecked').length;
+
+                return `
+                <div class="p-4 rounded-xl border transition-all ${item.completed ? 'bg-emerald-50/70 border-emerald-200' : 'bg-white/60 border-slate-200 hover:border-slate-300'} group animate-fade-in"
                      style="animation-delay: ${idx * 0.03}s">
                     
-                    <div class="mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors ${item.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 group-hover:border-emerald-400 bg-white'}">
-                        ${item.completed ? '<i data-lucide="check" class="w-3 h-3"></i>' : ''}
+                    <div class="flex items-start gap-3 cursor-pointer" onclick="toggleItem('${item.id}')">
+                        <div class="mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors ${item.completed ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-slate-300 group-hover:border-emerald-400 bg-white'}">
+                            ${item.completed ? '<i data-lucide="check" class="w-3 h-3"></i>' : ''}
+                        </div>
+                        
+                        <div class="flex-1">
+                            <span class="text-sm font-medium ${item.completed ? 'text-slate-400 line-through' : 'text-slate-700'}">${item.text}</span>
+                            
+                            <div class="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-xs text-slate-400">
+                                ${item.timestamp ? `<span class="flex items-center"><i data-lucide="clock" class="w-3 h-3 mr-1"></i>${new Date(item.timestamp).toLocaleString()}</span>` : ''}
+                                ${(tickCount > 0 || untickCount > 0) ? `
+                                    <span onclick="viewHistory(event, '${item.id}')" 
+                                          class="font-medium text-blue-500 hover:text-blue-600 hover:underline cursor-pointer flex items-center gap-1">
+                                        <i data-lucide="history" class="w-3 h-3"></i> 
+                                        History: ${tickCount} Ticks, ${untickCount} Unticks
+                                    </span>
+                                ` : ''}
+                            </div>
+                        </div>
                     </div>
-                    
-                    <div class="flex-1">
-                        <span class="text-sm font-medium ${item.completed ? 'text-slate-400 line-through' : 'text-slate-700'}">${item.text}</span>
-                        ${item.timestamp ? `<div class="text-xs text-slate-400 mt-1 flex items-center"><i data-lucide="clock" class="w-3 h-3 mr-1"></i>${new Date(item.timestamp).toLocaleString()}</div>` : ''}
+
+                    <div class="mt-3 ml-8">
+                        <input type="text" 
+                               value="${item.remarks || ''}"
+                               placeholder="Add remarks (optional)..."
+                               onchange="updateRemark('${item.id}', this.value)"
+                               onclick="event.stopPropagation()"
+                               class="w-full text-xs px-3 py-2 bg-white/50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-400 focus:bg-white transition-all">
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
 
             document.getElementById('checklistModal').classList.remove('hidden');
             setTimeout(() => {
                 document.getElementById('modalContent').classList.remove('translate-y-full');
             }, 10);
             lucide.createIcons();
+        }
+
+        function viewHistory(e, itemId) {
+            e.stopPropagation(); // Prevent toggling the checklist item
+
+            if (!selectedDeptId || !currentStageId) return;
+            const dept = departments.find(d => d.id === selectedDeptId);
+            const stage = dept.stages.find(s => s.id === currentStageId);
+            const item = stage.items.find(i => i.id === itemId);
+            const history = item.history || [];
+
+            if (history.length === 0) return;
+
+            // Sort history by timestamp desc (newest first)
+            const sortedHistory = [...history].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            const historyHtml = sortedHistory.map(h => `
+                <div class="flex items-center justify-between p-2 border-b border-slate-100 last:border-0 text-sm">
+                    <span class="font-mono text-xs text-slate-500">${new Date(h.timestamp).toLocaleString()}</span>
+                    <span class="font-bold ml-2 ${h.action === 'checked' ? 'text-emerald-600' : 'text-slate-400'}">
+                        ${h.action === 'checked' ? 'Checked' : 'Unchecked'}
+                    </span>
+                </div>
+            `).join('');
+
+            Swal.fire({
+                title: 'Item History',
+                html: `<div class="text-left bg-slate-50 rounded-lg border border-slate-200 p-2 max-h-60 overflow-y-auto custom-scrollbar">${historyHtml}</div>`,
+                showCloseButton: true,
+                focusConfirm: false,
+                confirmButtonText: 'Close',
+                confirmButtonColor: '#64748b'
+            });
         }
 
         function closeModal() {
@@ -1433,8 +1511,18 @@
             const stage = dept.stages.find(s => s.id === currentStageId);
             const item = stage.items.find(i => i.id === itemId);
 
+            const oldState = item.completed;
             item.completed = !item.completed;
-            item.timestamp = item.completed ? new Date().toISOString() : null;
+            const now = new Date().toISOString();
+
+            item.timestamp = item.completed ? now : null;
+
+            // History Tracking
+            if (!item.history) item.history = [];
+            item.history.push({
+                action: item.completed ? 'checked' : 'unchecked',
+                timestamp: now
+            });
 
             // Update stage status
             const doneCount = stage.items.filter(i => i.completed).length;
@@ -1445,6 +1533,16 @@
             debouncedSave();
             openStageModal(currentStageId); // Re-render modal
             updateOverallProgress();
+        }
+
+        function updateRemark(itemId, value) {
+            if (!selectedDeptId || !currentStageId) return;
+            const dept = departments.find(d => d.id === selectedDeptId);
+            const stage = dept.stages.find(s => s.id === currentStageId);
+            const item = stage.items.find(i => i.id === itemId);
+
+            item.remarks = value;
+            debouncedSave();
         }
 
         function completeStage() {

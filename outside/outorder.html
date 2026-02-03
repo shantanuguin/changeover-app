@@ -581,10 +581,13 @@
                         <div class="flex items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
                             <select id="dept_${index}" class="px-3 py-2 text-xs rounded-lg border border-slate-200 focus:border-emerald-500 bg-slate-50 w-28">
                                 <option value="">Dept...</option>
+                                <option value="Trims" ${department === 'Trims' ? 'selected' : ''}>Trims</option>
+                                <option value="Cutting" ${department === 'Cutting' ? 'selected' : ''}>Cutting</option>
                                 <option value="Production" ${department === 'Production' ? 'selected' : ''}>Production</option>
+                                <option value="Merchandiser" ${department === 'Merchandiser' ? 'selected' : ''}>Merchandiser</option>
+                                <option value="IE" ${department === 'IE' ? 'selected' : ''}>IE</option>
+                                <option value="Technical" ${department === 'Technical' ? 'selected' : ''}>Technical</option>
                                 <option value="Maintenance" ${department === 'Maintenance' ? 'selected' : ''}>Maintenance</option>
-                                <option value="Quality" ${department === 'Quality' ? 'selected' : ''}>Quality</option>
-                                <option value="Engineering" ${department === 'Engineering' ? 'selected' : ''}>Engg.</option>
                             </select>
                             <input type="text" id="remarks_${index}" placeholder="Remarks..." value="${remarks}"
                                 class="flex-1 md:flex-none md:w-40 px-3 py-2 text-xs rounded-lg border border-slate-200 focus:border-emerald-500 bg-slate-50">
