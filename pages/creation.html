@@ -7257,10 +7257,22 @@ Shantanu & Sampreeti`;
                 // User Rule: All 3 columns (A, B, C) must be populated
                 // A must be numeric, B must have operation name, C must have SMV value
                 if (isSerialNumber && colB.length > 0 && smvValue !== null) {
+                    // Extract Column G (Machine Type), J (Allocated WP), K (Allocated Direct)
+                    const colG = row[6] ? String(row[6]).trim() : "MANUAL";
+                    const colJ = row[9] ? parseFloat(row[9]) : 0;
+                    const colK_raw = row[10] ? parseFloat(row[10]) : 0;
+                    // Round Column K to nearest 0.5
+                    const colK = Math.round(colK_raw * 2) / 2;
+
                     operations.push({
+                        serialNumber: colA,
                         name: colB,
-                        smv: smvValue
+                        smv: smvValue,
+                        machineType: colG || "MANUAL",
+                        allocatedWP: isNaN(colJ) ? 0 : colJ,
+                        allocatedDirect: isNaN(colK) ? 0 : colK
                     });
+
 
                     // --- Manpower Calculation (Column J) ---
                     // Summing Allocated WP from Column J (index 9) for valid operations

@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operations Sequence | Smart QCO System</title>
+
+    <!-- Frameworks & Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <!-- Animation & Drag-Drop Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Poppins', 'sans-serif']
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #f8fafc;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            color: #1e293b;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            border-color: rgba(255, 255, 255, 0.9);
+        }
+
+        .operation-card {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 1rem;
+            padding: 1rem 1.25rem;
+            transition: all 0.2s ease;
+            cursor: grab;
+        }
+
+        .operation-card:active {
+            cursor: grabbing;
+        }
+
+        .operation-card:hover {
+            border-color: #0ea5e9;
+            box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.15);
+        }
+
+        .operation-card.selected {
+            border-color: #0ea5e9;
+            background: rgba(14, 165, 233, 0.05);
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+        }
+
+        .operation-card.combined {
+            border-color: #8b5cf6;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(99, 102, 241, 0.05));
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+        }
+
+        .sortable-chosen {
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.15);
+            transform: scale(1.02);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.2);
+            border-left: 4px solid #0ea5e9;
+            z-index: 9999;
+            transform: translateX(150%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 400px;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast.error {
+            border-left-color: #ef4444;
+        }
+
+        .toast.success {
+            border-left-color: #10b981;
+        }
+    </style>
+</head>
+
+<body class="relative min-h-screen selection:bg-blue-100 selection:text-blue-900">
+
+    <!-- Animated Background Blobs -->
+    <div class="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
+        <div
+            class="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-blue-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob">
+        </div>
+        <div
+            class="absolute top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-indigo-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-2000">
+        </div>
+        <div
+            class="absolute bottom-[-20%] left-[20%] w-[60vw] h-[60vw] bg-pink-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-4000">
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-40 glass transition-all duration-300" id="navbar">
+        <div class="max-w-[1600px] mx-auto px-6">
+            <div class="flex justify-between h-24 items-center relative">
+
+                <!-- Centered Navigation -->
+                <div class="hidden xl:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
+                    <div
+                        class="flex items-center gap-1 bg-white/50 p-1.5 rounded-full border border-white/20 shadow-sm backdrop-blur-md">
+                        <a href="../index.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Home</a>
+                        <a href="dashboard.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Dashboard</a>
+                        <a href="creation.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Creation</a>
+                        <a href="operations.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-blue-900 bg-blue-100 shadow-sm transition-all">Operations</a>
+                        <a href="schedule.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Schedule</a>
+                        <a href="checklist.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Checklist</a>
+                        <a href="recorder.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Recorder</a>
+                        <a href="summary.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Reports</a>
+                        <a href="planning.html"
+                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Planning</a>
+                    </div>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button onclick="toggleMobileMenu()"
+                    class="xl:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-all">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+
+                <!-- Logo -->
+                <a href="../index.html" class="flex items-center gap-4 group cursor-pointer">
+                    <div
+                        class="w-10 h-10 md:w-12 md:h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:rotate-12 transition-transform duration-500 ease-out">
+                        <i data-lucide="layers" class="w-5 h-5 md:w-6 md:h-6"></i>
+                    </div>
+                    <div class="flex flex-col">
+                        <span class="font-heading font-bold text-slate-900 text-lg md:text-xl tracking-tight">QCO
+                            Portal</span>
+                        <span class="text-[10px] md:text-xs text-slate-500 font-medium tracking-wide">Manufacturing
+                            Excellence</span>
+                    </div>
+                </a>
+
+                <div class="flex items-center gap-4">
+                    <!-- User Profile Dropdown -->
+                    <div class="relative">
+                        <button onclick="document.getElementById('userDropdown').classList.toggle('hidden')"
+                            class="flex items-center gap-2 focus:outline-none group p-1 pr-1 md:p-1.5 md:pr-3 rounded-full hover:bg-white/60 transition-all border border-transparent hover:border-slate-200">
+                            <div
+                                class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border border-white shadow-sm flex items-center justify-center overflow-hidden">
+                                <i data-lucide="user" class="w-4 h-4 text-slate-500"></i>
+                            </div>
+                            <div class="text-left hidden sm:block">
+                                <p class="text-xs font-bold text-slate-900 leading-tight" id="userName">User</p>
+                                <p class="text-[10px] text-slate-500 leading-tight" id="userRole">Member</p>
+                            </div>
+                            <i data-lucide="chevron-down"
+                                class="w-3 h-3 text-slate-400 ml-1 group-hover:text-slate-600 transition-colors hidden sm:block"></i>
+                        </button>
+
+                        <div id="userDropdown"
+                            class="hidden absolute right-0 mt-3 w-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 ring-1 ring-black/5 divide-y divide-slate-100 transform origin-top-right transition-all z-50">
+                            <div class="p-2">
+                                <button onclick="handleLogout()"
+                                    class="w-full group flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left">
+                                    <i data-lucide="log-out"
+                                        class="w-4 h-4 text-red-400 group-hover:text-red-600 transition-colors mr-3"></i>
+                                    Sign Out
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Menu -->
+            <div id="mobileMenu"
+                class="hidden xl:hidden bg-white/90 backdrop-blur-xl border-t border-slate-100 absolute left-0 right-0 top-24 p-4 shadow-xl z-50">
+                <div class="grid grid-cols-2 gap-2">
+                    <a href="../index.html"
+                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Home</a>
+                    <a href="dashboard.html"
+                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Dashboard</a>
+                    <a href="creation.html"
+                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Creation</a>
+                    <a href="operations.html"
+                        class="p-3 text-sm font-semibold text-white bg-blue-600 rounded-xl transition-colors text-center shadow-md">Operations</a>
+                    <a href="schedule.html"
+                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Schedule</a>
+                    <a href="checklist.html"
+                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Checklist</a>
+                    <a href="recorder.html"
+                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Recorder</a>
+                    <a href="summary.html"
+                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Reports</a>
+                    <a href="planning.html"
+                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Planning</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="pt-32 pb-12 px-6">
+        <div class="max-w-[1400px] mx-auto">
+
+            <!-- Page Header -->
+            <div class="flex flex-col md:flex-row justify-between items-end mb-10 gap-6">
+                <div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <h1 class="text-4xl md:text-5xl font-heading font-bold text-slate-900 tracking-tight">
+                            Operations <span
+                                class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Sequence</span>
+                        </h1>
+                    </div>
+                    <p class="text-slate-500 text-lg max-w-xl leading-relaxed">
+                        View, combine, and reorder operations for upcoming styles. Changes are saved to Firebase.
+                    </p>
+                </div>
+                <div class="flex gap-3 mb-2">
+                    <button onclick="saveOperations()" id="saveBtn"
+                        class="px-6 py-3 rounded-2xl bg-slate-900 text-white font-semibold shadow-xl shadow-blue-900/20 hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled>
+                        <i data-lucide="save" class="w-4 h-4"></i> Save Changes
+                    </button>
+                </div>
+            </div>
+
+            <!-- Style Selector -->
+            <div class="glass-card p-8 mb-8">
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
+                            <i data-lucide="shirt" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Select
+                                Style</label>
+                            <select id="styleSelector" onchange="loadOperationsForStyle(this.value)"
+                                class="block w-64 mt-1 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
+                                <option value="">-- Select Upcoming Style --</option>
+                                <!-- Populated from Firebase -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="styleInfo" class="hidden flex-1 flex flex-wrap gap-6 ml-6">
+                        <div>
+                            <p class="text-xs text-slate-400 font-semibold">Style Number</p>
+                            <p class="text-lg font-bold text-slate-800" id="infoStyleNumber">-</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-semibold">Total Operations</p>
+                            <p class="text-lg font-bold text-slate-800" id="infoTotalOps">-</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-semibold">Total Allocated WP</p>
+                            <p class="text-lg font-bold text-emerald-600" id="infoTotalWP">-</p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-400 font-semibold">Total Allocated Direct</p>
+                            <p class="text-lg font-bold text-violet-600" id="infoTotalDirect">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Bar -->
+            <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <div class="flex items-center gap-3">
+                    <button onclick="combineSelectedOperations()" id="combineBtn"
+                        class="px-5 py-2.5 rounded-xl bg-violet-600 text-white font-semibold hover:bg-violet-700 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                        disabled>
+                        <i data-lucide="merge" class="w-4 h-4"></i> Combine Selected
+                    </button>
+                    <button onclick="clearSelection()" id="clearBtn"
+                        class="px-5 py-2.5 rounded-xl bg-slate-200 text-slate-700 font-semibold hover:bg-slate-300 transition-all flex items-center gap-2 hidden">
+                        <i data-lucide="x" class="w-4 h-4"></i> Clear Selection
+                    </button>
+                </div>
+                <p class="text-sm text-slate-500">
+                    <span id="selectedCount">0</span> operation(s) selected. Drag to reorder.
+                </p>
+            </div>
+
+            <!-- Operations Container -->
+            <div class="glass-card p-6 min-h-[400px]">
+                <div id="operationsContainer" class="space-y-3">
+                    <div class="text-center py-20 text-slate-400">
+                        <i data-lucide="list-checks" class="w-16 h-16 mx-auto mb-4 opacity-30"></i>
+                        <p class="text-lg font-medium">Select a style to view operations</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCayfWGQP1t3oBU9eFj-3Ww0uu7nSl3Q4g",
+            authDomain: "sidneymailer.firebaseapp.com",
+            projectId: "sidneymailer",
+            storageBucket: "sidneymailer.firebasestorage.app",
+            messagingSenderId: "911316068119",
+            appId: "1:911316068119:web:ce23dbe663dc385a81f952",
+            measurementId: "G-NJ0QH6DEXG"
+        };
+
+        let db;
+        let currentUser = null;
+        let allChangeovers = [];
+        let currentOperations = [];
+        let selectedOperationIds = new Set();
+        let currentQCOId = null;
+        let hasUnsavedChanges = false;
+        let sortableInstance = null;
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+            checkAuth();
+            await initFirebase();
+            await loadUpcomingStyles();
+            gsap.to('#mainApp', { opacity: 1, duration: 0.5 });
+        });
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        function checkAuth() {
+            const userStr = localStorage.getItem('qcoCurrentUser');
+            if (userStr) {
+                currentUser = JSON.parse(userStr);
+                document.getElementById('userName').textContent = currentUser.name || 'User';
+                document.getElementById('userRole').textContent = currentUser.role || 'User';
+            }
+        }
+
+        async function initFirebase() {
+            try {
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                showToast('Connected to database', 'success');
+            } catch (error) {
+                console.error('Firebase init error:', error);
+                showToast('Database connection failed', 'error');
+            }
+        }
+
+        // --- Load Styles ---
+        async function loadUpcomingStyles() {
+            try {
+                const snapshot = await db.collection('changeovers')
+                    .orderBy('createdAt', 'desc')
+                    .limit(50)
+                    .get();
+
+                const selector = document.getElementById('styleSelector');
+                selector.innerHTML = '<option value="">-- Select Upcoming Style --</option>';
+
+                allChangeovers = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    allChangeovers.push({ id: doc.id, ...data });
+
+                    const upcomingStyle = data.upcomingStyle || data.newStyle || 'Unknown';
+                    const line = data.line || data.lineNumber || '-';
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = `${upcomingStyle} (Line ${line}) - ${doc.id}`;
+                    selector.appendChild(option);
+                });
+
+                if (allChangeovers.length === 0) {
+                    showToast('No changeovers found in database', 'info');
+                }
+
+            } catch (error) {
+                console.error('Error loading styles:', error);
+                showToast('Failed to load styles', 'error');
+            }
+        }
+
+        // --- Load Operations for Style ---
+        async function loadOperationsForStyle(qcoId) {
+            if (!qcoId) {
+                document.getElementById('operationsContainer').innerHTML = `
+                    <div class="text-center py-20 text-slate-400">
+                        <i data-lucide="list-checks" class="w-16 h-16 mx-auto mb-4 opacity-30"></i>
+                        <p class="text-lg font-medium">Select a style to view operations</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                document.getElementById('styleInfo').classList.add('hidden');
+                return;
+            }
+
+            currentQCOId = qcoId;
+            const changeover = allChangeovers.find(c => c.id === qcoId);
+
+            if (!changeover) {
+                showToast('Changeover not found', 'error');
+                return;
+            }
+
+            // Try to load from sub-collection first, fallback to operationsList
+            let operations = [];
+
+            try {
+                const opsSnapshot = await db.collection('changeovers').doc(qcoId).collection('operations').orderBy('order').get();
+                if (!opsSnapshot.empty) {
+                    opsSnapshot.forEach(doc => {
+                        operations.push({ id: doc.id, ...doc.data() });
+                    });
+                }
+            } catch (e) {
+                console.log('No operations sub-collection, using operationsList');
+            }
+
+            // Fallback to operationsList from main document
+            if (operations.length === 0 && changeover.operationsList) {
+                operations = changeover.operationsList.map((op, index) => ({
+                    id: `op-${index}`,
+                    serialNumber: op.serialNumber || (index + 1).toString(),
+                    name: op.name || 'Unknown',
+                    smv: op.smv || 0,
+                    machineType: op.machineType || 'MANUAL',
+                    allocatedWP: op.allocatedWP || 0,
+                    allocatedDirect: op.allocatedDirect || 0,
+                    order: index,
+                    isCombined: false
+                }));
+            }
+
+            currentOperations = operations;
+            selectedOperationIds.clear();
+            hasUnsavedChanges = false;
+            updateSaveButton();
+            renderOperations();
+            updateStyleInfo(changeover, operations);
+        }
+
+        function updateStyleInfo(changeover, operations) {
+            const upcomingStyle = changeover.upcomingStyle || changeover.newStyle || 'Unknown';
+            document.getElementById('infoStyleNumber').textContent = upcomingStyle;
+            document.getElementById('infoTotalOps').textContent = operations.length;
+
+            const totalWP = operations.reduce((sum, op) => sum + (parseFloat(op.allocatedWP) || 0), 0);
+            const totalDirect = operations.reduce((sum, op) => sum + (parseFloat(op.allocatedDirect) || 0), 0);
+
+            document.getElementById('infoTotalWP').textContent = totalWP.toFixed(2);
+            document.getElementById('infoTotalDirect').textContent = totalDirect.toFixed(2);
+            document.getElementById('styleInfo').classList.remove('hidden');
+        }
+
+        // --- Render Operations ---
+        function renderOperations() {
+            const container = document.getElementById('operationsContainer');
+
+            if (currentOperations.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-20 text-slate-400">
+                        <i data-lucide="alert-circle" class="w-16 h-16 mx-auto mb-4 opacity-30"></i>
+                        <p class="text-lg font-medium">No operations found for this style</p>
+                        <p class="text-sm mt-2">Operations are extracted when a changeover is created.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = currentOperations.map((op, index) => `
+                <div class="operation-card ${selectedOperationIds.has(op.id) ? 'selected' : ''} ${op.isCombined ? 'combined' : ''}"
+                     data-id="${op.id}" onclick="toggleOperationSelection('${op.id}')">
+                    <div class="flex items-center gap-4">
+                        <!-- Drag Handle -->
+                        <div class="cursor-grab text-slate-300 hover:text-slate-500 transition-colors">
+                            <i data-lucide="grip-vertical" class="w-5 h-5"></i>
+                        </div>
+                        
+                        <!-- Checkbox -->
+                        <input type="checkbox" ${selectedOperationIds.has(op.id) ? 'checked' : ''} 
+                               onclick="event.stopPropagation(); toggleOperationSelection('${op.id}')"
+                               class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                        
+                        <!-- Serial Number -->
+                        <div class="w-16 text-center">
+                            <span class="px-3 py-1 rounded-lg bg-slate-100 text-slate-700 font-mono font-bold text-sm">
+                                ${op.serialNumber}
+                            </span>
+                        </div>
+                        
+                        <!-- Operation Name -->
+                        <div class="flex-1 min-w-0">
+                            <p class="font-semibold text-slate-800 truncate">${op.name}</p>
+                            ${op.isCombined ? '<span class="text-xs text-violet-600 font-medium">Combined Operation</span>' : ''}
+                        </div>
+                        
+                        <!-- SMV -->
+                        <div class="w-24 text-center">
+                            <p class="text-xs text-slate-400 font-semibold">SMV</p>
+                            <p class="font-bold text-slate-700">${op.smv}</p>
+                        </div>
+                        
+                        <!-- Machine Type -->
+                        <div class="w-32 text-center">
+                            <p class="text-xs text-slate-400 font-semibold">Machine</p>
+                            <p class="font-medium text-slate-600 text-sm truncate">${op.machineType}</p>
+                        </div>
+                        
+                        <!-- Allocated WP -->
+                        <div class="w-20 text-center">
+                            <p class="text-xs text-slate-400 font-semibold">WP</p>
+                            <p class="font-bold text-emerald-600">${op.allocatedWP}</p>
+                        </div>
+                        
+                        <!-- Allocated Direct -->
+                        <div class="w-20 text-center">
+                            <p class="text-xs text-slate-400 font-semibold">Direct</p>
+                            <p class="font-bold text-violet-600">${op.allocatedDirect}</p>
+                        </div>
+                        
+                        <!-- Split Button (only for combined operations) -->
+                        ${op.isCombined ? `
+                        <button onclick="event.stopPropagation(); splitCombinedOperation('${op.id}')" 
+                                class="ml-2 px-3 py-1.5 rounded-lg bg-orange-100 text-orange-700 hover:bg-orange-200 text-xs font-semibold transition-all flex items-center gap-1"
+                                title="Split back to original operations">
+                            <i data-lucide="split" class="w-3 h-3"></i> Split
+                        </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            lucide.createIcons();
+            initSortable();
+            updateSelectionUI();
+        }
+
+        // --- Sortable (Drag-Drop) ---
+        function initSortable() {
+            const container = document.getElementById('operationsContainer');
+            if (sortableInstance) sortableInstance.destroy();
+
+            sortableInstance = Sortable.create(container, {
+                animation: 200,
+                handle: '.cursor-grab',
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                onEnd: function (evt) {
+                    // Reorder currentOperations array
+                    const movedItem = currentOperations.splice(evt.oldIndex, 1)[0];
+                    currentOperations.splice(evt.newIndex, 0, movedItem);
+
+                    // Update order property
+                    currentOperations.forEach((op, idx) => op.order = idx);
+
+                    hasUnsavedChanges = true;
+                    updateSaveButton();
+                }
+            });
+        }
+
+        // --- Selection ---
+        function toggleOperationSelection(id) {
+            if (selectedOperationIds.has(id)) {
+                selectedOperationIds.delete(id);
+            } else {
+                selectedOperationIds.add(id);
+            }
+            updateSelectionUI();
+            renderOperations();
+        }
+
+        function updateSelectionUI() {
+            const count = selectedOperationIds.size;
+            document.getElementById('selectedCount').textContent = count;
+            document.getElementById('combineBtn').disabled = count < 2;
+            document.getElementById('clearBtn').classList.toggle('hidden', count === 0);
+        }
+
+        function clearSelection() {
+            selectedOperationIds.clear();
+            updateSelectionUI();
+            renderOperations();
+        }
+
+        // --- Combine Operations ---
+        function combineSelectedOperations() {
+            if (selectedOperationIds.size < 2) {
+                showToast('Select at least 2 operations to combine', 'warning');
+                return;
+            }
+
+            const selectedOps = currentOperations.filter(op => selectedOperationIds.has(op.id));
+
+            // Sort by current order
+            selectedOps.sort((a, b) => currentOperations.indexOf(a) - currentOperations.indexOf(b));
+
+            // Create combined operation - store full source data for split
+            const combinedOp = {
+                id: `combined-${Date.now()}`,
+                serialNumber: selectedOps.map(op => op.serialNumber).join(' + '),
+                name: selectedOps.map(op => op.name).join(' + '),
+                smv: selectedOps.map(op => op.smv).join(' + '),
+                machineType: selectedOps.map(op => op.machineType).join(' + '),
+                allocatedWP: selectedOps.reduce((sum, op) => sum + (parseFloat(op.allocatedWP) || 0), 0),
+                allocatedDirect: selectedOps.reduce((sum, op) => sum + (parseFloat(op.allocatedDirect) || 0), 0),
+                order: currentOperations.indexOf(selectedOps[0]),
+                isCombined: true,
+                // Store full source operation data for split functionality
+                sourceOperations: selectedOps.map(op => ({
+                    id: op.id,
+                    serialNumber: op.serialNumber,
+                    name: op.name,
+                    smv: op.smv,
+                    machineType: op.machineType,
+                    allocatedWP: op.allocatedWP,
+                    allocatedDirect: op.allocatedDirect,
+                    order: op.order,
+                    isCombined: false
+                }))
+            };
+
+            // Remove selected operations and insert combined one
+            const insertIndex = currentOperations.indexOf(selectedOps[0]);
+            currentOperations = currentOperations.filter(op => !selectedOperationIds.has(op.id));
+            currentOperations.splice(insertIndex, 0, combinedOp);
+
+            // Update order
+            currentOperations.forEach((op, idx) => op.order = idx);
+
+            selectedOperationIds.clear();
+            hasUnsavedChanges = true;
+            updateSaveButton();
+            updateSelectionUI();
+            renderOperations();
+
+            // Update totals
+            const changeover = allChangeovers.find(c => c.id === currentQCOId);
+            if (changeover) updateStyleInfo(changeover, currentOperations);
+
+            showToast('Operations combined successfully', 'success');
+        }
+
+        // --- Split Combined Operation ---
+        function splitCombinedOperation(combinedOpId) {
+            const combinedOp = currentOperations.find(op => op.id === combinedOpId);
+
+            if (!combinedOp || !combinedOp.isCombined || !combinedOp.sourceOperations) {
+                showToast('Cannot split this operation', 'error');
+                return;
+            }
+
+            const insertIndex = currentOperations.indexOf(combinedOp);
+
+            // Remove the combined operation
+            currentOperations = currentOperations.filter(op => op.id !== combinedOpId);
+
+            // Insert source operations back at the same position
+            combinedOp.sourceOperations.forEach((sourceOp, idx) => {
+                currentOperations.splice(insertIndex + idx, 0, {
+                    ...sourceOp,
+                    id: sourceOp.id.startsWith('op-') ? sourceOp.id : `op-split-${Date.now()}-${idx}`,
+                    isCombined: false
+                });
+            });
+
+            // Update order
+            currentOperations.forEach((op, idx) => op.order = idx);
+
+            hasUnsavedChanges = true;
+            updateSaveButton();
+            renderOperations();
+
+            // Update totals
+            const changeover = allChangeovers.find(c => c.id === currentQCOId);
+            if (changeover) updateStyleInfo(changeover, currentOperations);
+
+            showToast('Operation split successfully', 'success');
+        }
+
+
+        // --- Save Operations ---
+        async function saveOperations() {
+            if (!currentQCOId || currentOperations.length === 0) {
+                showToast('No operations to save', 'warning');
+                return;
+            }
+
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Saving...';
+            lucide.createIcons();
+
+            try {
+                const batch = db.batch();
+
+                // Clear existing operations sub-collection
+                const existingOps = await db.collection('changeovers').doc(currentQCOId).collection('operations').get();
+                existingOps.forEach(doc => batch.delete(doc.ref));
+
+                // Add new operations
+                currentOperations.forEach((op, index) => {
+                    const ref = db.collection('changeovers').doc(currentQCOId).collection('operations').doc(op.id);
+                    batch.set(ref, {
+                        ...op,
+                        order: index,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
+
+                await batch.commit();
+
+                hasUnsavedChanges = false;
+                showToast('Operations saved successfully!', 'success');
+
+            } catch (error) {
+                console.error('Save error:', error);
+                showToast('Failed to save operations', 'error');
+            } finally {
+                updateSaveButton();
+            }
+        }
+
+        function updateSaveButton() {
+            const saveBtn = document.getElementById('saveBtn');
+            saveBtn.disabled = !hasUnsavedChanges;
+            saveBtn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i> Save Changes';
+            lucide.createIcons();
+        }
+
+        // --- Toast ---
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i data-lucide="${type === 'success' ? 'check-circle' : type === 'error' ? 'alert-circle' : 'info'}" class="w-5 h-5"></i>
+                    <p class="font-medium">${message}</p>
+                </div>
+            `;
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        // --- Logout ---
+        function handleLogout() {
+            localStorage.removeItem('qcoCurrentUser');
+            localStorage.removeItem('qcoSessionActive');
+            window.location.href = '../index.html';
+        }
+
+        // Warn on unsaved changes
+        window.addEventListener('beforeunload', (e) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+    </script>
+
+</body>
+
+</html>
