@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Dashboard | Smart QCO System</title>
 
     <!-- Frameworks & Icons -->
@@ -79,26 +79,76 @@
             --header-height: 5rem;
         }
 
-        /* Sidebar & Backdrop */
+        /* Sidebar & Backdrop (Fixed) */
         .retractable-sidebar {
             position: fixed;
             top: 0;
             left: 0;
-            bottom: 0;
+            width: 280px;
+            /* Slightly wider for mobile */
+            height: 100%;
+            max-width: 85vw;
+            /* Don't take full width on mobile */
             z-index: 50;
-            width: var(--sidebar-width);
+            /* Higher than backdrop */
             transform: translateX(-100%);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             will-change: transform;
-            background: rgba(255, 255, 255, 0.8);
+
+            /* Glass morphism */
+            background: rgba(255, 255, 255, 0.92);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             border-right: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1), inset 1px 0 0 rgba(255, 255, 255, 0.9);
-            padding-top: env(safe-area-inset-top, 1.25rem);
-            padding-bottom: env(safe-area-inset-bottom, 1.25rem);
+            box-shadow:
+                10px 0 30px rgba(0, 0, 0, 0.1),
+                inset 1px 0 0 rgba(255, 255, 255, 0.9);
+
+            /* Flex container for internal layout */
             display: flex;
             flex-direction: column;
+
+            /* Safe area support */
+            padding-top: env(safe-area-inset-top, 0);
+            padding-bottom: env(safe-area-inset-bottom, 0);
+        }
+
+        .retractable-sidebar.open {
+            transform: translateX(0);
+            box-shadow: 20px 0 40px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Sidebar internal layout */
+        .retractable-sidebar>*:first-child {
+            flex-shrink: 0;
+            /* Header - don't shrink */
+        }
+
+        .retractable-sidebar>nav {
+            flex: 1 1 auto;
+            /* Content - grow and shrink, scrollable */
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .retractable-sidebar>*:last-child {
+            flex-shrink: 0;
+            /* Footer - don't shrink */
+        }
+
+        /* Mobile-specific adjustments */
+        @media (max-width: 768px) {
+            .retractable-sidebar {
+                width: 100%;
+                max-width: 320px;
+                /* Max width on mobile */
+                box-shadow: 20px 0 50px rgba(0, 0, 0, 0.2);
+            }
+
+            /* Ensure nav is scrollable */
+            .retractable-sidebar>nav {
+                padding-bottom: env(safe-area-inset-bottom, 20px);
+            }
         }
 
         .retractable-sidebar.open {
@@ -108,17 +158,20 @@
         .nav-backdrop {
             position: fixed;
             inset: 0;
-            background: rgba(15, 23, 42, 0.2);
-            backdrop-filter: blur(4px);
-            z-index: 49;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px) saturate(180%);
+            -webkit-backdrop-filter: blur(8px) saturate(180%);
+            z-index: 45;
+            /* Between header and sidebar */
             opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
+            visibility: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .nav-backdrop.active {
             opacity: 1;
             pointer-events: auto;
+            visibility: visible;
         }
 
         /* Navigation Items */
@@ -615,6 +668,219 @@
             color: #0ea5e9;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
+
+        /* Mobile-specific overrides (max-width: 768px) */
+        @media (max-width: 768px) {
+
+            /* 1. Fix header and filter layout */
+            #headerActions {
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                margin-top: 1rem;
+            }
+
+            #headerActions button {
+                flex: 1;
+                min-width: 120px;
+                font-size: 0.875rem;
+                padding: 0.5rem 0.75rem;
+            }
+
+            /* 2. Fix filter chips */
+            #filterChips {
+                max-width: 100vw;
+                padding-bottom: 0.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .filter-chip {
+                white-space: nowrap;
+                font-size: 0.75rem;
+                padding: 0.375rem 0.75rem;
+            }
+
+            /* 3. Fix search and date filters */
+            .flex.flex-wrap.gap-3.mb-8.items-center.justify-between {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 1rem;
+            }
+
+            #searchInput {
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            /* Time range buttons container */
+            .flex.gap-1.bg-white\/60.p-1.rounded-xl {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .time-range-btn {
+                flex: 1;
+                min-width: 60px;
+                font-size: 0.7rem;
+                padding: 0.375rem 0.5rem;
+            }
+
+            /* 4. Fix QCO selector */
+            #qcoSelector {
+                width: 100%;
+                min-width: unset;
+            }
+
+            /* 5. Fix chart tabs */
+            .flex.gap-2.mb-6.border-b.border-slate-200.pb-2 {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                padding-bottom: 0.75rem;
+            }
+
+            .chart-tab {
+                flex-shrink: 0;
+                font-size: 0.75rem;
+                padding: 0.5rem 0.75rem;
+            }
+
+            /* 6. Fix chart canvas */
+            .relative.h-\[380px\].w-full {
+                height: 250px;
+                overflow-x: auto;
+            }
+
+            #performanceChart {
+                min-width: 300px;
+            }
+
+            /* 7. Fix operations tabs */
+            .flex.gap-1.mb-4.bg-slate-100.p-1.rounded-lg {
+                overflow-x: auto;
+            }
+
+            .operation-tab {
+                flex-shrink: 0;
+                font-size: 0.7rem;
+                padding: 0.375rem 0.5rem;
+            }
+
+            /* 8. Fix data table */
+            .overflow-x-auto {
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .data-table {
+                min-width: 600px;
+                /* Allow horizontal scroll on very small screens */
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.75rem;
+            }
+
+            /* 9. Fix footer */
+            footer {
+                margin-left: -1rem !important;
+                margin-right: -1rem !important;
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+                padding-top: 2rem !important;
+                padding-bottom: 2rem !important;
+            }
+
+            footer .grid {
+                gap: 2rem;
+            }
+
+            /* 10. Fix main container padding */
+            #mainApp {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+
+            /* 11. Fix stat cards */
+            .glass-card.p-8 {
+                padding: 1.5rem !important;
+            }
+
+            .text-4xl {
+                font-size: 1.875rem !important;
+            }
+
+            /* 12. Fix page header */
+            .split-header {
+                font-size: 2rem !important;
+                line-height: 1.2 !important;
+            }
+
+            .hero-subtitle {
+                font-size: 1rem !important;
+            }
+
+            /* 13. Ensure no horizontal overflow */
+            body {
+                overflow-x: hidden;
+            }
+
+            #appContent {
+                overflow-x: hidden;
+            }
+
+            /* 14. Fix modal on mobile */
+            .modal {
+                width: 95% !important;
+                max-height: 85vh !important;
+                border-radius: 1rem !important;
+            }
+
+            .modal .p-8 {
+                padding: 1.5rem !important;
+            }
+        }
+
+        /* Very small screens (max-width: 480px) */
+        @media (max-width: 480px) {
+
+            /* Stats grid becomes 2 columns */
+            #statsGrid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 0.75rem;
+            }
+
+            .glass-card.p-8 {
+                padding: 1rem !important;
+            }
+
+            .text-4xl {
+                font-size: 1.5rem !important;
+            }
+
+            /* Main content grid - single column */
+            .grid.grid-cols-1.lg\:grid-cols-3.gap-6.mb-8 {
+                gap: 1rem;
+            }
+
+            /* Header actions - vertical stack */
+            #headerActions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            #headerActions button {
+                width: 100%;
+            }
+
+            /* Time range buttons - smaller */
+            .time-range-btn span {
+                display: none;
+            }
+
+            .time-range-btn i {
+                margin-right: 0;
+            }
+        }
     </style>
 </head>
 
@@ -666,9 +932,10 @@
     <div id="navBackdrop" class="nav-backdrop" aria-hidden="true"></div>
 
     <!-- Retractable Sidebar -->
+    <!-- Retractable Sidebar -->
     <aside id="appSidebar" class="retractable-sidebar hidden" aria-hidden="true">
-        <!-- Sidebar Header -->
-        <div class="h-20 flex items-center px-6 border-b border-white/30">
+        <!-- Header - FIXED HEIGHT -->
+        <div class="sidebar-header h-20 flex-shrink-0 flex items-center px-6 border-b border-white/30">
             <a href="../index.html" class="flex items-center gap-3 group transition-all hover:scale-105">
                 <div
                     class="w-10 h-10 bg-gradient-to-br from-slate-900 to-slate-700 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-all group-hover:rotate-6">
@@ -681,7 +948,7 @@
             </a>
         </div>
 
-        <!-- Navigation Links -->
+        <!-- Navigation - SCROLLABLE -->
         <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-6">
             <div>
                 <div class="section-header">General</div>
@@ -768,8 +1035,8 @@
             </div>
         </nav>
 
-        <!-- Sidebar Footer -->
-        <div class="p-4 border-t border-white/30">
+        <!-- Footer - FIXED HEIGHT -->
+        <div class="sidebar-footer flex-shrink-0 p-4 border-t border-white/30">
             <div
                 class="flex items-center justify-center gap-2 text-[10px] font-bold text-slate-400 tracking-widest uppercase">
                 <i data-lucide="lock" class="w-3 h-3 text-slate-300"></i> Secure Access
@@ -1196,10 +1463,21 @@
                     </div>
 
                 </div>
-                <!-- Footer (Index Style) -->
-                <footer class="mt-auto py-16 px-8 border-t border-slate-200/30 relative z-10 text-center">
-                    <p class="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase">2026 Manufacturing
-                        Excellence</p>
+                <!-- Simplified Footer (Synced with Index) -->
+                <footer
+                    class="mt-24 py-8 px-8 border-t border-slate-200/30 relative z-10 bg-white/30 backdrop-blur-md -mx-8 -mb-24">
+                    <div class="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                        <p class="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase">© 2026 MANUFACTURING
+                            EXCELLENCE SYSTEM</p>
+                        <div class="flex gap-6">
+                            <a href="#" class="text-slate-400 hover:text-slate-600 transition-colors"><i
+                                    data-lucide="twitter" class="w-4 h-4"></i></a>
+                            <a href="#" class="text-slate-400 hover:text-slate-600 transition-colors"><i
+                                    data-lucide="github" class="w-4 h-4"></i></a>
+                            <a href="#" class="text-slate-400 hover:text-slate-600 transition-colors"><i
+                                    data-lucide="linkedin" class="w-4 h-4"></i></a>
+                        </div>
+                    </div>
                 </footer>
             </div> <!-- End MainApp Inner -->
 
@@ -3152,6 +3430,7 @@
                         this.setupEventListeners();
                         this.resolveActiveState();
                         this.initSafeAreas();
+                        this.setupScrollableNav();
                     }
 
                     setupEventListeners() {
@@ -3167,6 +3446,13 @@
                             this.backdrop.addEventListener('click', (e) => {
                                 if (e.target === this.backdrop) this.closeSidebar();
                             });
+
+                            // Close sidebar on backdrop touch
+                            this.backdrop.addEventListener('touchstart', (e) => {
+                                if (e.target === this.backdrop) {
+                                    this.closeSidebar();
+                                }
+                            }, { passive: true });
                         }
 
                         if (this.userBtn && this.userDropdown) {
@@ -3195,11 +3481,36 @@
                             this.sidebar.querySelectorAll('a').forEach(link => {
                                 link.addEventListener('click', () => this.closeSidebar());
                             });
+
+                            // Prevent body scroll when interacting with sidebar
+                            this.sidebar.addEventListener('touchstart', (e) => {
+                                if (this.isOpen) {
+                                    e.stopPropagation();
+                                }
+                            }, { passive: true });
                         }
 
                         document.addEventListener('keydown', (e) => {
                             if (e.key === 'Escape' && this.isOpen) this.closeSidebar();
                         });
+                    }
+
+                    setupScrollableNav() {
+                        const nav = this.sidebar ? this.sidebar.querySelector('nav') : null;
+                        if (nav) {
+                            // Enable momentum scrolling on iOS
+                            nav.style.webkitOverflowScrolling = 'touch';
+
+                            // Prevent body scroll when sidebar is open
+                            this.sidebar.addEventListener('touchmove', (e) => {
+                                e.stopPropagation();
+                            }, { passive: false });
+
+                            // Allow scroll on nav
+                            nav.addEventListener('touchmove', (e) => {
+                                e.stopPropagation();
+                            }, { passive: true });
+                        }
                     }
 
                     toggleSidebar() {
@@ -3214,6 +3525,9 @@
                         this.backdrop.classList.add('active');
                         this.sidebar.setAttribute('aria-hidden', 'false');
                         this.backdrop.setAttribute('aria-hidden', 'false');
+
+                        // Prevent body scroll when sidebar is open
+                        document.body.style.overflow = 'hidden';
                     }
 
                     closeSidebar() {
@@ -3223,6 +3537,9 @@
                         this.backdrop.classList.remove('active');
                         this.sidebar.setAttribute('aria-hidden', 'true');
                         this.backdrop.setAttribute('aria-hidden', 'true');
+
+                        // Re-enable body scroll
+                        document.body.style.overflow = '';
                     }
 
                     resolveActiveState() {
@@ -3250,7 +3567,6 @@
                         document.head.appendChild(style);
                     }
                 }
-
                 // --- Auth Guard & Init ---
                 document.addEventListener('DOMContentLoaded', () => {
                     const sessionActive = localStorage.getItem('qcoSessionActive');
@@ -3300,6 +3616,10 @@
                         checkForNotifications();
                         calculateCriticalIssues();
                     }, 60000);
+
+                    // Mobile behavior init
+                    initMobileBehavior();
+                    window.addEventListener('resize', initMobileBehavior);
                 });
 
                 function handleLogout() {
@@ -3316,6 +3636,35 @@
                         auth.signOut().then(performLogout).catch(performLogout);
                     } else {
                         performLogout();
+                    }
+                }
+
+                // --- Mobile Specific Behavior ---
+                function initMobileBehavior() {
+                    const isMobile = window.innerWidth <= 768;
+
+                    if (isMobile) {
+                        // Disable tilt effects on mobile for performance
+                        document.querySelectorAll('[data-tilt]').forEach(card => {
+                            // Backup the tilt setting if needed, or just disable
+                            card.style.transform = 'none';
+                            // We can't easily remove listeners added with anonymous functions, 
+                            // but we can prevent the GSAP calls if we check isMobile inside initTilt
+                        });
+
+                        // Adjust chart dimensions
+                        const chartCanvas = document.getElementById('performanceChart');
+                        if (window.performanceChart && chartCanvas) {
+                            window.performanceChart.options.maintainAspectRatio = false;
+                            chartCanvas.parentNode.style.height = '250px';
+                            window.performanceChart.resize();
+                        }
+
+                        // Make filter chips scrollable (already has overflow-x-auto, but ensuring touch)
+                        const filterChips = document.getElementById('filterChips');
+                        if (filterChips) {
+                            filterChips.style.webkitOverflowScrolling = 'touch';
+                        }
                     }
                 }
             </script>
