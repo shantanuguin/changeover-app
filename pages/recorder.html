@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Activity Recorder | Smart QCO System</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -40,10 +41,42 @@
             overflow-x: hidden;
         }
 
+        /* --- PERFORMANCE OPTIMIZATION --- */
+        #appContent {
+            transform: translateZ(0);
+            will-change: transform;
+            backface-visibility: hidden;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
+        }
+
+        body.is-scrolling .glass,
+        body.is-scrolling .glass-card {
+            backdrop-filter: none;
+            transition: backdrop-filter 0.3s ease;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+
+            .glass,
+            .glass-card {
+                backdrop-filter: none !important;
+                background: rgba(255, 255, 255, 0.95) !important;
+            }
+
+            .animate-blob {
+                animation: none !important;
+                opacity: 0.05 !important;
+            }
+        }
+
+        /* Glassmorphism Utilities */
         .glass {
-            background: rgba(255, 255, 255, 0.65);
+            background: rgba(255, 255, 255, 0.4);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
 
         .glass-card {
@@ -95,7 +128,189 @@
             border-color: #0ea5e9;
             box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
         }
+
+        /* Mobile Optimization */
+        @media (max-width: 768px) {
+            #mainApp {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+        }
+
+        /* --- Retractable Sidebar --- */
+        .retractable-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.6);
+            z-index: 50;
+            transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 10px 0 30px -10px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar-open .retractable-sidebar {
+            transform: translateX(0);
+        }
+
+        .sidebar-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.2);
+            backdrop-filter: blur(4px);
+            z-index: 40;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .sidebar-open .sidebar-backdrop {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Hamburger Menu Button - Squircle Glassmorphism */
+        #appHeader .hamburger-btn {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.375rem;
+            /* 6px */
+            width: 3rem;
+            /* 48px */
+            height: 3rem;
+            /* 48px */
+            padding: 0.875rem;
+            /* 14px */
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(240, 249, 255, 0.9));
+            border-radius: 1rem;
+            /* 16px */
+            border: 0.09375rem solid rgba(255, 255, 255, 1);
+            box-shadow:
+                0 0.5rem 1.5rem -0.25rem rgba(14, 165, 233, 0.25),
+                0 0.25rem 0.5rem -0.125rem rgba(14, 165, 233, 0.15),
+                inset 0 0.0625rem 0 rgba(255, 255, 255, 1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            /* Snappy */
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .hamburger-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(6, 182, 212, 0.05));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .hamburger-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow:
+                0 12px 40px -8px rgba(14, 165, 233, 0.25),
+                0 6px 20px -4px rgba(0, 0, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 1);
+            border-color: rgba(14, 165, 233, 0.3);
+        }
+
+        .hamburger-btn:hover::before {
+            opacity: 1;
+        }
+
+        .hamburger-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .hamburger-line {
+            width: 100%;
+            height: 0.15625rem;
+            /* 2.5px */
+            background: linear-gradient(90deg, #0ea5e9, #06b6d4);
+            border-radius: 0.125rem;
+            /* 2px */
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center;
+            box-shadow: 0 0.0625rem 0.125rem rgba(14, 165, 233, 0.3);
+        }
+
+        .hamburger-btn.open {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(6, 182, 212, 0.1));
+            border-color: rgba(14, 165, 233, 0.4);
+        }
+
+        .hamburger-btn.open .hamburger-line:nth-child(1) {
+            transform: translateY(0.25rem) rotate(45deg);
+            /* 4px */
+            background: linear-gradient(90deg, #0284c7, #0891b2);
+        }
+
+        .hamburger-btn.open .hamburger-line:nth-child(2) {
+            transform: translateY(-0.25rem) rotate(-45deg);
+            /* -4px */
+            background: linear-gradient(90deg, #0284c7, #0891b2);
+        }
+
+        /* Hide Scrollbar for specific elements */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Modals */
+        .modal-active {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+
+        #editModal,
+        #breakModal {
+            z-index: 100;
+        }
+
+        /* Spinner for loading states */
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid #fff;
+            width: 1rem;
+            height: 1rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
     </style>
+    <!-- Mobile Logic -->
+    <script>
+        window.initMobileBehavior = () => {
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                // Disable heavy animations/effects if needed
+            }
+        };
+    </script>
 </head>
 
 <body class="relative min-h-screen">
@@ -112,223 +327,479 @@
         </div>
     </div>
 
-    <!-- Nav -->
-    <nav class="fixed top-0 w-full z-40 glass transition-all duration-300" id="navbar">
-        <div class="max-w-[1600px] mx-auto px-6">
-            <div class="flex justify-between h-24 items-center relative">
+    <!-- Sidebar Backdrop -->
+    <div id="sidebarBackdrop" class="sidebar-backdrop" onclick="window.navSystem?.closeSidebar()"></div>
 
-                <!-- Centered Navigation -->
-                <div class="hidden xl:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                    <div
-                        class="flex items-center gap-1 bg-white/50 p-1.5 rounded-full border border-white/20 shadow-sm backdrop-blur-md">
+    <!-- Retractable Sidebar -->
+    <!-- Retractable Sidebar (Hidden by default) -->
+    <aside id="appSidebar" class="retractable-sidebar hidden" aria-hidden="true">
+        <!-- Header - FIXED HEIGHT -->
+        <div class="sidebar-header h-20 flex-shrink-0 flex items-center px-6 border-b border-white/30">
+            <a href="../index.html" class="flex items-center gap-3 group transition-all hover:scale-105">
+                <div
+                    class="w-10 h-10 bg-gradient-to-br from-slate-900 to-slate-700 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-all group-hover:rotate-6">
+                    <i data-lucide="layers" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-800 text-sm tracking-wide">QCO Portal</h1>
+                    <p class="text-[10px] text-slate-500 font-medium">Enterprise v2.1</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Navigation - SCROLLABLE -->
+        <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-6">
+            <div>
+                <div class="section-header">General</div>
+                <ul class="space-y-1">
+                    <li>
                         <a href="../index.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Home</a>
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="home" class="w-4 h-4 text-slate-500"></i>
+                            <span>Home</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="dashboard.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Dashboard</a>
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="line-chart" class="w-4 h-4 text-slate-500"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-header">Workflow</div>
+                <ul class="space-y-1">
+                    <li>
                         <a href="creation.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Creation</a>
-                        <a href="schedule.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Schedule</a>
-                        <a href="checklist.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Checklist</a>
-                        <a href="recorder.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-blue-900 bg-blue-100 shadow-sm transition-all">Recorder</a>
-                        <a href="summary.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Reports</a>
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="pen-tool" class="w-4 h-4 text-slate-500"></i>
+                            <span>QCO Creation</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="operations.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="list-ordered" class="w-4 h-4 text-slate-500"></i>
+                            <span>Operations</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-header">Planning</div>
+                <ul class="space-y-1">
+                    <li>
                         <a href="planning.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Planning</a>
-                    </div>
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="layout-grid" class="w-4 h-4 text-slate-500"></i>
+                            <span>Planning</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="schedule.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="calendar" class="w-4 h-4 text-slate-500"></i>
+                            <span>Schedule</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-header">Utilities</div>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="checklist.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="clipboard-list" class="w-4 h-4 text-slate-500"></i>
+                            <span>Checklist</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="recorder.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors active">
+                            <i data-lucide="mic" class="w-4 h-4 text-slate-500"></i>
+                            <span>Recorder</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="summary.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Footer - FIXED HEIGHT -->
+        <div class="sidebar-footer flex-shrink-0 p-4 border-t border-white/30">
+            <div
+                class="flex items-center justify-center gap-2 text-[10px] font-bold text-slate-400 tracking-widest uppercase">
+                <i data-lucide="lock" class="w-3 h-3 text-slate-300"></i> Secure Access
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main App Container Structure -->
+    <div id="appShell" class="flex flex-col h-screen overflow-hidden">
+        <!-- Header with Hamburger Menu -->
+        <header id="appHeader"
+            class="glass h-20 flex items-center justify-between px-4 md:px-8 z-20 flex-shrink-0 sticky top-0 border-b border-white/20">
+            <!-- Hamburger Menu Button -->
+            <button id="navToggle" class="hamburger-btn touch-target" aria-label="Toggle navigation">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+
+            <!-- Right Actions (User, etc.) -->
+            <div class="flex items-center gap-4">
+                <!-- System Status -->
+                <div
+                    class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold text-emerald-700 tracking-wider uppercase">System Online</span>
                 </div>
 
-                <!-- Mobile Menu Button -->
-                <button onclick="toggleMobileMenu()"
-                    class="xl:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-all">
-                    <i data-lucide="menu" class="w-6 h-6"></i>
-                </button>
-
-                <a href="../index.html" class="flex items-center gap-4 group cursor-pointer">
+                <!-- User Profile -->
+                <div class="relative group">
+                    <button
+                        class="flex items-center gap-3 focus:outline-none group p-1.5 pr-3 rounded-full hover:bg-white/60 transition-all border border-transparent hover:border-slate-200">
+                        <div
+                            class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 border border-white shadow-sm flex items-center justify-center overflow-hidden">
+                            <span class="text-xs font-bold text-white user-initials-display">??</span>
+                        </div>
+                        <div class="text-left hidden md:block">
+                            <p class="text-xs font-bold text-slate-900 user-name-display leading-tight">User</p>
+                            <p
+                                class="text-[10px] text-slate-500 user-role-display leading-tight uppercase font-semibold">
+                                Member</p>
+                        </div>
+                        <i data-lucide="chevron-down"
+                            class="w-3 h-3 text-slate-400 ml-1 group-hover:text-slate-600 transition-colors"></i>
+                    </button>
+                    <!-- Profile Dropdown -->
                     <div
-                        class="w-10 h-10 md:w-12 md:h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:rotate-12 transition-transform duration-500 ease-out">
-                        <i data-lucide="layers" class="w-5 h-5 md:w-6 md:h-6"></i>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="font-heading font-bold text-slate-900 text-lg md:text-xl tracking-tight">QCO
-                            Portal</span>
-                        <span class="text-[10px] md:text-xs text-slate-500 font-medium tracking-wide">Manufacturing
-                            Excellence</span>
-                    </div>
-                </a>
-
-                <div class="flex items-center gap-4">
-                    <!-- User Profile Dropdown -->
-                    <div class="relative">
-                        <button onclick="document.getElementById('userDropdown').classList.toggle('hidden')"
-                            class="flex items-center gap-2 focus:outline-none group p-1 pr-1 md:p-1.5 md:pr-3 rounded-full hover:bg-white/60 transition-all border border-transparent hover:border-slate-200">
-                            <div
-                                class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border border-white shadow-sm flex items-center justify-center overflow-hidden">
-                                <i data-lucide="user" class="w-4 h-4 text-slate-500"></i>
-                            </div>
-                            <div class="text-left hidden sm:block">
-                                <p class="text-xs font-bold text-slate-900 leading-tight" id="userName">User</p>
-                                <p class="text-[10px] text-slate-500 leading-tight" id="userRole">Member</p>
-                            </div>
-                            <i data-lucide="chevron-down"
-                                class="w-3 h-3 text-slate-400 ml-1 group-hover:text-slate-600 transition-colors hidden sm:block"></i>
-                        </button>
-
-                        <div id="userDropdown"
-                            class="hidden absolute right-0 mt-3 w-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 ring-1 ring-black/5 divide-y divide-slate-100 transform origin-top-right transition-all z-50">
-                            <div class="p-2">
-                                <button onclick="handleLogout()"
-                                    class="w-full group flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left">
-                                    <i data-lucide="log-out"
-                                        class="w-4 h-4 text-red-400 group-hover:text-red-600 transition-colors mr-3"></i>
-                                    Sign Out
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Mobile Menu -->
-            <div id="mobileMenu"
-                class="hidden xl:hidden bg-white/90 backdrop-blur-xl border-t border-slate-100 absolute left-0 right-0 top-24 p-4 shadow-xl z-50">
-                <div class="grid grid-cols-2 gap-2">
-                    <a href="../index.html"
-                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Home</a>
-                    <a href="dashboard.html"
-                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Dashboard</a>
-                    <a href="creation.html"
-                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Creation</a>
-                    <a href="schedule.html"
-                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Schedule</a>
-                    <a href="checklist.html"
-                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Checklist</a>
-                    <a href="recorder.html"
-                        class="p-3 text-sm font-semibold text-white bg-blue-600 rounded-xl transition-colors text-center shadow-md">Recorder</a>
-                    <a href="summary.html"
-                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Reports</a>
-                </div>
-            </div>
-        </div>
-        </div>
-    </nav>
-
-    <!-- Content -->
-    <div id="mainApp" class="pt-32 pb-12 px-6 opacity-0">
-        <div class="max-w-[1200px] mx-auto">
-
-            <!-- Operations Tracker Card -->
-            <div class="glass-card p-8 lg:p-10 relative overflow-hidden">
-                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-400 to-rose-500"></div>
-
-                <h2
-                    class="text-3xl font-heading font-bold text-slate-900 mb-8 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                    <div class="flex items-center gap-3">
-                        <span
-                            class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center text-lg">
-                            <i data-lucide="activity"></i>
-                        </span>
-                        Operations Log
-                    </div>
-
-                    <div class="flex flex-col w-full lg:w-auto lg:flex-row items-stretch lg:items-center gap-3">
-                        <div class="flex flex-col sm:flex-row items-stretch gap-2 w-full lg:w-auto">
-                            <div class="relative w-full sm:w-auto">
-                                <i data-lucide="search"
-                                    class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
-                                <input type="text" id="qcoSearch" onkeyup="handleSearch(event)"
-                                    placeholder="Search QCO..."
-                                    class="pl-10 pr-10 py-2.5 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 w-full sm:w-48 transition-all">
-                                <button onclick="clearSearch()" id="clearSearchBtn"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors hidden">
-                                    <i data-lucide="x" class="w-3 h-3"></i>
-                                </button>
-                                <p id="searchStatus"
-                                    class="absolute top-full right-0 mt-1 text-xs text-slate-500 hidden z-10 bg-white p-1 rounded shadow-sm border border-slate-100 w-full">
-                                </p>
-                            </div>
-                            <!-- QCO Selector -->
-                            <div class="relative group w-full sm:w-auto">
-                                <select id="qcoSelector" onchange="handleQCOChange(this.value)"
-                                    class="appearance-none w-full sm:w-auto bg-white border border-slate-200 text-slate-700 font-bold py-2.5 pl-4 pr-10 rounded-xl hover:border-violet-400 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer text-sm min-w-[200px]">
-                                    <option value="">Select Changeover...</option>
-                                </select>
-                                <i data-lucide="chevron-down"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
-                            </div>
-                            <!-- Shift Mode Toggle -->
-                            <div class="relative group w-full sm:w-auto">
-                                <select id="shiftMode" onchange="handleShiftChange(this.value)"
-                                    class="appearance-none w-full sm:w-auto bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold py-2.5 pl-4 pr-10 rounded-xl hover:border-indigo-400 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-sm min-w-[150px]">
-                                    <option value="day">Day Only (07-18)</option>
-                                    <option value="day-night">Day-Night (24h)</option>
-                                </select>
-                                <i data-lucide="sun-moon"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-indigo-400 w-4 h-4 pointer-events-none"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="font-mono font-bold text-2xl text-slate-700 bg-slate-100/80 px-4 py-2 rounded-xl border border-slate-200 shadow-inner text-center sm:text-left"
-                        id="clock">00:00:00</div>
-            </div>
-            </h2>
-
-            <!-- Target COPT Info -->
-            <div id="targetCOPTSection"
-                class="mb-8 p-6 bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl border border-emerald-200">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center">
-                            <i data-lucide="target" class="w-5 h-5"></i>
-                        </div>
-                        <div>
-                            <p class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Target COPT</p>
-                            <p class="text-2xl font-heading font-bold text-slate-900">
-                                <span id="recorderTargetCOPT">-</span> <span
-                                    class="text-sm text-slate-500 font-normal">min</span>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-xs text-slate-500 font-medium">Category</p>
-                        <p class="text-sm font-bold text-slate-900" id="recorderCategory">-</p>
-                        <div class="mt-2 text-right">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tight" id="lineIdLabel">
-                                Line -</p>
-                            <button onclick="openBreakModal()"
-                                class="text-xs font-semibold text-blue-600 hover:text-blue-800 underline transition-colors">
-                                break timings
+                        class="absolute right-0 mt-2 w-56 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 ring-1 ring-slate-900/5 transform opacity-0 scale-95 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 origin-top-right z-50">
+                        <div class="p-2">
+                            <button onclick="handleLogout()"
+                                class="w-full group flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left">
+                                <i data-lucide="log-out"
+                                    class="w-4 h-4 text-red-400 group-hover:text-red-600 transition-colors mr-3"></i>
+                                Sign Out
                             </button>
                         </div>
                     </div>
                 </div>
-                <p class="text-xs text-slate-500 mt-3 flex items-center gap-1">
-                    <i data-lucide="info" class="w-3 h-3"></i>
-                    Based on SMV and changeover complexity
-                </p>
             </div>
+        </header>
 
-            <!-- Operations Tracking Section -->
-            <div id="operationsSection" class="hidden">
-                <h3 class="text-xl font-heading font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <span
-                        class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm">
-                        <i data-lucide="list-checks" class="w-4 h-4"></i>
-                    </span>
-                    Operations Checklist
-                </h3>
-                <div id="operationsList" class="space-y-3">
-                    <!-- Operations will be injected here -->
+        <!-- Scrollable Content Area -->
+        <div id="appContent" class="flex-1 relative overflow-y-auto">
+            <div id="mainApp" class="min-h-full flex flex-col pt-8 pb-32 px-6 opacity-0">
+                <div class="max-w-[1400px] mx-auto w-full">
+
+                    <!-- Operations Tracker Card -->
+                    <div class="glass-card p-6 lg:p-10 relative overflow-hidden mb-6">
+                        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-400 to-rose-500"></div>
+
+                        <h2
+                            class="text-2xl lg:text-3xl font-heading font-bold text-slate-900 mb-6 lg:mb-8 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6">
+                            <div class="flex items-center gap-3">
+                                <span
+                                    class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center text-lg shadow-lg shadow-slate-900/20">
+                                    <i data-lucide="activity"></i>
+                                </span>
+                                Operations Log
+                            </div>
+
+                            <div class="flex flex-col w-full xl:w-auto lg:flex-row items-stretch lg:items-center gap-4">
+                                <div class="flex flex-col sm:flex-row items-stretch gap-3 w-full xl:w-auto">
+                                    <div class="relative w-full sm:w-auto">
+                                        <i data-lucide="search"
+                                            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                                        <input type="text" id="qcoSearch" onkeyup="handleSearch(event)"
+                                            placeholder="Search QCO..."
+                                            class="pl-10 pr-10 py-2.5 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 w-full sm:w-48 transition-all hover:border-slate-300">
+                                        <button onclick="clearSearch()" id="clearSearchBtn"
+                                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors hidden">
+                                            <i data-lucide="x" class="w-3 h-3"></i>
+                                        </button>
+                                        <p id="searchStatus"
+                                            class="absolute top-full right-0 mt-1 text-xs text-slate-500 hidden z-10 bg-white p-2 rounded-xl shadow-xl border border-slate-100 w-full">
+                                        </p>
+                                    </div>
+                                    <!-- QCO Selector -->
+                                    <div class="relative group w-full sm:w-auto">
+                                        <select id="qcoSelector" onchange="handleQCOChange(this.value)"
+                                            class="appearance-none w-full xl:w-auto bg-white border border-slate-200 text-slate-700 font-bold py-2.5 pl-4 pr-10 rounded-xl hover:border-violet-400 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer text-sm min-w-[200px]">
+                                            <option value="">Select Changeover...</option>
+                                        </select>
+                                        <i data-lucide="chevron-down"
+                                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
+                                    </div>
+                                    <!-- Shift Mode Toggle -->
+                                    <div class="relative group w-full sm:w-auto">
+                                        <select id="shiftMode" onchange="handleShiftChange(this.value)"
+                                            class="appearance-none w-full sm:w-auto bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold py-2.5 pl-4 pr-10 rounded-xl hover:border-indigo-400 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-sm min-w-[150px]">
+                                            <option value="day">Day Only (07-18)</option>
+                                            <option value="day-night">Day-Night (24h)</option>
+                                        </select>
+                                        <i data-lucide="sun-moon"
+                                            class="absolute right-3 top-1/2 -translate-y-1/2 text-indigo-400 w-4 h-4 pointer-events-none"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="font-mono font-bold text-2xl text-slate-700 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 shadow-sm text-center sm:text-left min-w-[140px]"
+                                id="clock">00:00:00</div>
+                        </h2>
+                    </div>
+
+                    <!-- Target COPT Info -->
+                    <div id="targetCOPTSection"
+                        class="mb-6 lg:mb-10 p-6 lg:p-8 bg-gradient-to-br from-emerald-50/50 to-blue-50/50 backdrop-blur-sm rounded-3xl border border-emerald-100/50 shadow-sm relative overflow-hidden">
+                        <div
+                            class="absolute top-0 right-0 w-32 h-32 bg-emerald-200/10 rounded-full -mr-16 -mt-16 blur-2xl">
+                        </div>
+                        <div
+                            class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 relative z-10">
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                                    <i data-lucide="target" class="w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-emerald-700 uppercase tracking-widest mb-0.5">
+                                        Target COPT
+                                    </p>
+                                    <p class="text-3xl font-heading font-bold text-slate-900">
+                                        <span id="recorderTargetCOPT">-</span> <span
+                                            class="text-sm text-slate-400 font-semibold ml-1">min</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div
+                                class="flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-4">
+                                <div class="text-left sm:text-right">
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">
+                                        Category</p>
+                                    <p class="text-sm lg:text-base font-bold text-slate-800 bg-white/60 px-3 py-1 rounded-lg border border-white/50"
+                                        id="recorderCategory">-</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tight mb-1"
+                                        id="lineIdLabel">Line -</p>
+                                    <button onclick="openBreakModal()"
+                                        class="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 text-xs font-bold hover:bg-blue-100 transition-all flex items-center gap-2">
+                                        <i data-lucide="clock" class="w-3 h-3"></i>
+                                        Break timings
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-4 flex items-center gap-1.5 font-medium">
+                            <i data-lucide="info" class="w-3.5 h-3.5 text-emerald-500"></i>
+                            Based on SMV and changeover complexity
+                        </p>
+                    </div>
+
+                    <!-- Operations Tracking Section -->
+                    <div id="operationsSection" class="hidden">
+                        <h3 class="text-xl font-heading font-bold text-slate-900 mb-4 flex items-center gap-2">
+                            <span
+                                class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm">
+                                <i data-lucide="list-checks" class="w-4 h-4"></i>
+                            </span>
+                            Operations Checklist
+                        </h3>
+                        <div id="operationsList" class="space-y-3">
+                            <!-- Operations will be injected here -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
+        <!-- Footer -->
+        <footer
+            class="mt-auto py-8 px-6 border-t border-slate-200/30 relative z-10 bg-white/30 backdrop-blur-md -mx-6 -mb-32">
+            <div class="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase">© 2026 MANUFACTURING
+                    EXCELLENCE SYSTEM</p>
+                <div class="flex gap-6">
+                    <a href="#" class="text-slate-400 hover:text-blue-500 transition-colors"><i data-lucide="github"
+                            class="w-4 h-4"></i></a>
+                    <a href="#" class="text-slate-400 hover:text-blue-500 transition-colors"><i data-lucide="twitter"
+                            class="w-4 h-4"></i></a>
+                    <a href="#" class="text-slate-400 hover:text-blue-500 transition-colors"><i data-lucide="mail"
+                            class="w-4 h-4"></i></a>
+                </div>
+            </div>
+        </footer>
     </div>
     </div>
 
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay"
+        class="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-30 opacity-0 pointer-events-none transition-opacity duration-300"
+        onclick="window.navSystem?.closeSidebar()"></div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="fixed inset-0 z-50 hidden transition-opacity duration-300 opacity-0">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeEditModal()"></div>
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div id="editModalContent"
+                class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all duration-300 scale-95">
+                <div class="p-6 md:p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl md:text-2xl font-heading font-bold text-slate-900">Edit Operation</h3>
+                        <button onclick="closeEditModal()"
+                            class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                            <i data-lucide="x" class="w-5 h-5 text-slate-500"></i>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4 md:space-y-5">
+                        <div>
+                            <label
+                                class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Operation</label>
+                            <p id="editOpName"
+                                class="text-sm md:text-base font-bold text-slate-900 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Start
+                                    Time</label>
+                                <input type="datetime-local" id="editStartTime" step="1"
+                                    class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">End
+                                    Time</label>
+                                <input type="datetime-local" id="editEndTime" step="1"
+                                    class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Department</label>
+                                <select id="editDept"
+                                    class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all appearance-none">
+                                    <option value="">Select Department...</option>
+                                    <option value="Production">Production</option>
+                                    <option value="Maintenance">Maintenance</option>
+                                    <option value="Quality">Quality</option>
+                                    <option value="Engineering">Engineering</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Remarks</label>
+                                <input type="text" id="editRemarks" placeholder="Add remarks..."
+                                    class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex items-center justify-end gap-3">
+                        <button onclick="closeEditModal()"
+                            class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition-all">
+                            Cancel
+                        </button>
+                        <button onclick="saveEditModal()"
+                            class="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 shadow-lg shadow-slate-900/20 transition-all flex items-center gap-2">
+                            <i data-lucide="save" class="w-4 h-4"></i>
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Break Timings Modal -->
+    <div id="breakModal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeBreakModal()"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6">
+            <div class="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
+                <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                    <h3 class="font-heading font-bold text-slate-800" id="breakModalTitle">Line Schedule</h3>
+                    <button onclick="closeBreakModal()" class="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                        <i data-lucide="x" class="w-4 h-4 text-slate-500"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4" id="breakListContainer">
+                        <!-- Breaks injected here -->
+                    </div>
+                    <div
+                        class="mt-6 p-4 rounded-xl bg-amber-50 border border-amber-100 text-[10px] text-amber-700 leading-relaxed">
+                        <i data-lucide="info" class="w-3 h-3 inline-block mr-1"></i>
+                        Note: Active durations are auto-deducted during these windows. Night shift breaks can be
+                        recorded once defined.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // --- Navigation System ---
+        class NavigationSystem {
+            constructor() {
+                this.sidebar = document.getElementById('appSidebar');
+                this.toggleBtn = document.getElementById('navToggle');
+                this.backdrop = document.getElementById('sidebarBackdrop');
+                this.body = document.body;
+                this.isOpen = false;
+
+                this.init();
+            }
+
+            init() {
+                if (this.toggleBtn) {
+                    this.toggleBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.toggleSidebar();
+                    });
+                }
+
+                if (this.backdrop) {
+                    this.backdrop.addEventListener('click', () => this.closeSidebar());
+                }
+            }
+
+            toggleSidebar() {
+                this.isOpen = !this.isOpen;
+                this.updateState();
+            }
+
+            closeSidebar() {
+                this.isOpen = false;
+                this.updateState();
+            }
+
+            updateState() {
+                if (this.isOpen) {
+                    this.body.classList.add('sidebar-open');
+                    this.body.style.overflow = 'hidden';
+                    this.toggleBtn?.classList.add('open');
+                } else {
+                    this.body.classList.remove('sidebar-open');
+                    this.body.style.overflow = '';
+                    this.toggleBtn?.classList.remove('open');
+                }
+            }
+        }
+
         // --- Configuration ---
         const firebaseConfig = {
             apiKey: "AIzaSyCayfWGQP1t3oBU9eFj-3Ww0uu7nSl3Q4g",
@@ -423,25 +894,105 @@
             document.getElementById('breakModal').classList.add('hidden');
         }
 
+        function updateUserUI() {
+            let user = {};
+            try {
+                user = JSON.parse(localStorage.getItem('qcoCurrentUser')) || {};
+            } catch (e) {
+                console.warn("User data error:", e);
+            }
+            const name = user.displayName || user.name || 'User';
+            const role = user.role || 'Member';
+            const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2);
+
+            document.querySelectorAll('.user-initials-display').forEach(el => el.textContent = initials);
+            document.querySelectorAll('.user-name-display').forEach(el => el.textContent = name);
+            document.querySelectorAll('.user-role-display').forEach(el => el.textContent = role.toUpperCase());
+        }
+
+        function handleLogout() {
+            if (confirm("Are you sure you want to sign out?")) {
+                auth.signOut().then(() => {
+                    localStorage.removeItem('qcoCurrentUser');
+                    localStorage.removeItem('currentQCOId');
+                    window.location.href = '../index.html';
+                });
+            }
+        }
+
+        let clockInterval;
+
         document.addEventListener('DOMContentLoaded', async () => {
-            // Strict Auth Check (Immediate)
+            // 1. Instant Reveal
+            gsap.to("#mainApp", { opacity: 1, duration: 0.4, ease: "power2.out" });
+
+            // 2. Initialize Navigation
+            window.navSystem = new NavigationSystem();
+
+            // 3. Mobile Init
+            if (window.initMobileBehavior) window.initMobileBehavior();
+
+            // 4. Lenis Init
+            const lenis = new Lenis({
+                wrapper: document.getElementById('appContent'),
+                content: document.getElementById('mainApp'),
+                duration: 1.2,
+                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                smoothWheel: true,
+                smoothTouch: false,
+                touchMultiplier: 1.5,
+                topOffset: 0
+            });
+            function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+            requestAnimationFrame(raf);
+
+            // Scroll State
+            let isScrolling;
+            document.getElementById('appContent').addEventListener('scroll', () => {
+                document.body.classList.add('is-scrolling');
+                clearTimeout(isScrolling);
+                isScrolling = setTimeout(() => {
+                    document.body.classList.remove('is-scrolling');
+                }, 150);
+            }, { passive: true });
+
+            // 5. Auth & Firebase Sequence
             const user = JSON.parse(localStorage.getItem('qcoCurrentUser'));
             if (!user) {
                 window.location.href = '../index.html';
                 return;
             }
-            // Navigation Guard for Planning Role
             if (user.role === 'planning') {
                 window.location.replace('schedule.html');
                 return;
             }
 
-            // Init utils
-            const lenis = new Lenis();
-            function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
-            requestAnimationFrame(raf);
+            // Init Firebase
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            auth = firebase.auth();
 
-            // Cursor
+            // Wait for Auth
+            await new Promise(resolve => {
+                const unsubscribe = auth.onAuthStateChanged(u => {
+                    if (u) {
+                        localStorage.setItem('qcoCurrentUser', JSON.stringify({
+                            uid: u.uid,
+                            name: u.displayName || 'User',
+                            email: u.email,
+                            role: user.role || 'Member'
+                        }));
+                    }
+                    updateUserUI();
+                    unsubscribe();
+                    resolve();
+                });
+            });
+
+            // 6. Data Loading
+            await loadChangeoverList();
+
+            // 7. Cursor
             const dot = document.querySelector('.cursor-dot');
             const outline = document.querySelector('.cursor-outline');
             window.addEventListener('mousemove', e => {
@@ -449,23 +1000,14 @@
                 gsap.to(outline, { x: e.clientX, y: e.clientY, duration: 0.5 });
             });
 
-            // Clock
-            setInterval(() => {
+            // 8. Clock
+            if (clockInterval) clearInterval(clockInterval);
+            clockInterval = setInterval(() => {
                 const el = document.getElementById('clock');
                 if (el) el.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
             }, 1000);
 
-            // Firebase Init
-            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-            auth = firebase.auth();
-            checkAuth();
-
-            // Load QCO List and set initial state
-            await loadChangeoverList();
-
             lucide.createIcons();
-            gsap.to("#mainApp", { opacity: 1, duration: 0.5 });
         });
 
         function checkAuth() {
@@ -486,26 +1028,7 @@
             });
         }
 
-        function updateUserUI() {
-            let user = {};
-            try {
-                user = JSON.parse(localStorage.getItem('qcoCurrentUser')) || {};
-            } catch (e) { console.warn(e); }
-            const name = user.displayName || user.name || 'User';
-            const role = user.role || 'Member';
-            const nameEl = document.getElementById('userName');
-            const roleEl = document.getElementById('userRole');
-            if (nameEl) nameEl.textContent = name;
-            if (roleEl) roleEl.textContent = role;
-        }
 
-        function handleLogout() {
-            auth.signOut().then(() => {
-                localStorage.removeItem('qcoCurrentUser');
-                localStorage.removeItem('qcoSessionActive');
-                window.location.href = '../index.html';
-            });
-        }
 
         // --- Data Logic: Selection & Loading ---
 
@@ -634,7 +1157,8 @@
                 }
             } catch (e) {
                 console.error("Error loading data:", e);
-                alert("Failed to load QCO data. Please refresh the page.");
+                showToast("Failed to load QCO data. Please check your connection.", "error");
+                document.getElementById('operationsSection').classList.add('hidden');
             }
         }
 
@@ -645,7 +1169,8 @@
         function getNetDuration(startISO, endISO, schedule) {
             const start = new Date(startISO);
             const end = new Date(endISO);
-            const mode = shiftMode; // Use global shiftMode
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+            const mode = shiftMode;
 
             if (mode === 'day') {
                 // Logic: Only count minutes within 07:00 and 18:00
@@ -834,8 +1359,7 @@
         }
 
         function toggleMobileMenu() {
-            const menu = document.getElementById('mobileMenu');
-            menu.classList.toggle('hidden');
+            window.navSystem?.toggleSidebar();
         }
 
         let currentEditOp = null;
@@ -861,14 +1385,13 @@
                 document.getElementById('editDept').value = currentDept || timing.department || '';
                 document.getElementById('editRemarks').value = currentRemarks || timing.remarks || '';
 
-                // Format timestamps for input (YYYY-MM-DDThh:mm:ss)
                 const formatForInput = (isoString) => {
                     if (!isoString) return '';
                     const d = new Date(isoString);
-                    // Adjust to local ISO string (handling timezone offset simply)
-                    const offset = d.getTimezoneOffset() * 60000;
-                    const localISOTime = (new Date(d.getTime() - offset)).toISOString().slice(0, 19);
-                    return localISOTime;
+                    if (isNaN(d.getTime())) return '';
+                    const z = d.getTimezoneOffset() * 60 * 1000;
+                    const localTime = new Date(d - z);
+                    return localTime.toISOString().slice(0, 19);
                 };
 
                 document.getElementById('editStartTime').value = formatForInput(timing.start);
@@ -912,8 +1435,8 @@
 
                 // Calculate durations if end time exists
                 let actualTime = null;
-                if (endDate) {
-                    actualTime = ((endDate - startDate) / 60000).toFixed(2);
+                if (endDate && !isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                    actualTime = getNetDuration(startISO, endISO, currentLineSchedule);
                 }
 
                 // Get standard time to preserve or recalculate if needed? 
@@ -945,19 +1468,19 @@
 
             } catch (e) { console.error(e); alert("Failed to save changes"); }
         }
-        async function saveOperationDetails(index, opName) {
-            if (!currentQCOId) {
+        async function saveOperationDetails(qcoId, index, opName) {
+            if (!qcoId) {
                 console.warn("No QCO selected");
                 return;
             }
 
-            // Get button reference more safely
+            // Get button reference safely from event if available, or target by ID
             let btn = null;
             if (typeof event !== 'undefined' && event && event.target) {
                 btn = event.target.closest('button');
             }
 
-            console.log("Save initiated for:", opName, "Index:", index, "Button found:", !!btn);
+            console.log("Save initiated for:", opName, "Index:", index, "QCO ID:", qcoId);
 
             try {
                 const deptEl = document.getElementById(`dept_${index}`);
@@ -970,26 +1493,20 @@
                 const department = deptEl.value || '';
                 const remarks = remarksEl.value || '';
 
-                console.log("Saving - Dept:", department, "Remarks:", remarks);
-
                 // Show loading state
                 if (btn) {
-                    btn.innerHTML = '<div class="spinner w-3 h-3 border-white/30 border-t-white"></div>';
+                    const originalContent = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin w-4 h-4"></i>';
                     btn.disabled = true;
                 }
 
-                const docRef = db.collection('changeovers').doc(currentQCOId);
+                const docRef = db.collection('changeovers').doc(qcoId);
                 const doc = await docRef.get();
 
-                if (!doc.exists) {
-                    throw new Error("QCO document not found");
-                }
+                if (!doc.exists) throw new Error("QCO document not found");
 
-                const data = doc.data();
-                const timings = data.operationTimings || {};
+                const timings = doc.data().operationTimings || {};
                 const existing = timings[opName] || {};
-
-                console.log("Existing timing data:", existing);
 
                 const fieldPath = new firebase.firestore.FieldPath('operationTimings', opName);
 
@@ -999,43 +1516,60 @@
                     remarks: remarks
                 });
 
-                console.log("✅ Save successful!");
-
                 // Success feedback
                 if (btn) {
                     btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>';
-                    btn.className = 'p-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-all flex-shrink-0';
+                    btn.classList.remove('bg-slate-900');
+                    btn.classList.add('bg-emerald-600');
                     lucide.createIcons();
 
                     setTimeout(() => {
                         btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i>';
-                        btn.className = 'p-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all flex-shrink-0';
+                        btn.classList.remove('bg-emerald-600');
+                        btn.classList.add('bg-slate-900');
                         btn.disabled = false;
-                        btn.title = 'Save Info';
                         lucide.createIcons();
                     }, 2000);
                 }
 
+                // Show success toast
+                showToast("Update Saved Successfully", "success");
+
             } catch (e) {
                 console.error("❌ Save failed:", e);
-                console.error("Error details:", e.message, e.stack);
-
-                alert("Failed to save: " + e.message);
-
+                showToast("Failed to save: " + e.message, "error");
                 if (btn) {
                     btn.innerHTML = '<i data-lucide="x" class="w-4 h-4"></i>';
-                    btn.className = 'p-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-all flex-shrink-0';
+                    btn.classList.add('bg-red-600');
                     lucide.createIcons();
-
                     setTimeout(() => {
                         btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i>';
-                        btn.className = 'p-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all flex-shrink-0';
+                        btn.classList.remove('bg-red-600');
                         btn.disabled = false;
-                        btn.title = 'Save Info';
                         lucide.createIcons();
                     }, 2000);
                 }
             }
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-emerald-600' : 'bg-rose-600';
+            const icon = type === 'success' ? 'check-circle' : 'alert-circle';
+
+            toast.className = `fixed bottom-5 right-5 ${bgClass} text-white px-6 py-3 rounded-xl shadow-lg z-[100] transition-all duration-300 transform translate-y-10 opacity-0`;
+            toast.innerHTML = `<i class="fas fa-${icon} mr-2"></i> ${message}`;
+            document.body.appendChild(toast);
+
+            // Animation
+            setTimeout(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
         }
 
         async function startOperation(qcoId, index, opName) {
@@ -1125,52 +1659,7 @@
             }
         }
 
-        async function saveOperationDetails(qcoId, index, opName) {
-            if (!qcoId) return;
-            try {
-                const department = document.getElementById(`dept_${index}`).value;
-                const remarks = document.getElementById(`remarks_${index}`).value;
 
-                // Get existing timing data
-                const doc = await db.collection('changeovers').doc(qcoId).get();
-                const data = doc.data();
-                const existingTiming = data.operationTimings && data.operationTimings[opName];
-
-                if (!existingTiming) {
-                    alert("Operation timing data not found!");
-                    return;
-                }
-
-                // Update with department and remarks
-                const fieldPath = new firebase.firestore.FieldPath('operationTimings', opName);
-                await db.collection('changeovers').doc(qcoId).update(
-                    fieldPath, {
-                    ...existingTiming,
-                    department: department,
-                    remarks: remarks
-                }
-                );
-
-                // Show success feedback
-                const btn = event.target;
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i data-lucide="check-circle" class="w-3 h-3 inline mr-1"></i> Saved!';
-                btn.classList.remove('bg-slate-900');
-                btn.classList.add('bg-emerald-600');
-
-                setTimeout(() => {
-                    btn.innerHTML = originalText;
-                    btn.classList.remove('bg-emerald-600');
-                    btn.classList.add('bg-slate-900');
-                    lucide.createIcons();
-                }, 1500);
-
-                console.log("Operation details saved:", opName, department, remarks);
-            } catch (e) {
-                console.error("Error saving operation details:", e);
-                alert("Failed to save details.");
-            }
-        }
 
         function updateTargetCOPTDisplay(qcoData) {
             // Get SMV - check multiple possible field names
@@ -1263,109 +1752,7 @@
         }
     </script>
 
-    <!-- Edit Modal -->
-    <div id="editModal" class="fixed inset-0 z-50 hidden transition-opacity duration-300 opacity-0">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeEditModal()"></div>
-        <div class="absolute inset-0 flex items-center justify-center p-4">
-            <div id="editModalContent"
-                class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all duration-300 scale-95">
-                <div class="p-6 md:p-8">
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-xl md:text-2xl font-heading font-bold text-slate-900">Edit Operation</h3>
-                        <button onclick="closeEditModal()"
-                            class="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                            <i data-lucide="x" class="w-5 h-5 text-slate-500"></i>
-                        </button>
-                    </div>
 
-                    <div class="space-y-4 md:space-y-5">
-                        <div>
-                            <label
-                                class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Operation</label>
-                            <p id="editOpName"
-                                class="text-sm md:text-base font-bold text-slate-900 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                            </p>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label
-                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Start
-                                    Time</label>
-                                <input type="datetime-local" id="editStartTime" step="1"
-                                    class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all">
-                            </div>
-                            <div>
-                                <label
-                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">End
-                                    Time</label>
-                                <input type="datetime-local" id="editEndTime" step="1"
-                                    class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label
-                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Department</label>
-                                <select id="editDept"
-                                    class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all appearance-none">
-                                    <option value="">Select Department...</option>
-                                    <option value="Production">Production</option>
-                                    <option value="Maintenance">Maintenance</option>
-                                    <option value="Quality">Quality</option>
-                                    <option value="Engineering">Engineering</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label
-                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Remarks</label>
-                                <input type="text" id="editRemarks" placeholder="Add remarks..."
-                                    class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-8 flex items-center justify-end gap-3">
-                        <button onclick="closeEditModal()"
-                            class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 hover:bg-slate-100 transition-all">
-                            Cancel
-                        </button>
-                        <button onclick="saveEditModal()"
-                            class="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-slate-900 hover:bg-slate-800 shadow-lg shadow-slate-900/20 transition-all flex items-center gap-2">
-                            <i data-lucide="save" class="w-4 h-4"></i>
-                            Save Changes
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Break Timings Modal -->
-    <div id="breakModal" class="fixed inset-0 z-[60] hidden">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeBreakModal()"></div>
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6">
-            <div class="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
-                <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                    <h3 class="font-heading font-bold text-slate-800" id="breakModalTitle">Line Schedule</h3>
-                    <button onclick="closeBreakModal()" class="p-2 hover:bg-slate-200 rounded-full transition-colors">
-                        <i data-lucide="x" class="w-4 h-4 text-slate-500"></i>
-                    </button>
-                </div>
-                <div class="p-6">
-                    <div class="space-y-4" id="breakListContainer">
-                        <!-- Breaks injected here -->
-                    </div>
-                    <div
-                        class="mt-6 p-4 rounded-xl bg-amber-50 border border-amber-100 text-[10px] text-amber-700 leading-relaxed">
-                        <i data-lucide="info" class="w-3 h-3 inline-block mr-1"></i>
-                        Note: Active durations are auto-deducted during these windows. Night shift breaks can be
-                        recorded once defined.
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </body>
 
 </html>

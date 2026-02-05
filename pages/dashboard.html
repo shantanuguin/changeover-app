@@ -347,12 +347,46 @@
         }
 
         /* Glassmorphism Utilities */
+        /* --- PERFORMANCE OPTIMIZATION --- */
+        #appContent {
+            transform: translateZ(0);
+            will-change: transform;
+            backface-visibility: hidden;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
+        }
+
+        body.is-scrolling .glass,
+        body.is-scrolling .glass-card {
+            backdrop-filter: none;
+            transition: backdrop-filter 0.3s ease;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+
+            .glass,
+            .glass-card {
+                backdrop-filter: none !important;
+                background: rgba(255, 255, 255, 0.95) !important;
+            }
+
+            .animate-blob {
+                animation: none !important;
+                opacity: 0.05 !important;
+            }
+
+            .parallax-layer {
+                display: none;
+            }
+        }
+
+        /* Glassmorphism Utilities */
         .glass {
-            background: rgba(255, 255, 255, 0.65);
+            background: rgba(255, 255, 255, 0.4);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
 
         .glass-card {
@@ -986,13 +1020,6 @@
                             <span>Operations</span>
                         </a>
                     </li>
-                    <li>
-                        <a href="recorder.html"
-                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
-                            <i data-lucide="mic" class="w-4 h-4 text-slate-500"></i>
-                            <span>Recorder</span>
-                        </a>
-                    </li>
                 </ul>
             </div>
             <div>
@@ -1022,6 +1049,13 @@
                             class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
                             <i data-lucide="clipboard-list" class="w-4 h-4 text-slate-500"></i>
                             <span>Checklist</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="recorder.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="mic" class="w-4 h-4 text-slate-500"></i>
+                            <span>Recorder</span>
                         </a>
                     </li>
                     <li>
@@ -3426,7 +3460,8 @@
                         this.userDropdown = document.getElementById('userDropdown');
                         this.logoutBtn = document.getElementById('logoutBtn');
 
-                        // Set up event listeners
+                        if (!this.sidebar || !this.toggleBtn) return;
+
                         this.setupEventListeners();
                         this.resolveActiveState();
                         this.initSafeAreas();
@@ -3434,25 +3469,13 @@
                     }
 
                     setupEventListeners() {
-                        if (this.toggleBtn) {
-                            this.toggleBtn.addEventListener('click', (e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                this.toggleSidebar();
-                            });
-                        }
+                        this.toggleBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            this.toggleSidebar();
+                        });
 
                         if (this.backdrop) {
-                            this.backdrop.addEventListener('click', (e) => {
-                                if (e.target === this.backdrop) this.closeSidebar();
-                            });
-
-                            // Close sidebar on backdrop touch
-                            this.backdrop.addEventListener('touchstart', (e) => {
-                                if (e.target === this.backdrop) {
-                                    this.closeSidebar();
-                                }
-                            }, { passive: true });
+                            this.backdrop.addEventListener('click', () => this.closeSidebar());
                         }
 
                         if (this.userBtn && this.userDropdown) {
@@ -3463,6 +3486,7 @@
                                     gsap.fromTo(this.userDropdown, { opacity: 0, scale: 0.95, y: -10 }, { opacity: 1, scale: 1, y: 0, duration: 0.2 });
                                 }
                             });
+
                             document.addEventListener('click', (e) => {
                                 if (!this.userBtn.contains(e.target) && !this.userDropdown.contains(e.target)) {
                                     this.userDropdown.classList.add('hidden');
@@ -3470,63 +3494,48 @@
                             });
                         }
 
-                        if (this.logoutBtn) {
+                        if (this.logoutBtn && typeof window.handleLogout === 'function') {
                             this.logoutBtn.addEventListener('click', (e) => {
                                 e.preventDefault();
-                                handleLogout();
+                                window.handleLogout();
+                            });
+                        } else if (this.logoutBtn) {
+                            this.logoutBtn.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                if (typeof logout === 'function') logout();
                             });
                         }
 
-                        if (this.sidebar) {
-                            this.sidebar.querySelectorAll('a').forEach(link => {
-                                link.addEventListener('click', () => this.closeSidebar());
+                        // Close sidebar on link click
+                        this.sidebar.querySelectorAll('a').forEach(link => {
+                            link.addEventListener('click', () => {
+                                if (window.innerWidth < 1280) this.closeSidebar();
                             });
-
-                            // Prevent body scroll when interacting with sidebar
-                            this.sidebar.addEventListener('touchstart', (e) => {
-                                if (this.isOpen) {
-                                    e.stopPropagation();
-                                }
-                            }, { passive: true });
-                        }
+                        });
 
                         document.addEventListener('keydown', (e) => {
                             if (e.key === 'Escape' && this.isOpen) this.closeSidebar();
                         });
-                    }
 
-                    setupScrollableNav() {
-                        const nav = this.sidebar ? this.sidebar.querySelector('nav') : null;
-                        if (nav) {
-                            // Enable momentum scrolling on iOS
-                            nav.style.webkitOverflowScrolling = 'touch';
-
-                            // Prevent body scroll when sidebar is open
-                            this.sidebar.addEventListener('touchmove', (e) => {
-                                e.stopPropagation();
-                            }, { passive: false });
-
-                            // Allow scroll on nav
-                            nav.addEventListener('touchmove', (e) => {
-                                e.stopPropagation();
-                            }, { passive: true });
-                        }
+                        window.addEventListener('resize', () => {
+                            if (window.innerWidth >= 1280 && this.isOpen) {
+                                this.closeSidebar();
+                            }
+                        });
                     }
 
                     toggleSidebar() {
-                        if (this.isOpen) this.closeSidebar();
-                        else this.openSidebar();
+                        this.isOpen ? this.closeSidebar() : this.openSidebar();
                     }
 
                     openSidebar() {
                         this.isOpen = true;
+                        this.sidebar.classList.remove('hidden');
                         this.sidebar.classList.add('open');
                         this.toggleBtn.classList.add('open');
-                        this.backdrop.classList.add('active');
+                        if (this.backdrop) this.backdrop.classList.add('active');
                         this.sidebar.setAttribute('aria-hidden', 'false');
-                        this.backdrop.setAttribute('aria-hidden', 'false');
-
-                        // Prevent body scroll when sidebar is open
+                        if (this.backdrop) this.backdrop.setAttribute('aria-hidden', 'false');
                         document.body.style.overflow = 'hidden';
                     }
 
@@ -3534,27 +3543,31 @@
                         this.isOpen = false;
                         this.sidebar.classList.remove('open');
                         this.toggleBtn.classList.remove('open');
-                        this.backdrop.classList.remove('active');
+                        if (this.backdrop) this.backdrop.classList.remove('active');
                         this.sidebar.setAttribute('aria-hidden', 'true');
-                        this.backdrop.setAttribute('aria-hidden', 'true');
-
-                        // Re-enable body scroll
+                        if (this.backdrop) this.backdrop.setAttribute('aria-hidden', 'true');
                         document.body.style.overflow = '';
+
+                        setTimeout(() => {
+                            if (!this.isOpen) this.sidebar.classList.add('hidden');
+                        }, 400);
                     }
 
                     resolveActiveState() {
                         const currentPath = window.location.pathname;
+                        const filename = currentPath.split('/').pop() || 'index.html';
                         const navItems = document.querySelectorAll('.nav-item');
+
                         navItems.forEach(item => {
                             item.classList.remove('active');
                             const href = item.getAttribute('href');
-                            if (href && currentPath.includes(href)) {
-                                item.classList.add('active');
+                            if (href) {
+                                const hrefFilename = href.split('/').pop();
+                                if (filename === hrefFilename) {
+                                    item.classList.add('active');
+                                }
                             }
                         });
-                        // Explicitly set dashboard active
-                        const dashboardLink = document.querySelector('a[href="dashboard.html"]');
-                        if (dashboardLink) dashboardLink.classList.add('active');
                     }
 
                     initSafeAreas() {
@@ -3565,6 +3578,19 @@
                             #appSidebar { padding-top: env(safe-area-inset-top, 0); }
                         `;
                         document.head.appendChild(style);
+                    }
+
+                    setupScrollableNav() {
+                        const nav = this.sidebar ? this.sidebar.querySelector('nav') : null;
+                        if (nav) {
+                            nav.style.webkitOverflowScrolling = 'touch';
+                            this.sidebar.addEventListener('touchmove', (e) => {
+                                if (this.isOpen) e.stopPropagation();
+                            }, { passive: false });
+                            nav.addEventListener('touchmove', (e) => {
+                                if (this.isOpen) e.stopPropagation();
+                            }, { passive: true });
+                        }
                     }
                 }
                 // --- Auth Guard & Init ---
@@ -3598,7 +3624,9 @@
                     initClock();
                     initAnimations();
                     initTilt();
-                    initScroll();
+                    initTilt();
+                    // initScroll(); // Replaced by Lenis
+                    initLenis();
                     initCursor();
                     initializeChart();
                     checkAuth();
@@ -3637,6 +3665,33 @@
                     } else {
                         performLogout();
                     }
+                }
+
+                function initLenis() {
+                    const container = document.getElementById('appContent');
+                    if (!container) return;
+
+                    const lenis = new Lenis({
+                        wrapper: container,
+                        content: document.getElementById('mainApp'),
+                        duration: 1.2,
+                        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                        smoothWheel: true,
+                        smoothTouch: false,
+                        touchMultiplier: 1.5,
+                    });
+                    function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+                    requestAnimationFrame(raf);
+
+                    // Scroll State
+                    let isScrolling;
+                    container.addEventListener('scroll', () => {
+                        document.body.classList.add('is-scrolling');
+                        clearTimeout(isScrolling);
+                        isScrolling = setTimeout(() => {
+                            document.body.classList.remove('is-scrolling');
+                        }, 150);
+                    }, { passive: true });
                 }
 
                 // --- Mobile Specific Behavior ---

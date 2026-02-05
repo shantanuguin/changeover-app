@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>SSLR Summary | Smart QCO System</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -40,10 +41,41 @@
             overflow-x: hidden;
         }
 
+        /* --- PERFORMANCE OPTIMIZATION --- */
+        #appContent {
+            transform: translateZ(0);
+            will-change: transform;
+            backface-visibility: hidden;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
+        }
+
+        body.is-scrolling .glass,
+        body.is-scrolling .glass-card {
+            backdrop-filter: none;
+            transition: backdrop-filter 0.3s ease;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+
+            .glass,
+            .glass-card {
+                backdrop-filter: none !important;
+                background: rgba(255, 255, 255, 0.95) !important;
+            }
+
+            .animate-blob {
+                animation: none !important;
+                opacity: 0.05 !important;
+            }
+        }
+
         .glass {
-            background: rgba(255, 255, 255, 0.65);
+            background: rgba(255, 255, 255, 0.4);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
 
         .glass-card {
@@ -90,6 +122,157 @@
                 display: none !important;
             }
         }
+
+        /* --- Navigation & Sidebar Styles --- */
+        .retractable-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 280px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.5);
+            z-index: 40;
+            transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-open .retractable-sidebar {
+            transform: translateX(0);
+            box-shadow: 20px 0 50px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.1);
+            backdrop-filter: blur(4px);
+            z-index: 30;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .sidebar-open .sidebar-backdrop {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        #appShell {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #appContent {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* Hamburger Menu Button - Squircle Glassmorphism */
+        #appHeader .hamburger-btn {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.375rem;
+            /* 6px */
+            width: 3rem;
+            /* 48px */
+            height: 3rem;
+            /* 48px */
+            padding: 0.875rem;
+            /* 14px */
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(240, 249, 255, 0.9));
+            border-radius: 1rem;
+            /* 16px */
+            border: 0.09375rem solid rgba(255, 255, 255, 1);
+            box-shadow:
+                0 0.5rem 1.5rem -0.25rem rgba(14, 165, 233, 0.25),
+                0 0.25rem 0.5rem -0.125rem rgba(14, 165, 233, 0.15),
+                inset 0 0.0625rem 0 rgba(255, 255, 255, 1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            /* Snappy */
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .hamburger-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(6, 182, 212, 0.05));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .hamburger-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow:
+                0 12px 40px -8px rgba(14, 165, 233, 0.25),
+                0 6px 20px -4px rgba(0, 0, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 1);
+            border-color: rgba(14, 165, 233, 0.3);
+        }
+
+        .hamburger-btn:hover::before {
+            opacity: 1;
+        }
+
+        .hamburger-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .hamburger-line {
+            width: 100%;
+            height: 0.15625rem;
+            /* 2.5px */
+            background: linear-gradient(90deg, #0ea5e9, #06b6d4);
+            border-radius: 0.125rem;
+            /* 2px */
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center;
+            box-shadow: 0 0.0625rem 0.125rem rgba(14, 165, 233, 0.3);
+        }
+
+        .hamburger-btn.open {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(6, 182, 212, 0.1));
+            border-color: rgba(14, 165, 233, 0.4);
+        }
+
+        .hamburger-btn.open .hamburger-line:nth-child(1) {
+            transform: translateY(0.25rem) rotate(45deg);
+            /* 4px */
+            background: linear-gradient(90deg, #0284c7, #0891b2);
+        }
+
+        .hamburger-btn.open .hamburger-line:nth-child(2) {
+            transform: translateY(-0.25rem) rotate(-45deg);
+            /* -4px */
+            background: linear-gradient(90deg, #0284c7, #0891b2);
+        }
+
+        /* Chart Heights */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
     </style>
 </head>
 
@@ -107,307 +290,437 @@
     </div>
 
     <!-- Nav -->
-    <nav class="fixed top-0 w-full z-40 glass transition-all duration-300 no-print" id="navbar">
-        <div class="max-w-[1600px] mx-auto px-6">
-            <div class="flex justify-between h-24 items-center relative">
+    <!-- Sidebar Backdrop -->
+    <div id="sidebarBackdrop" class="sidebar-backdrop"></div>
 
-                <!-- Centered Navigation -->
-                <div class="hidden xl:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                    <div
-                        class="flex items-center gap-1 bg-white/50 p-1.5 rounded-full border border-white/20 shadow-sm backdrop-blur-md">
+    <!-- Retractable Sidebar -->
+    <!-- Retractable Sidebar (Hidden by default) -->
+    <aside id="appSidebar" class="retractable-sidebar hidden no-print" aria-hidden="true">
+        <!-- Header - FIXED HEIGHT -->
+        <div class="sidebar-header h-20 flex-shrink-0 flex items-center px-6 border-b border-white/30">
+            <a href="../index.html" class="flex items-center gap-3 group transition-all hover:scale-105">
+                <div
+                    class="w-10 h-10 bg-gradient-to-br from-slate-900 to-slate-700 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-all group-hover:rotate-6">
+                    <i data-lucide="layers" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-800 text-sm tracking-wide">QCO Portal</h1>
+                    <p class="text-[10px] text-slate-500 font-medium">Enterprise v2.1</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Navigation - SCROLLABLE -->
+        <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-6">
+            <div>
+                <div class="section-header">General</div>
+                <ul class="space-y-1">
+                    <li>
                         <a href="../index.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Home</a>
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="home" class="w-4 h-4 text-slate-500"></i>
+                            <span>Home</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="dashboard.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Dashboard</a>
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="line-chart" class="w-4 h-4 text-slate-500"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-header">Workflow</div>
+                <ul class="space-y-1">
+                    <li>
                         <a href="creation.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Creation</a>
-                        <a href="schedule.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Schedule</a>
-                        <a href="checklist.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Checklist</a>
-                        <a href="recorder.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Recorder</a>
-                        <a href="summary.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-blue-900 bg-blue-100 shadow-sm transition-all">Reports</a>
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="pen-tool" class="w-4 h-4 text-slate-500"></i>
+                            <span>QCO Creation</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="operations.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="list-ordered" class="w-4 h-4 text-slate-500"></i>
+                            <span>Operations</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-header">Planning</div>
+                <ul class="space-y-1">
+                    <li>
                         <a href="planning.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Planning</a>
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="layout-grid" class="w-4 h-4 text-slate-500"></i>
+                            <span>Planning</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="schedule.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="calendar" class="w-4 h-4 text-slate-500"></i>
+                            <span>Schedule</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-header">Utilities</div>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="checklist.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="clipboard-list" class="w-4 h-4 text-slate-500"></i>
+                            <span>Checklist</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="recorder.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="mic" class="w-4 h-4 text-slate-500"></i>
+                            <span>Recorder</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="summary.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors active">
+                            <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Sidebar Footer -->
+        <div class="sidebar-footer flex-shrink-0 p-4 border-t border-white/30">
+            <div
+                class="flex items-center justify-center gap-2 text-[10px] font-bold text-slate-400 tracking-widest uppercase">
+                <i data-lucide="lock" class="w-3 h-3 text-slate-300"></i> Secure Access
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main App Container Structure -->
+    <div id="appShell" class="flex flex-col h-screen overflow-hidden">
+        <!-- Header with Hamburger Menu -->
+        <header id="appHeader"
+            class="glass h-20 flex items-center justify-between px-4 md:px-8 z-20 flex-shrink-0 sticky top-0 border-b border-white/20 no-print">
+            <!-- Hamburger Menu Button -->
+            <button id="navToggle" class="hamburger-btn touch-target" aria-label="Toggle navigation">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+
+            <!-- Right Actions (User, etc.) -->
+            <div class="flex items-center gap-4">
+                <!-- Print Button moved here -->
+                <button onclick="window.print()"
+                    class="px-3 py-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hidden md:flex items-center gap-2 transition-colors">
+                    <i data-lucide="printer" class="w-4 h-4"></i>
+                    <span class="text-xs font-bold uppercase">Print</span>
+                </button>
+
+                <!-- User Profile -->
+                <div class="relative group">
+                    <button
+                        class="flex items-center gap-3 focus:outline-none group p-1.5 pr-3 rounded-full hover:bg-white/60 transition-all border border-transparent hover:border-slate-200">
+                        <div
+                            class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 border border-white shadow-sm flex items-center justify-center overflow-hidden">
+                            <span class="text-xs font-bold text-white user-initials-display">??</span>
+                        </div>
+                        <div class="text-left hidden md:block">
+                            <p class="text-xs font-bold text-slate-900 user-name-display leading-tight">User</p>
+                            <p
+                                class="text-[10px] text-slate-500 user-role-display leading-tight uppercase font-semibold">
+                                Member</p>
+                        </div>
+                        <i data-lucide="chevron-down"
+                            class="w-3 h-3 text-slate-400 ml-1 group-hover:text-slate-600 transition-colors"></i>
+                    </button>
+                    <!-- Profile Dropdown -->
+                    <div
+                        class="absolute right-0 mt-2 w-56 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 ring-1 ring-slate-900/5 transform opacity-0 scale-95 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 origin-top-right z-50">
+                        <div class="p-2">
+                            <button onclick="handleLogout()"
+                                class="w-full group flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left">
+                                <i data-lucide="log-out"
+                                    class="w-4 h-4 text-red-400 group-hover:text-red-600 transition-colors mr-3"></i>
+                                Sign Out
+                            </button>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </header>
 
-                <a href="../index.html" class="flex items-center gap-4 group cursor-pointer">
-                    <div
-                        class="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:rotate-12 transition-transform duration-500 ease-out">
-                        <i data-lucide="layers" class="w-6 h-6"></i>
+        <!-- Scrollable Content Area -->
+        <div id="appContent" class="flex-1 relative overflow-y-auto">
+
+            <!-- Main -->
+            <div id="mainApp" class="min-h-full flex flex-col pt-8 pb-32 px-6 opacity-0">
+                <div class="max-w-[1600px] mx-auto w-full">
+
+                    <div class="flex items-end justify-between mb-8">
+                        <div>
+                            <h1 class="text-3xl md:text-4xl font-heading font-bold text-slate-900 tracking-tight mb-2">
+                                Startup
+                                <span
+                                    class="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600">Loss
+                                    Summary</span>
+                            </h1>
+                            <p class="text-slate-500 font-medium">Detailed breakdown for <span id="activeQCOName"
+                                    class="font-bold text-slate-800">...</span></p>
+                        </div>
+                        <div class="text-right hidden md:block">
+                            <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Report Date</p>
+                            <p class="text-lg font-bold text-slate-900" id="reportDate">...</p>
+                        </div>
                     </div>
-                    <div class="flex flex-col">
-                        <span class="font-heading font-bold text-slate-900 text-xl tracking-tight">QCO Portal</span>
-                        <span class="text-xs text-slate-500 font-medium tracking-wide">Manufacturing Excellence</span>
-                    </div>
-                </a>
-                <div class="flex gap-4 items-center">
-                    <div class="flex gap-2">
 
-                        <button onclick="window.print()"
-                            class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition-colors flex items-center gap-2">
-                            <i data-lucide="printer" class="w-4 h-4"></i> Print
-                        </button>
-                    </div>
-
-                    <!-- User Profile Dropdown -->
-                    <div class="relative">
-                        <button onclick="document.getElementById('userDropdown').classList.toggle('hidden')"
-                            class="flex items-center gap-3 focus:outline-none group p-1.5 pr-3 rounded-full hover:bg-white/60 transition-all border border-transparent hover:border-slate-200">
-                            <div
-                                class="w-9 h-9 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border border-white shadow-sm flex items-center justify-center overflow-hidden">
-                                <i data-lucide="user" class="w-4 h-4 text-slate-500"></i>
-                            </div>
-                            <div class="text-left hidden sm:block">
-                                <p class="text-xs font-bold text-slate-900 leading-tight" id="userName">User</p>
-                                <p class="text-[10px] text-slate-500 leading-tight" id="userRole">Member</p>
-                            </div>
-                            <i data-lucide="chevron-down"
-                                class="w-3 h-3 text-slate-400 ml-1 group-hover:text-slate-600 transition-colors"></i>
-                        </button>
-
-                        <div id="userDropdown"
-                            class="hidden absolute right-0 mt-3 w-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 ring-1 ring-black/5 divide-y divide-slate-100 transform origin-top-right transition-all z-50">
-                            <div class="p-2">
-                                <button onclick="handleLogout()"
-                                    class="w-full group flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left">
-                                    <i data-lucide="log-out"
-                                        class="w-4 h-4 text-red-400 group-hover:text-red-600 transition-colors mr-3"></i>
-                                    Sign Out
+                    <!-- Filter Panel -->
+                    <div class="glass-card p-6 mb-8">
+                        <!-- Search Bar -->
+                        <div class="mb-4">
+                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Quick
+                                Search</label>
+                            <div class="relative">
+                                <input type="text" id="qcoSearch" placeholder="Type QCO Number (e.g., QVJCO10008)"
+                                    onkeyup="handleSearch(event)"
+                                    class="w-full px-4 py-3 pl-10 pr-10 rounded-xl border-2 border-slate-200 focus:border-sky-400 focus:ring-2 focus:ring-sky-200 transition-all font-semibold text-slate-900 placeholder:text-slate-400">
+                                <i data-lucide="search"
+                                    class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none"></i>
+                                <button onclick="clearSearch()"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
                                 </button>
                             </div>
+                            <p id="searchStatus" class="text-xs text-slate-500 mt-1 hidden"></p>
                         </div>
-                    </div>
-                </div>
 
-            </div>
-        </div>
-        </div>
-    </nav>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Line
+                                    Number</label>
+                                <div class="relative">
+                                    <select id="lineSelector" onchange="handleLineChange(this.value)"
+                                        class="w-full appearance-none bg-white border-2 border-slate-200 text-slate-900 font-semibold py-3 pl-4 pr-10 rounded-xl hover:border-emerald-300 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer">
+                                        <option value="ALL">All Lines</option>
+                                    </select>
+                                    <i data-lucide="chevron-down"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
+                                </div>
+                            </div>
 
-    <!-- Main -->
-    <div id="mainApp" class="pt-32 pb-12 px-6 opacity-0">
-        <div class="max-w-[1400px] mx-auto">
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Select
+                                    QCO</label>
+                                <div class="relative">
+                                    <select id="qcoSelector" onchange="handleQCOChange(this.value)"
+                                        class="w-full appearance-none bg-white border-2 border-slate-200 text-slate-900 font-semibold py-3 pl-4 pr-10 rounded-xl hover:border-violet-300 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 cursor-pointer">
+                                        <option value="">Select Changeover...</option>
+                                    </select>
+                                    <i data-lucide="chevron-down"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
+                                </div>
+                            </div>
 
-            <div class="flex items-end justify-between mb-8">
-                <div>
-                    <h1 class="text-3xl md:text-4xl font-heading font-bold text-slate-900 tracking-tight mb-2">Startup
-                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-indigo-600">Loss
-                            Summary</span>
-                    </h1>
-                    <p class="text-slate-500 font-medium">Detailed breakdown for <span id="activeQCOName"
-                            class="font-bold text-slate-800">...</span></p>
-                </div>
-                <div class="text-right hidden md:block">
-                    <p class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Report Date</p>
-                    <p class="text-lg font-bold text-slate-900" id="reportDate">...</p>
-                </div>
-            </div>
-
-            <!-- Filter Panel -->
-            <div class="glass-card p-6 mb-8">
-                <!-- Search Bar -->
-                <div class="mb-4">
-                    <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Quick
-                        Search</label>
-                    <div class="relative">
-                        <input type="text" id="qcoSearch" placeholder="Type QCO Number (e.g., QVJCO10008)"
-                            onkeyup="handleSearch(event)"
-                            class="w-full px-4 py-3 pl-10 pr-10 rounded-xl border-2 border-slate-200 focus:border-sky-400 focus:ring-2 focus:ring-sky-200 transition-all font-semibold text-slate-900 placeholder:text-slate-400">
-                        <i data-lucide="search"
-                            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 pointer-events-none"></i>
-                        <button onclick="clearSearch()"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
-                            <i data-lucide="x" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                    <p id="searchStatus" class="text-xs text-slate-500 mt-1 hidden"></p>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Line
-                            Number</label>
-                        <div class="relative">
-                            <select id="lineSelector" onchange="handleLineChange(this.value)"
-                                class="w-full appearance-none bg-white border-2 border-slate-200 text-slate-900 font-semibold py-3 pl-4 pr-10 rounded-xl hover:border-emerald-300 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer">
-                                <option value="ALL">All Lines</option>
-                            </select>
-                            <i data-lucide="chevron-down"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Time
+                                    Period</label>
+                                <div class="relative">
+                                    <select id="timePeriodSelector" onchange="handleTimePeriodChange(this.value)"
+                                        class="w-full appearance-none bg-white border-2 border-slate-200 text-slate-900 font-semibold py-3 pl-4 pr-10 rounded-xl hover:border-indigo-300 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer">
+                                        <option value="single">Single QCO</option>
+                                        <option value="daily">Daily</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="monthly">Monthly</option>
+                                    </select>
+                                    <i data-lucide="chevron-down"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Select
-                            QCO</label>
-                        <div class="relative">
-                            <select id="qcoSelector" onchange="handleQCOChange(this.value)"
-                                class="w-full appearance-none bg-white border-2 border-slate-200 text-slate-900 font-semibold py-3 pl-4 pr-10 rounded-xl hover:border-violet-300 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 cursor-pointer">
-                                <option value="">Select Changeover...</option>
-                            </select>
-                            <i data-lucide="chevron-down"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
+                    <!-- Header Summary Stats -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <!-- Style Info -->
+                        <div class="glass-card p-6 border-l-4 border-l-violet-500 relative overflow-hidden group">
+                            <div
+                                class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <i data-lucide="shirt" class="w-16 h-16 text-violet-600"></i>
+                            </div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Style Name</p>
+                            <p class="text-xl font-heading font-bold text-slate-900 truncate" id="styleName">---</p>
+                            <p class="text-xs text-slate-500 mt-2 font-medium" id="coDate">---</p>
+                        </div>
+
+                        <!-- Total Time -->
+                        <div class="glass-card p-6 border-l-4 border-l-blue-500 relative overflow-hidden group">
+                            <div
+                                class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <i data-lucide="clock" class="w-16 h-16 text-blue-600"></i>
+                            </div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Time Taken
+                            </p>
+                            <div class="flex items-baseline gap-2">
+                                <p class="text-3xl font-heading font-bold text-slate-900" id="totalTimeMin">0</p>
+                                <span class="text-sm font-bold text-slate-500">min</span>
+                            </div>
+                            <p class="text-sm text-blue-600 font-bold mt-1"><span id="totalTimeHours">0</span> Hours</p>
+                        </div>
+
+                        <!-- Manpower & Cost Input -->
+                        <div class="glass-card p-6 border-l-4 border-l-amber-500 relative overflow-hidden group">
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Cost Parameters
+                            </p>
+                            <div class="flex flex-col gap-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-bold text-slate-600">Manpower</span>
+                                    <input type="number" id="inputManpower" value="0" min="0"
+                                        oninput="debouncedRecalculate()"
+                                        class="w-20 text-right font-bold text-slate-900 bg-amber-50 border border-amber-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-sm font-bold text-slate-600">Cost / Min ($)</span>
+                                    <input type="number" id="inputCostRate" value="0.11" step="0.01" min="0"
+                                        oninput="debouncedRecalculate()"
+                                        class="w-20 text-right font-bold text-slate-900 bg-amber-50 border border-amber-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Total Cost Impact -->
+                        <div
+                            class="glass-card p-6 border-l-4 border-l-rose-500 flex flex-col justify-center relative overflow-hidden">
+                            <div class="absolute right-0 top-0 p-4 opacity-10">
+                                <i data-lucide="dollar-sign" class="w-16 h-16 text-rose-600"></i>
+                            </div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Cost Impact
+                            </p>
+                            <p class="text-3xl font-heading font-bold text-rose-600" id="totalCostDisplay">$0.00</p>
+                            <p class="text-xs text-rose-400/80 mt-2 font-medium">Based on duration & manpower</p>
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Time
-                            Period</label>
-                        <div class="relative">
-                            <select id="timePeriodSelector" onchange="handleTimePeriodChange(this.value)"
-                                class="w-full appearance-none bg-white border-2 border-slate-200 text-slate-900 font-semibold py-3 pl-4 pr-10 rounded-xl hover:border-indigo-300 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 cursor-pointer">
-                                <option value="single">Single QCO</option>
-                                <option value="daily">Daily</option>
-                                <option value="weekly">Weekly</option>
-                                <option value="monthly">Monthly</option>
-                            </select>
-                            <i data-lucide="chevron-down"
-                                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
+                    <!-- Start/End Times -->
+                    <div
+                        class="glass-card p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900 text-white shadow-xl shadow-slate-900/10">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-white/10 rounded-lg"><i data-lucide="play-circle"
+                                    class="w-5 h-5 text-emerald-400"></i></div>
+                            <div>
+                                <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Changeover
+                                    Start</p>
+                                <p class="font-mono font-bold text-lg" id="startTimeDisplay">--/--/-- --:--</p>
+                            </div>
+                        </div>
+                        <div class="h-px w-full md:w-px md:h-12 bg-white/10"></div>
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 bg-white/10 rounded-lg"><i data-lucide="stop-circle"
+                                    class="w-5 h-5 text-rose-400"></i></div>
+                            <div>
+                                <p
+                                    class="text-[10px] uppercase tracking-wider text-slate-400 font-bold text-right md:text-left">
+                                    Changeover End</p>
+                                <p class="font-mono font-bold text-lg" id="endTimeDisplay">--/--/-- --:--</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Header Summary Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <!-- Style Info -->
-                <div class="glass-card p-6 border-l-4 border-l-violet-500 relative overflow-hidden group">
-                    <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <i data-lucide="shirt" class="w-16 h-16 text-violet-600"></i>
-                    </div>
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Style Name</p>
-                    <p class="text-xl font-heading font-bold text-slate-900 truncate" id="styleName">---</p>
-                    <p class="text-xs text-slate-500 mt-2 font-medium" id="coDate">---</p>
-                </div>
-
-                <!-- Total Time -->
-                <div class="glass-card p-6 border-l-4 border-l-blue-500 relative overflow-hidden group">
-                    <div class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <i data-lucide="clock" class="w-16 h-16 text-blue-600"></i>
-                    </div>
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Time Taken</p>
-                    <div class="flex items-baseline gap-2">
-                        <p class="text-3xl font-heading font-bold text-slate-900" id="totalTimeMin">0</p>
-                        <span class="text-sm font-bold text-slate-500">min</span>
-                    </div>
-                    <p class="text-sm text-blue-600 font-bold mt-1"><span id="totalTimeHours">0</span> Hours</p>
-                </div>
-
-                <!-- Manpower & Cost Input -->
-                <div class="glass-card p-6 border-l-4 border-l-amber-500 relative overflow-hidden group">
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Cost Parameters</p>
-                    <div class="flex flex-col gap-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm font-bold text-slate-600">Manpower</span>
-                            <input type="number" id="inputManpower" value="0" onchange="recalculateCosts()"
-                                class="w-20 text-right font-bold text-slate-900 bg-amber-50 border border-amber-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+                    <!-- Analytics Grid -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                        <!-- Loss Breakdown Chart -->
+                        <div class="glass-card p-8">
+                            <h3 class="text-lg font-heading font-bold text-slate-900 mb-6">Loss Time Breakdown (Chart)
+                            </h3>
+                            <div class="relative h-[300px]">
+                                <canvas id="lossChart"></canvas>
+                            </div>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm font-bold text-slate-600">Cost / Min ($)</span>
-                            <input type="number" id="inputCostRate" value="0.11" step="0.01"
-                                onchange="recalculateCosts()"
-                                class="w-20 text-right font-bold text-slate-900 bg-amber-50 border border-amber-200 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500">
+
+                        <!-- Top 5 Loss Times -->
+                        <div class="glass-card p-8">
+                            <h3 class="text-lg font-heading font-bold text-slate-900 mb-6 flex items-center gap-2">
+                                <i data-lucide="bar-chart-2" class="w-5 h-5 text-rose-500"></i>
+                                Top 5 Loss Times
+                            </h3>
+                            <div class="relative h-[300px]">
+                                <canvas id="topLossChart"></canvas>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Total Cost Impact -->
-                <div
-                    class="glass-card p-6 border-l-4 border-l-rose-500 flex flex-col justify-center relative overflow-hidden">
-                    <div class="absolute right-0 top-0 p-4 opacity-10">
-                        <i data-lucide="dollar-sign" class="w-16 h-16 text-rose-600"></i>
+                    <!-- Table -->
+                    <!-- Loss Time Breakdown Table -->
+                    <div class="glass-card p-8 overflow-hidden">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-heading font-bold text-slate-900">Loss Time Breakdown</h3>
+                            <span
+                                class="px-3 py-1 bg-slate-100 text-slate-500 text-xs font-bold rounded-full uppercase tracking-wider">Detailed
+                                Statement</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead>
+                                    <tr class="border-b-2 border-slate-100">
+                                        <th class="py-4 pl-4 font-bold text-slate-500 uppercase tracking-wider">
+                                            Department</th>
+                                        <th class="py-4 font-bold text-slate-500 uppercase tracking-wider text-right">
+                                            Time (Min)
+                                        </th>
+                                        <th class="py-4 font-bold text-slate-500 uppercase tracking-wider text-right">
+                                            Cost ($)
+                                        </th>
+                                        <th
+                                            class="py-4 pr-4 font-bold text-slate-500 uppercase tracking-wider text-right whitespace-nowrap">
+                                            % Share</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBody" class="text-slate-700 font-medium">
+                                    <!-- Injected -->
+                                </tbody>
+                                <tfoot id="tableFoot"
+                                    class="bg-slate-50 font-bold text-slate-900 border-t-2 border-slate-200">
+                                    <!-- Total Row -->
+                                </tfoot>
+                            </table>
+                        </div>
                     </div>
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Cost Impact</p>
-                    <p class="text-3xl font-heading font-bold text-rose-600" id="totalCostDisplay">$0.00</p>
-                    <p class="text-xs text-rose-400/80 mt-2 font-medium">Based on duration & manpower</p>
+
                 </div>
             </div>
 
-            <!-- Start/End Times -->
-            <div
-                class="glass-card p-6 mb-8 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900 text-white shadow-xl shadow-slate-900/10">
-                <div class="flex items-center gap-3">
-                    <div class="p-2 bg-white/10 rounded-lg"><i data-lucide="play-circle"
-                            class="w-5 h-5 text-emerald-400"></i></div>
-                    <div>
-                        <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Changeover Start</p>
-                        <p class="font-mono font-bold text-lg" id="startTimeDisplay">--/--/-- --:--</p>
+            <!-- Footer -->
+            <footer
+                class="mt-auto py-8 px-6 border-t border-slate-200/30 relative z-10 bg-white/30 backdrop-blur-md -mx-6 -mb-32 no-print">
+                <div class="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                    <p class="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase">© 2026 MANUFACTURING
+                        EXCELLENCE SYSTEM</p>
+                    <div class="flex gap-6">
+                        <a href="#" class="text-slate-400 hover:text-blue-500 transition-colors"><i data-lucide="github"
+                                class="w-4 h-4"></i></a>
+                        <a href="#" class="text-slate-400 hover:text-blue-500 transition-colors"><i
+                                data-lucide="twitter" class="w-4 h-4"></i></a>
+                        <a href="#" class="text-slate-400 hover:text-blue-500 transition-colors"><i data-lucide="mail"
+                                class="w-4 h-4"></i></a>
                     </div>
                 </div>
-                <div class="h-px w-full md:w-px md:h-12 bg-white/10"></div>
-                <div class="flex items-center gap-3">
-                    <div class="p-2 bg-white/10 rounded-lg"><i data-lucide="stop-circle"
-                            class="w-5 h-5 text-rose-400"></i></div>
-                    <div>
-                        <p
-                            class="text-[10px] uppercase tracking-wider text-slate-400 font-bold text-right md:text-left">
-                            Changeover End</p>
-                        <p class="font-mono font-bold text-lg" id="endTimeDisplay">--/--/-- --:--</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Analytics Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                <!-- Loss Breakdown Chart -->
-                <div class="glass-card p-8">
-                    <h3 class="text-lg font-heading font-bold text-slate-900 mb-6">Loss Time Breakdown (Chart)</h3>
-                    <div class="relative h-[300px]">
-                        <canvas id="lossChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Top 5 Loss Times -->
-                <div class="glass-card p-8">
-                    <h3 class="text-lg font-heading font-bold text-slate-900 mb-6 flex items-center gap-2">
-                        <i data-lucide="bar-chart-2" class="w-5 h-5 text-rose-500"></i>
-                        Top 5 Loss Times
-                    </h3>
-                    <div class="relative h-[300px]">
-                        <canvas id="topLossChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Table -->
-            <!-- Loss Time Breakdown Table -->
-            <div class="glass-card p-8 overflow-hidden">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-lg font-heading font-bold text-slate-900">Loss Time Breakdown</h3>
-                    <span
-                        class="px-3 py-1 bg-slate-100 text-slate-500 text-xs font-bold rounded-full uppercase tracking-wider">Detailed
-                        Statement</span>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead>
-                            <tr class="border-b-2 border-slate-100">
-                                <th class="py-4 pl-4 font-bold text-slate-500 uppercase tracking-wider">Department</th>
-                                <th class="py-4 font-bold text-slate-500 uppercase tracking-wider text-right">Time (Min)
-                                </th>
-                                <th class="py-4 font-bold text-slate-500 uppercase tracking-wider text-right">Cost ($)
-                                </th>
-                                <th
-                                    class="py-4 pr-4 font-bold text-slate-500 uppercase tracking-wider text-right whitespace-nowrap">
-                                    % Share</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody" class="text-slate-700 font-medium">
-                            <!-- Injected -->
-                        </tbody>
-                        <tfoot id="tableFoot" class="bg-slate-50 font-bold text-slate-900 border-t-2 border-slate-200">
-                            <!-- Total Row -->
-                        </tfoot>
-                    </table>
-                </div>
-            </div>
-
+            </footer>
         </div>
     </div>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay"
+        class="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-30 opacity-0 pointer-events-none transition-opacity duration-300"
+        onclick="window.navSystem?.closeSidebar()"></div>
 
     <script>
         // --- Configuration ---
@@ -436,7 +749,60 @@
         let db, auth;
         let currentLineSchedule = null;
 
+        // --- Navigation System ---
+        class NavigationSystem {
+            constructor() {
+                this.sidebar = document.getElementById('appSidebar');
+                this.toggleBtn = document.getElementById('navToggle');
+                this.backdrop = document.getElementById('sidebarBackdrop');
+                this.body = document.body;
+                this.isOpen = false;
+
+                this.init();
+            }
+
+            init() {
+                if (this.toggleBtn) {
+                    this.toggleBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.toggleSidebar();
+                    });
+                }
+
+                if (this.backdrop) {
+                    this.backdrop.addEventListener('click', () => this.closeSidebar());
+                }
+            }
+
+            toggleSidebar() {
+                this.isOpen = !this.isOpen;
+                this.updateState();
+            }
+
+            closeSidebar() {
+                this.isOpen = false;
+                this.updateState();
+            }
+
+            updateState() {
+                if (this.isOpen) {
+                    this.body.classList.add('sidebar-open');
+                    this.body.style.overflow = 'hidden'; // Lock body scroll
+                    this.toggleBtn?.classList.add('open');
+                } else {
+                    this.body.classList.remove('sidebar-open');
+                    this.body.style.overflow = '';
+                    this.toggleBtn?.classList.remove('open');
+                }
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize Navigation
+            if (!window.navSystem) {
+                window.navSystem = new NavigationSystem();
+            }
+
             // Strict Auth Check (Immediate)
             const user = JSON.parse(localStorage.getItem('qcoCurrentUser'));
             if (!user) {
@@ -449,15 +815,41 @@
                 return;
             }
 
-            const lenis = new Lenis();
+            const lenis = new Lenis({
+                wrapper: document.getElementById('appContent'),
+                content: document.getElementById('mainApp'),
+                smoothWheel: true,
+                duration: 1.2,
+                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                smoothTouch: false,
+                touchMultiplier: 1.5,
+                topOffset: 0
+            });
             function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
             requestAnimationFrame(raf);
 
+            // Scroll State
+            let isScrolling;
+            document.getElementById('appContent').addEventListener('scroll', () => {
+                document.body.classList.add('is-scrolling');
+                clearTimeout(isScrolling);
+                isScrolling = setTimeout(() => {
+                    document.body.classList.remove('is-scrolling');
+                }, 150);
+            }, { passive: true });
+
             const dot = document.querySelector('.cursor-dot');
             const outline = document.querySelector('.cursor-outline');
-            window.addEventListener('mousemove', e => {
-                gsap.to(dot, { x: e.clientX, y: e.clientY, duration: 0.1 });
-                gsap.to(outline, { x: e.clientX, y: e.clientY, duration: 0.5 });
+            let mouseTimeout;
+            window.addEventListener('mousemove', (e) => {
+                if (mouseTimeout) cancelAnimationFrame(mouseTimeout);
+                mouseTimeout = requestAnimationFrame(() => {
+                    gsap.to(dot, { x: e.clientX, y: e.clientY, duration: 0.1 });
+                    gsap.to(outline, { x: e.clientX, y: e.clientY, duration: 0.5 });
+                });
+            }, { passive: true });
+            window.addEventListener('beforeunload', () => {
+                window.removeEventListener('mousemove', handleMouseMove);
             });
 
             document.getElementById('reportDate').textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -501,18 +893,21 @@
             } catch (e) { console.warn(e); }
             const name = user.displayName || user.name || 'User';
             const role = user.role || 'Member';
-            const nameEl = document.getElementById('userName');
-            const roleEl = document.getElementById('userRole');
-            if (nameEl) nameEl.textContent = name;
-            if (roleEl) roleEl.textContent = role;
+            const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2);
+
+            document.querySelectorAll('.user-initials-display').forEach(el => el.textContent = initials);
+            document.querySelectorAll('.user-name-display').forEach(el => el.textContent = name);
+            document.querySelectorAll('.user-role-display').forEach(el => el.textContent = role.toUpperCase());
         }
 
         function handleLogout() {
-            auth.signOut().then(() => {
-                localStorage.removeItem('qcoCurrentUser');
-                localStorage.removeItem('qcoSessionActive');
-                window.location.href = '../index.html';
-            });
+            if (confirm("Are you sure you want to sign out?")) {
+                auth.signOut().then(() => {
+                    localStorage.removeItem('qcoCurrentUser');
+                    localStorage.removeItem('qcoSessionActive');
+                    window.location.href = '../index.html';
+                });
+            }
         }
 
         // --- Data Logic: Selection & Loading ---
@@ -531,11 +926,15 @@
                 });
 
                 const sortedLines = Array.from(lines).sort((a, b) => {
-                    // Natural sort for line numbers (e.g., "1", "1A", "2", "10")
-                    const numA = parseInt(a) || 0;
-                    const numB = parseInt(b) || 0;
-                    if (numA !== numB) return numA - numB;
-                    return a.localeCompare(b);
+                    // Extract numeric parts if possible for natural sort (e.g., "S-01" vs "S-10")
+                    const matchA = a.match(/\d+/);
+                    const matchB = b.match(/\d+/);
+                    if (matchA && matchB) {
+                        const numA = parseInt(matchA[0]);
+                        const numB = parseInt(matchB[0]);
+                        if (numA !== numB) return numA - numB;
+                    }
+                    return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
                 });
 
                 sortedLines.forEach(line => {
@@ -754,8 +1153,17 @@
             if (!currentQCOId) return;
 
             try {
+                // Show loading state
+                document.getElementById('activeQCOName').textContent = 'Loading...';
+                const tableBody = document.getElementById('tableBody');
+                if (tableBody) tableBody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-slate-400 font-medium"><i data-lucide="loader-2" class="w-5 h-5 animate-spin mx-auto mb-2"></i> Fetching report data...</td></tr>`;
+                lucide.createIcons();
+
                 const doc = await db.collection('changeovers').doc(currentQCOId).get();
-                if (!doc.exists) return;
+                if (!doc.exists) {
+                    document.getElementById('activeQCOName').textContent = 'QCO Not Found';
+                    return;
+                }
 
                 const data = doc.data();
 
@@ -763,20 +1171,23 @@
                 // Extract Line Key (e.g., "S-01" from "S-01-ABC-DEF-01")
                 const qcoNum = data.qcoNumber || "";
                 const parts = qcoNum.split('-');
-                if (parts.length >= 2) {
-                    const lineKey = parts.slice(0, 2).join('-');
-                    if (!currentLineSchedule || currentLineSchedule.lineKey !== lineKey) {
-                        try {
-                            const schedDoc = await db.collection('line_schedules').doc(lineKey).get();
-                            if (schedDoc.exists) {
-                                currentLineSchedule = { lineKey, ...schedDoc.data() };
-                                console.log("Loaded schedule for", lineKey, currentLineSchedule);
-                            } else {
-                                currentLineSchedule = null;
-                            }
-                        } catch (err) {
-                            console.error("Error loading schedule:", err);
+                let lineKey = data.lineNumber || "";
+                if (!lineKey && parts.length >= 2) {
+                    lineKey = parts.slice(0, 2).join('-');
+                }
+
+                if (lineKey && (!currentLineSchedule || currentLineSchedule.lineKey !== lineKey)) {
+                    try {
+                        const schedDoc = await db.collection('line_schedules').doc(lineKey).get();
+                        if (schedDoc.exists) {
+                            currentLineSchedule = { lineKey, ...schedDoc.data() };
+                            console.log("Loaded schedule for", lineKey, currentLineSchedule);
+                        } else {
+                            // Try fallback to RAW_LINE_SCHEDULES or similar? No, just null
+                            currentLineSchedule = null;
                         }
+                    } catch (err) {
+                        console.error("Error loading schedule:", err);
                     }
                 }
 
@@ -785,14 +1196,14 @@
                 currentReportData.operations = [];
 
                 // Prioritize saved manpower, fallback to allotted, default to 0
-                currentReportData.manpower = data.savedManpower !== undefined
+                currentReportData.manpower = Math.max(0, data.savedManpower !== undefined
                     ? parseInt(data.savedManpower)
-                    : (data.allotedWP ? parseInt(data.allotedWP) : 0);
+                    : (data.allotedWP ? parseInt(data.allotedWP) : 0));
 
                 // Prioritize saved cost rate, default to 0.11
-                currentReportData.costRate = data.savedCostRate !== undefined
+                currentReportData.costRate = Math.max(0, data.savedCostRate !== undefined
                     ? parseFloat(data.savedCostRate)
-                    : 0.11;
+                    : 0.11);
 
                 // Update Inputs
                 document.getElementById('inputManpower').value = currentReportData.manpower;
@@ -803,9 +1214,18 @@
                 document.getElementById('styleName').textContent = styleName;
                 document.getElementById('activeQCOName').textContent = data.qcoNumber || 'QCO';
 
-                // Format Date
-                const dateObj = data.date && data.date.toDate ? data.date.toDate() : (data.date ? new Date(data.date) : new Date());
-                document.getElementById('coDate').textContent = dateObj.toLocaleDateString('en-GB');
+                // Format Date (Handle Firestore Timestamp or Date String)
+                let coDateObj = new Date();
+                if (data.date) {
+                    if (typeof data.date.toDate === 'function') {
+                        coDateObj = data.date.toDate();
+                    } else {
+                        coDateObj = new Date(data.date);
+                    }
+                }
+                if (isNaN(coDateObj.getTime())) coDateObj = new Date();
+
+                document.getElementById('coDate').textContent = coDateObj.toLocaleDateString('en-GB');
 
                 // Log for debugging
                 console.log('📊 Summary Report Loaded:', {
@@ -1032,6 +1452,12 @@
             return totalMinutes;
         }
 
+        let calcTimeout = null;
+        function debouncedRecalculate() {
+            if (calcTimeout) clearTimeout(calcTimeout);
+            calcTimeout = setTimeout(recalculateCosts, 300);
+        }
+
         function recalculateCosts() {
             // Get inputs
             const manpower = parseFloat(document.getElementById('inputManpower').value) || 0;
@@ -1105,23 +1531,27 @@
                 return { dept, time, cost, share };
             });
 
-            // Render Table (Sorted by defined order or magnitude? Excel has fixed order. Let's filter useful ones first)
+            // Render Table
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = gridData.map(row => `
-                <tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
-                    <td class="py-4 pl-4 font-bold text-slate-700">${row.dept}</td>
-                    <td class="py-4 font-mono text-slate-600 text-right">${row.time.toFixed(2)}</td>
-                    <td class="py-4 font-mono ${row.cost > 0 ? 'text-rose-600 font-bold' : 'text-slate-400'} text-right">$${row.cost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                    <td class="py-4 pr-4 text-right">
-                        <div class="flex items-center justify-end gap-2">
-                            <span class="text-xs font-bold text-slate-500">${row.share.toFixed(0)}%</span>
-                            <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                <div class="h-full ${getDeptColor(row.dept)}" style="width: ${row.share}%"></div>
+            if (gridData.length === 0 || totalTime === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-10 text-center text-slate-400 font-medium">No recorded operations found</td></tr>`;
+            } else {
+                tbody.innerHTML = gridData.map(row => `
+                    <tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
+                        <td class="py-4 pl-4 font-bold text-slate-700">${row.dept}</td>
+                        <td class="py-4 font-mono text-slate-600 text-right">${row.time.toFixed(2)}</td>
+                        <td class="py-4 font-mono ${row.cost > 0 ? 'text-rose-600 font-bold' : 'text-slate-400'} text-right">$${row.cost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td class="py-4 pr-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <span class="text-xs font-bold text-slate-500">${row.share.toFixed(0)}%</span>
+                                <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full ${getDeptColor(row.dept)}" style="width: ${row.share}%"></div>
+                                </div>
                             </div>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+                        </td>
+                    </tr>
+                `).join('');
+            }
 
             // Totals Row
             document.getElementById('tableFoot').innerHTML = `
@@ -1141,80 +1571,95 @@
 
         function renderCharts(deptData, allOps) {
             // 1. Loss Time Breakdown (Pie)
-            const ctxLoss = document.getElementById('lossChart').getContext('2d');
+            const canvasLoss = document.getElementById('lossChart');
+            if (!canvasLoss) return;
+            const ctxLoss = canvasLoss.getContext('2d');
 
             // Filter non-zero for cleaner chart
             const activeDepts = deptData.filter(d => d.time > 0);
 
-            if (lossChartInstance) lossChartInstance.destroy();
+            if (lossChartInstance) {
+                lossChartInstance.destroy();
+                lossChartInstance = null;
+            }
 
-            lossChartInstance = new Chart(ctxLoss, {
-                type: 'doughnut',
-                data: {
-                    labels: activeDepts.map(d => d.dept),
-                    datasets: [{
-                        data: activeDepts.map(d => d.time),
-                        backgroundColor: activeDepts.map(d => getDeptColorHex(d.dept)),
-                        borderWidth: 0,
-                        hoverOffset: 4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { position: 'right', labels: { usePointStyle: true, font: { family: 'Inter', size: 11 } } },
-                        tooltip: {
-                            callbacks: {
-                                label: function (context) {
-                                    const val = context.raw || 0;
-                                    const percentage = ((val / activeDepts.reduce((s, i) => s + i.time, 0)) * 100).toFixed(0) + '%';
-                                    return ` ${context.label}: ${val.toFixed(1)}m (${percentage})`;
+            if (activeDepts.length > 0) {
+                lossChartInstance = new Chart(ctxLoss, {
+                    type: 'doughnut',
+                    data: {
+                        labels: activeDepts.map(d => d.dept),
+                        datasets: [{
+                            data: activeDepts.map(d => d.time),
+                            backgroundColor: activeDepts.map(d => getDeptColorHex(d.dept)),
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right', labels: { usePointStyle: true, font: { family: 'Inter', size: 11 } } },
+                            tooltip: {
+                                callbacks: {
+                                    label: function (context) {
+                                        const val = context.raw || 0;
+                                        const total = activeDepts.reduce((s, i) => s + i.time, 0);
+                                        const percentage = total > 0 ? ((val / total) * 100).toFixed(0) + '%' : '0%';
+                                        return ` ${context.label}: ${val.toFixed(1)}m (${percentage})`;
+                                    }
                                 }
                             }
-                        }
-                    },
-                    cutout: '70%'
-                }
-            });
+                        },
+                        cutout: '70%'
+                    }
+                });
+            }
 
             // 2. Top 5 Loss Times (Bar)
-            const ctxTop = document.getElementById('topLossChart').getContext('2d');
+            const canvasTop = document.getElementById('topLossChart');
+            if (!canvasTop) return;
+            const ctxTop = canvasTop.getContext('2d');
 
-            const top5 = [...allOps].sort((a, b) => b.duration - a.duration).slice(0, 5);
+            const top5 = [...allOps].sort((a, b) => b.duration - a.duration).slice(0, 5).filter(o => o.duration > 0);
 
-            if (topLossChartInstance) topLossChartInstance.destroy();
+            if (topLossChartInstance) {
+                topLossChartInstance.destroy();
+                topLossChartInstance = null;
+            }
 
-            topLossChartInstance = new Chart(ctxTop, {
-                type: 'bar',
-                data: {
-                    labels: top5.map(o => o.name.length > 20 ? o.name.substring(0, 20) + '...' : o.name),
-                    datasets: [{
-                        label: 'Duration (Min)',
-                        data: top5.map(o => o.duration),
-                        backgroundColor: '#f43f5e',
-                        borderRadius: 6,
-                        barThickness: 24
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    indexAxis: 'y', // Horizontal Layout
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                title: (items) => top5[items[0].dataIndex].name // Full name
-                            }
-                        }
+            if (top5.length > 0) {
+                topLossChartInstance = new Chart(ctxTop, {
+                    type: 'bar',
+                    data: {
+                        labels: top5.map(o => o.name.length > 20 ? o.name.substring(0, 20) + '...' : o.name),
+                        datasets: [{
+                            label: 'Duration (Min)',
+                            data: top5.map(o => o.duration),
+                            backgroundColor: '#f43f5e',
+                            borderRadius: 6,
+                            barThickness: 24
+                        }]
                     },
-                    scales: {
-                        x: { grid: { display: false }, beginAtZero: true },
-                        y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y', // Horizontal Layout
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    title: (items) => top5[items[0].dataIndex].name // Full name
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { grid: { display: false }, beginAtZero: true },
+                            y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                        }
                     }
-                }
-            });
+                });
+            }
         }
 
         function getDeptColor(dept) {
@@ -1236,7 +1681,10 @@
                 'TRIMS': '#8b5cf6',
                 'QUALITY': '#f59e0b',
                 'IE': '#6366f1',
-                'TECHNICAL': '#a855f7'
+                'TECHNICAL': '#a855f7',
+                'MERCHANDISER': '#ec4899',
+                'PLANNING': '#06b6d4',
+                'STORE': '#71717a'
             };
             return map[dept] || '#94a3b8';
         }

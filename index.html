@@ -405,9 +405,10 @@
 
         /* Legacy Styles */
         .glass {
-            background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(16px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
 
         .login-glass {
@@ -453,6 +454,40 @@
 
         .parallax-layer {
             will-change: transform;
+        }
+
+        /* --- PERFORMANCE OPTIMIZATION --- */
+        #appContent {
+            transform: translateZ(0);
+            will-change: transform;
+            backface-visibility: hidden;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
+        }
+
+        body.is-scrolling .glass,
+        body.is-scrolling .glass-card {
+            backdrop-filter: none;
+            transition: backdrop-filter 0.3s ease;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+
+            .glass,
+            .glass-card {
+                backdrop-filter: none !important;
+                background: rgba(255, 255, 255, 0.95) !important;
+            }
+
+            .animate-blob {
+                animation: none !important;
+                opacity: 0.05 !important;
+            }
+
+            .parallax-layer {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -553,89 +588,87 @@
         <!-- Navigation - SCROLLABLE -->
         <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-6">
             <div>
-                <div>
-                    <div class="section-header">General</div>
-                    <ul class="space-y-1">
-                        <li>
-                            <a href="index.html"
-                                class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
-                                <i data-lucide="home" class="w-4 h-4 text-slate-500"></i>
-                                <span>Home</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="pages/dashboard.html"
-                                class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
-                                <i data-lucide="line-chart" class="w-4 h-4 text-slate-500"></i>
-                                <span>Dashboard</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                <div>
-                    <div class="section-header">Workflow</div>
-                    <ul class="space-y-1">
-                        <li>
-                            <a href="pages/creation.html"
-                                class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
-                                <i data-lucide="pen-tool" class="w-4 h-4 text-slate-500"></i>
-                                <span>QCO Creation</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="pages/operations.html"
-                                class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
-                                <i data-lucide="list-ordered" class="w-4 h-4 text-slate-500"></i>
-                                <span>Operations</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="pages/recorder.html"
-                                class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
-                                <i data-lucide="mic" class="w-4 h-4 text-slate-500"></i>
-                                <span>Recorder</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                <div>
-                    <div class="section-header">Planning</div>
-                    <ul class="space-y-1">
-                        <li>
-                            <a href="pages/planning.html"
-                                class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
-                                <i data-lucide="layout-grid" class="w-4 h-4 text-slate-500"></i>
-                                <span>Planning</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="pages/schedule.html"
-                                class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
-                                <i data-lucide="calendar" class="w-4 h-4 text-slate-500"></i>
-                                <span>Schedule</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-                <div>
-                    <div class="section-header">Utilities</div>
-                    <ul class="space-y-1">
-                        <li>
-                            <a href="pages/checklist.html"
-                                class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
-                                <i data-lucide="clipboard-list" class="w-4 h-4 text-slate-500"></i>
-                                <span>Checklist</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="pages/summary.html"
-                                class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
-                                <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
-                                <span>Reports</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+                <div class="section-header">General</div>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="index.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors active">
+                            <i data-lucide="home" class="w-4 h-4 text-slate-500"></i>
+                            <span>Home</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="pages/dashboard.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="line-chart" class="w-4 h-4 text-slate-500"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-header">Workflow</div>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="pages/creation.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="pen-tool" class="w-4 h-4 text-slate-500"></i>
+                            <span>QCO Creation</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="pages/operations.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="list-ordered" class="w-4 h-4 text-slate-500"></i>
+                            <span>Operations</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-header">Planning</div>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="pages/planning.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="layout-grid" class="w-4 h-4 text-slate-500"></i>
+                            <span>Planning</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="pages/schedule.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="calendar" class="w-4 h-4 text-slate-500"></i>
+                            <span>Schedule</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-header">Utilities</div>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="pages/checklist.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="clipboard-list" class="w-4 h-4 text-slate-500"></i>
+                            <span>Checklist</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="pages/recorder.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="mic" class="w-4 h-4 text-slate-500"></i>
+                            <span>Recorder</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="pages/summary.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
         </nav>
 
@@ -1472,14 +1505,32 @@
         function initLenis() {
             lenis = new Lenis({
                 wrapper: document.getElementById('appContent'),
-                content: document.getElementById('appContent'),
-                duration: 1.2, // Slightly reduced for snappiness
+                content: document.getElementById('mainApp'), // Optimization: Target content wrapper
+                duration: 1.2,
                 easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-                smooth: true,
-                mouseMultiplier: 1,
+                smoothWheel: true,
+                smoothTouch: false, // Native feel on touch devices
+                touchMultiplier: 1.5,
+                wheelMultiplier: 1,
             });
-            function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+
+            function raf(time) {
+                lenis.raf(time);
+                requestAnimationFrame(raf);
+            }
             requestAnimationFrame(raf);
+
+            // Scroll State Detection
+            let isScrolling;
+            document.getElementById('appContent').addEventListener('scroll', () => {
+                document.body.classList.add('is-scrolling');
+                clearTimeout(isScrolling);
+                isScrolling = setTimeout(() => {
+                    document.body.classList.remove('is-scrolling');
+                }, 150);
+            }, {
+                passive: true
+            });
         }
 
         function initCursor() {
@@ -1493,12 +1544,19 @@
             const xOutlineTo = gsap.quickTo(outline, "x", { duration: 0.4, ease: "power2.out" });
             const yOutlineTo = gsap.quickTo(outline, "y", { duration: 0.4, ease: "power2.out" });
 
+            // Optimized Mouse Mover using RAF
+            let mouseTimeout;
             window.addEventListener('mousemove', (e) => {
-                xDotTo(e.clientX);
-                yDotTo(e.clientY);
-                xOutlineTo(e.clientX);
-                yOutlineTo(e.clientY);
-            }, { passive: true });
+                if (mouseTimeout) cancelAnimationFrame(mouseTimeout);
+                mouseTimeout = requestAnimationFrame(() => {
+                    xDotTo(e.clientX);
+                    yDotTo(e.clientY);
+                    xOutlineTo(e.clientX);
+                    yOutlineTo(e.clientY);
+                });
+            }, {
+                passive: true
+            });
 
             const interactiveEls = document.querySelectorAll('a, button, input');
             interactiveEls.forEach(el => {

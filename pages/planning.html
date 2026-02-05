@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Planning Input | QCO Portal</title>
 
     <!-- Frameworks & Icons -->
@@ -65,6 +66,123 @@
     </script>
 
     <style>
+        /* Sidebar Width Variable */
+        :root {
+            --sidebar-width: 280px;
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --sidebar-width: 85vw;
+            }
+        }
+
+        /* Hamburger Button - Squircle Glassmorphism Sync with Dashboard */
+        .hamburger-btn {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.375rem;
+            width: 3rem;
+            height: 3rem;
+            padding: 0.875rem;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(240, 249, 255, 0.9));
+            border-radius: 1rem;
+            border: 0.09375rem solid rgba(255, 255, 255, 1);
+            box-shadow:
+                0 0.5rem 1.5rem -0.25rem rgba(14, 165, 233, 0.25),
+                0 0.25rem 0.5rem -0.125rem rgba(14, 165, 233, 0.15),
+                inset 0 0.0625rem 0 rgba(255, 255, 255, 1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .hamburger-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(6, 182, 212, 0.05));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .hamburger-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow:
+                0 12px 40px -8px rgba(14, 165, 233, 0.25),
+                0 6px 20px -4px rgba(0, 0, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 1);
+            border-color: rgba(14, 165, 233, 0.3);
+        }
+
+        .hamburger-btn:hover::before {
+            opacity: 1;
+        }
+
+        .hamburger-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .hamburger-line {
+            width: 100%;
+            height: 0.15625rem;
+            background: linear-gradient(90deg, #0ea5e9, #06b6d4);
+            border-radius: 0.125rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center;
+            box-shadow: 0 0.0625rem 0.125rem rgba(14, 165, 233, 0.3);
+        }
+
+        .hamburger-btn.open {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(6, 182, 212, 0.1));
+            border-color: rgba(14, 165, 233, 0.4);
+        }
+
+        .hamburger-btn.open .hamburger-line:first-child {
+            transform: translateY(0.25rem) rotate(45deg);
+            background: linear-gradient(90deg, #0284c7, #0891b2);
+        }
+
+        .hamburger-btn.open .hamburger-line:last-child {
+            transform: translateY(-0.25rem) rotate(-45deg);
+            background: linear-gradient(90deg, #0284c7, #0891b2);
+        }
+
+        /* Touch target for mobile */
+        .touch-target {
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Section header in sidebar */
+        .section-header {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+            padding: 0 1rem 0.5rem;
+            margin-bottom: 0.25rem;
+            border-bottom: 1px solid rgba(241, 245, 249, 0.5);
+        }
+
+        /* Custom scrollbar for sidebar */
+        #appSidebar nav::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #appSidebar nav::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 2px;
+        }
+
         /* Base & Typography */
         body {
             background-color: #f8fafc;
@@ -82,12 +200,41 @@
         }
 
         /* Glassmorphism Utilities */
+        /* --- PERFORMANCE OPTIMIZATION --- */
+        #appContent {
+            transform: translateZ(0);
+            will-change: transform;
+            backface-visibility: hidden;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
+        }
+
+        body.is-scrolling .glass,
+        body.is-scrolling .glass-card {
+            backdrop-filter: none;
+            transition: backdrop-filter 0.3s ease;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+
+            .glass,
+            .glass-card {
+                backdrop-filter: none !important;
+                background: rgba(255, 255, 255, 0.95) !important;
+            }
+
+            .animate-blob {
+                animation: none !important;
+                opacity: 0.05 !important;
+            }
+        }
+
         .glass {
-            background: rgba(255, 255, 255, 0.65);
+            background: rgba(255, 255, 255, 0.4);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
 
         .glass-card {
@@ -98,8 +245,6 @@
             border-radius: 2rem;
             box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.05);
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            /* transform-style: preserve-3d; */
-            /* Disabled for complex nested layouts */
         }
 
         .glass-card:hover {
@@ -212,7 +357,90 @@
             transform: translateX(0);
             opacity: 1;
         }
+
+        /* Mobile Optimization */
+        @media (max-width: 768px) {
+            #mainApp {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+        }
+
+        /* --- Retractable Sidebar --- */
+        .retractable-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.6);
+            z-index: 50;
+            transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 10px 0 30px -10px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar-open .retractable-sidebar {
+            transform: translateX(0);
+        }
+
+        .sidebar-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.2);
+            backdrop-filter: blur(4px);
+            z-index: 40;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        .sidebar-open .sidebar-backdrop {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Nav Item Styles */
+        .nav-item {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item.active {
+            background: white;
+            color: #0ea5e9;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+        }
+
+        .nav-item.active i {
+            color: #0ea5e9;
+        }
+
+        /* Hide Scrollbar for specific elements */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
+    <!-- Mobile Logic -->
+    <script>
+        window.initMobileBehavior = () => {
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                // Disable heavy animations/effects if needed
+            }
+        };
+    </script>
 </head>
 
 <body class="relative min-h-screen selection:bg-blue-100 selection:text-blue-900">
@@ -245,290 +473,421 @@
         </div>
     </div>
 
-    <!-- Navigation -->
-    <nav class="fixed top-0 w-full z-40 glass transition-all duration-300" id="navbar">
-        <div class="max-w-[1600px] mx-auto px-6">
-            <div class="flex justify-between h-24 items-center relative">
+    <!-- Sidebar Backdrop -->
+    <div id="sidebarBackdrop" class="sidebar-backdrop" onclick="window.navSystem?.closeSidebar()"></div>
 
-                <!-- Centered Navigation -->
-                <div class="hidden xl:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                    <div
-                        class="flex items-center gap-1 bg-white/50 p-1.5 rounded-full border border-white/20 shadow-sm backdrop-blur-md">
-                        <a href="../index.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Home</a>
-                        <a href="dashboard.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Dashboard</a>
-                        <a href="creation.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Creation</a>
-                        <a href="schedule.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Schedule</a>
-                        <a href="checklist.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Checklist</a>
-                        <a href="recorder.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Recorder</a>
-                        <a href="summary.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Reports</a>
-                        <a href="planning.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-blue-900 bg-blue-100 shadow-sm transition-all">Planning</a>
-                    </div>
+    <!-- Retractable Sidebar -->
+    <aside id="appSidebar" class="retractable-sidebar">
+        <!-- Sidebar Header -->
+        <div class="h-20 flex items-center px-6 border-b border-slate-100/50 sidebar-header flex-shrink-0">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                    <i data-lucide="layers" class="w-5 h-5"></i>
                 </div>
-
-                <!-- Logo -->
-                <a href="../index.html" class="flex items-center gap-4 group cursor-pointer">
-                    <div
-                        class="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:rotate-12 transition-transform duration-500 ease-out">
-                        <i data-lucide="layers" class="w-6 h-6"></i>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="font-heading font-bold text-slate-900 text-xl tracking-tight">QCO Portal</span>
-                        <span class="text-xs text-slate-500 font-medium tracking-wide">Manufacturing Excellence</span>
-                    </div>
-                </a>
-
-                <!-- User Profile & Actions -->
-                <div class="flex items-center gap-4">
-                    <div class="relative group">
-                        <button
-                            class="flex items-center gap-3 focus:outline-none p-1.5 pr-3 rounded-full hover:bg-white/60 transition-all border border-transparent hover:border-white/50">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md flex items-center justify-center text-sm font-bold"
-                                id="userInitials">JD</div>
-                            <div class="text-left hidden sm:block">
-                                <p class="text-xs font-bold text-slate-900 leading-tight" id="userName">John Doe</p>
-                                <p class="text-[10px] text-slate-500 leading-tight" id="userRole">Administrator</p>
-                            </div>
-                            <i data-lucide="chevron-down"
-                                class="w-3 h-3 text-slate-400 ml-1 group-hover:text-slate-600 transition-colors"></i>
-                        </button>
-                        <!-- Dropdown -->
-                        <div
-                            class="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all transform origin-top-right z-50">
-                            <div class="p-2">
-                                <button onclick="logout()"
-                                    class="w-full text-left px-4 py-2 rounded-xl text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2">
-                                    <i data-lucide="log-out" class="w-4 h-4"></i> Logout
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                <div>
+                    <h1 class="text-lg font-heading font-bold text-slate-900 tracking-tight">QCO Portal</h1>
+                    <p class="text-[10px] text-slate-500 font-medium tracking-wide">Manufacturing Excellence</p>
                 </div>
             </div>
         </div>
-    </nav>
 
-    <!-- Main Application -->
-    <div id="mainApp" class="pt-32 pb-12 px-6 opacity-0">
-        <div class="max-w-[1600px] mx-auto">
-
-            <!-- Page Header -->
-            <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-                <div>
-                    <h1
-                        class="split-header text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-slate-900 tracking-tight mb-4">
-                        Planning <span
-                            class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Input</span>
-                    </h1>
-                    <p class="text-slate-500 text-lg max-w-2xl leading-relaxed">
-                        Visualize and analyze production schedules efficiently.
-                    </p>
-                </div>
-
-                <div class="flex flex-col items-end gap-4">
-                    <!-- Search Bar (Initially Hidden) -->
-                    <div id="searchContainer" class="hidden relative group animate-[fadeIn_0.5s_ease-out]">
-                        <i data-lucide="search"
-                            class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 group-focus-within:text-blue-500 transition-colors"></i>
-                        <input type="text" id="planSearch" onkeyup="window.PlanningLogic.handleSearch(this.value)"
-                            placeholder="Search Name, Line, Supervisor..."
-                            class="pl-12 pr-4 py-3 rounded-2xl bg-white border border-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 w-72 transition-all">
-                    </div>
-
-                    <!-- View Controls (Normally Hidden) -->
-                    <div class="flex gap-3 opacity-0 transition-all duration-300 transform translate-y-4"
-                        id="viewControls" style="display: none;">
-                        <button onclick="switchView('dashboard')" id="btn-dashboard"
-                            class="px-6 py-3 rounded-2xl bg-slate-900 text-white font-semibold shadow-xl shadow-blue-900/20 hover:scale-105 transition-all">Dashboard</button>
-                        <button onclick="switchView('timeline')" id="btn-timeline"
-                            class="px-6 py-3 rounded-2xl bg-white/60 text-slate-600 font-semibold hover:bg-white hover:text-blue-600 transition-all">Timeline</button>
-                        <button onclick="switchView('grid')" id="btn-grid"
-                            class="px-6 py-3 rounded-2xl bg-white/60 text-slate-600 font-semibold hover:bg-white hover:text-blue-600 transition-all">Grid</button>
-                    </div>
-                </div>
+        <!-- Navigation - SCROLLABLE -->
+        <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-6">
+            <div>
+                <div class="section-header">General</div>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="../index.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="home" class="w-4 h-4 text-slate-500"></i>
+                            <span>Home</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="dashboard.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="line-chart" class="w-4 h-4 text-slate-500"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
+            <div>
+                <div class="section-header">Workflow</div>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="creation.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="pen-tool" class="w-4 h-4 text-slate-500"></i>
+                            <span>QCO Creation</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="operations.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="list-ordered" class="w-4 h-4 text-slate-500"></i>
+                            <span>Operations</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-header">Planning</div>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="planning.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors active">
+                            <i data-lucide="layout-grid" class="w-4 h-4 text-slate-500"></i>
+                            <span>Planning</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="schedule.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="calendar" class="w-4 h-4 text-slate-500"></i>
+                            <span>Schedule</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-header">Utilities</div>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="checklist.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="clipboard-list" class="w-4 h-4 text-slate-500"></i>
+                            <span>Checklist</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="recorder.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="mic" class="w-4 h-4 text-slate-500"></i>
+                            <span>Recorder</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="summary.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
 
-            <!-- File Upload State -->
-            <div id="uploadState"
-                class="glass-card p-12 text-center border-dashed border-2 border-slate-300 hover:border-blue-400 transition-colors">
+        <!-- Sidebar Footer -->
+        <div class="p-4 border-t border-slate-100/50 sidebar-footer flex-shrink-0">
+            <div
+                class="flex items-center justify-center gap-2 text-[10px] font-bold text-slate-400 tracking-widest uppercase">
+                <i data-lucide="lock" class="w-3 h-3 text-slate-300"></i> Secure Access
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main App Container Structure -->
+    <div id="appShell" class="flex flex-col h-screen overflow-hidden">
+        <!-- Header with Hamburger Menu -->
+        <header id="appHeader"
+            class="glass h-20 flex items-center justify-between px-4 md:px-8 z-20 flex-shrink-0 sticky top-0 border-b border-white/20">
+            <!-- Hamburger Menu Button -->
+            <!-- Hamburger Menu Button -->
+            <button id="navToggle" class="hamburger-btn touch-target" aria-label="Toggle navigation">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+
+            <!-- Right Actions (User, etc.) -->
+            <div class="flex items-center gap-4">
+                <!-- System Status -->
                 <div
-                    class="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
-                    <i data-lucide="upload-cloud" class="w-10 h-10"></i>
+                    class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold text-emerald-700 tracking-wider uppercase">System Online</span>
                 </div>
-                <h3 class="text-2xl font-bold text-slate-900 mb-3">Import Production Schedule</h3>
-                <p class="text-slate-500 mb-8 max-w-md mx-auto">Upload your Excel planning sheet (.xlsx). The system
-                    will automatically parse Supervisor, Target, and Manpower data.</p>
 
-                <label
-                    class="relative inline-flex cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl font-bold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-1 transition-all group">
-                    <i data-lucide="file-spreadsheet" class="w-5 h-5 mr-2 group-hover:animate-bounce"></i>
-                    <span>Select Excel File</span>
-                    <!-- FIXED: Removed onchange attribute to prevent ReferenceError -->
-                    <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden">
-                </label>
-
-                <p id="loadingText"
-                    class="hidden mt-6 text-blue-600 font-bold animate-pulse flex items-center justify-center gap-2">
-                    <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processing workbook...
-                </p>
+                <!-- User Profile -->
+                <div class="relative group">
+                    <button
+                        class="flex items-center gap-3 focus:outline-none group p-1.5 pr-3 rounded-full hover:bg-white/60 transition-all border border-transparent hover:border-slate-200">
+                        <div
+                            class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 border border-white shadow-sm flex items-center justify-center overflow-hidden">
+                            <span class="text-xs font-bold text-white user-initials-display">??</span>
+                        </div>
+                        <div class="text-left hidden md:block">
+                            <p class="text-xs font-bold text-slate-900 user-name-display leading-tight">User</p>
+                            <p
+                                class="text-[10px] text-slate-500 user-role-display leading-tight uppercase font-semibold">
+                                Member</p>
+                        </div>
+                        <i data-lucide="chevron-down"
+                            class="w-3 h-3 text-slate-400 ml-1 group-hover:text-slate-600 transition-colors"></i>
+                    </button>
+                    <!-- Profile Dropdown -->
+                    <div
+                        class="absolute right-0 mt-2 w-56 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 ring-1 ring-slate-900/5 transform opacity-0 scale-95 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 origin-top-right z-50">
+                        <div class="p-2">
+                            <button onclick="handleLogout()"
+                                class="w-full group flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left">
+                                <i data-lucide="log-out"
+                                    class="w-4 h-4 text-red-400 group-hover:text-red-600 transition-colors mr-3"></i>
+                                Sign Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
+        </header>
 
-            <!-- Content Area -->
-            <div id="contentArea" class="hidden space-y-8">
+        <!-- Scrollable Content Area -->
+        <div id="appContent" class="flex-1 relative overflow-y-auto flex flex-col">
+            <div id="mainApp" class="flex-1 pt-8 pb-32 px-6 opacity-0">
+                <div class="max-w-[1600px] mx-auto w-full">
 
-                <!-- Dashboard View -->
-                <div id="view-dashboard" class="view-section space-y-8">
-                    <!-- Stats Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <!-- Stat 1 -->
-                        <div class="glass-card p-6 flex flex-col justify-between">
-                            <div class="flex justify-between items-start mb-4">
-                                <div
-                                    class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shadow-sm">
-                                    <i data-lucide="layers" class="w-5 h-5"></i>
-                                </div>
-                                <span
-                                    class="px-2 py-1 rounded-lg bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider">Styles</span>
-                            </div>
-                            <div>
-                                <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">Active
-                                    Styles</h3>
-                                <p class="text-3xl font-heading font-bold text-slate-900" id="stat-styles">0</p>
-                            </div>
+                    <!-- Page Header -->
+                    <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                        <div>
+                            <h1
+                                class="split-header text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-slate-900 tracking-tight mb-4">
+                                Planning <span
+                                    class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Input</span>
+                            </h1>
+                            <p class="text-slate-500 text-lg max-w-2xl leading-relaxed">
+                                Visualize and analyze production schedules efficiently.
+                            </p>
                         </div>
 
-                        <!-- Stat 2 -->
-                        <div class="glass-card p-6 flex flex-col justify-between">
-                            <div class="flex justify-between items-start mb-4">
-                                <div
-                                    class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shadow-sm">
-                                    <i data-lucide="target" class="w-5 h-5"></i>
-                                </div>
-                                <span
-                                    class="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wider">Output</span>
+                        <div class="flex flex-col items-end gap-4">
+                            <!-- Search Bar (Initially Hidden) -->
+                            <div id="searchContainer" class="hidden relative group animate-[fadeIn_0.5s_ease-out]">
+                                <i data-lucide="search"
+                                    class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 group-focus-within:text-blue-500 transition-colors"></i>
+                                <input type="text" id="planSearch"
+                                    onkeyup="window.PlanningLogic.handleSearch(this.value)"
+                                    placeholder="Search Name, Line, Supervisor..."
+                                    class="pl-12 pr-4 py-3 rounded-2xl bg-white border border-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 w-72 transition-all">
                             </div>
-                            <div>
-                                <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">Total
-                                    Pieces</h3>
-                                <p class="text-3xl font-heading font-bold text-slate-900" id="stat-target">0</p>
-                            </div>
-                        </div>
 
-                        <!-- Stat 3 -->
-                        <div class="glass-card p-6 flex flex-col justify-between">
-                            <div class="flex justify-between items-start mb-4">
-                                <div
-                                    class="w-10 h-10 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center shadow-sm">
-                                    <i data-lucide="users" class="w-5 h-5"></i>
-                                </div>
-                                <span
-                                    class="px-2 py-1 rounded-lg bg-orange-50 text-orange-600 text-[10px] font-bold uppercase tracking-wider">Labor</span>
-                            </div>
-                            <div>
-                                <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1"
-                                    id="stat-manpower-label">Avg Manpower</h3>
-                                <p class="text-3xl font-heading font-bold text-slate-900" id="stat-manpower">0</p>
-                            </div>
-                        </div>
-
-                        <!-- Stat 4 (Issues) -->
-                        <div class="glass-card p-6 flex flex-col justify-between">
-                            <div class="flex justify-between items-start mb-4">
-                                <div
-                                    class="w-10 h-10 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center shadow-sm">
-                                    <i data-lucide="alert-circle" class="w-5 h-5"></i>
-                                </div>
-                                <span
-                                    class="px-2 py-1 rounded-lg bg-rose-50 text-rose-600 text-[10px] font-bold uppercase tracking-wider">Alerts</span>
-                            </div>
-                            <div>
-                                <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">Total
-                                    Issues</h3>
-                                <p class="text-3xl font-heading font-bold text-slate-900" id="anomaly-count">0</p>
+                            <!-- View Controls (Normally Hidden) -->
+                            <div class="flex gap-3 opacity-0 transition-all duration-300 transform translate-y-4"
+                                id="viewControls" style="display: none;">
+                                <button onclick="switchView('dashboard')" id="btn-dashboard"
+                                    class="px-6 py-3 rounded-2xl bg-slate-900 text-white font-semibold shadow-xl shadow-blue-900/20 hover:scale-105 transition-all">Dashboard</button>
+                                <button onclick="switchView('timeline')" id="btn-timeline"
+                                    class="px-6 py-3 rounded-2xl bg-white/60 text-slate-600 font-semibold hover:bg-white hover:text-blue-600 transition-all">Timeline</button>
+                                <button onclick="switchView('grid')" id="btn-grid"
+                                    class="px-6 py-3 rounded-2xl bg-white/60 text-slate-600 font-semibold hover:bg-white hover:text-blue-600 transition-all">Grid</button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Main Dashboard Content -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <!-- Style Matrix (Full Width) -->
-                        <div class="lg:col-span-3">
-                            <div id="dashboard-matrix" class="glass-card overflow-hidden">
-                                <!-- Injected by PlanningLogic.renderDashboard -->
-                            </div>
+                    <!-- File Upload State -->
+                    <div id="uploadState"
+                        class="glass-card p-12 text-center border-dashed border-2 border-slate-300 hover:border-blue-400 transition-colors">
+                        <div
+                            class="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                            <i data-lucide="upload-cloud" class="w-10 h-10"></i>
                         </div>
+                        <h3 class="text-2xl font-bold text-slate-900 mb-3">Import Production Schedule</h3>
+                        <p class="text-slate-500 mb-8 max-w-md mx-auto">Upload your Excel planning sheet (.xlsx). The
+                            system will automatically parse Supervisor, Target, and Manpower data.</p>
 
-                        <!-- Factory Goals -->
-                        <div class="lg:col-span-1">
-                            <div id="dashboard-goals" class="glass-card h-[500px] flex flex-col overflow-hidden">
-                                <!-- Injected by PlanningLogic.renderDashboard -->
-                            </div>
-                        </div>
+                        <label
+                            class="relative inline-flex cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl font-bold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-1 transition-all group">
+                            <i data-lucide="file-spreadsheet" class="w-5 h-5 mr-2 group-hover:animate-bounce"></i>
+                            <span>Select Excel File</span>
+                            <!-- FIXED: Removed onchange attribute to prevent ReferenceError -->
+                            <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden">
+                        </label>
 
-                        <!-- Critical Items -->
-                        <div class="lg:col-span-2">
-                            <div class="glass-card h-[500px] flex flex-col overflow-hidden">
-                                <div
-                                    class="p-6 border-b border-slate-100 flex justify-between items-center bg-white/50">
-                                    <h3 class="text-lg font-heading font-bold text-slate-900 flex items-center gap-2">
-                                        <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500"></i>
-                                        System Anomalies & Remarks
-                                    </h3>
+                        <p id="loadingText"
+                            class="hidden mt-6 text-blue-600 font-bold animate-pulse flex items-center justify-center gap-2">
+                            <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processing workbook...
+                        </p>
+                    </div>
+
+                    <!-- Content Area -->
+                    <div id="contentArea" class="hidden space-y-8">
+
+                        <!-- Dashboard View -->
+                        <div id="view-dashboard" class="view-section space-y-8">
+                            <!-- Stats Grid -->
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                <!-- Stat 1 -->
+                                <div class="glass-card p-6 flex flex-col justify-between">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <div
+                                            class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center shadow-sm">
+                                            <i data-lucide="layers" class="w-5 h-5"></i>
+                                        </div>
+                                        <span
+                                            class="px-2 py-1 rounded-lg bg-blue-50 text-blue-600 text-[10px] font-bold uppercase tracking-wider">Styles</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">
+                                            Active Styles</h3>
+                                        <p class="text-3xl font-heading font-bold text-slate-900" id="stat-styles">0</p>
+                                    </div>
                                 </div>
-                                <div class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar" id="anomaly-list">
-                                    <div class="text-slate-400 text-center py-12 italic">
-                                        Upload a file to see anomalies
+
+                                <!-- Stat 2 -->
+                                <div class="glass-card p-6 flex flex-col justify-between">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <div
+                                            class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center shadow-sm">
+                                            <i data-lucide="target" class="w-5 h-5"></i>
+                                        </div>
+                                        <span
+                                            class="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase tracking-wider">Output</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">
+                                            Total Pieces</h3>
+                                        <p class="text-3xl font-heading font-bold text-slate-900" id="stat-target">0</p>
+                                    </div>
+                                </div>
+
+                                <!-- Stat 3 -->
+                                <div class="glass-card p-6 flex flex-col justify-between">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <div
+                                            class="w-10 h-10 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center shadow-sm">
+                                            <i data-lucide="users" class="w-5 h-5"></i>
+                                        </div>
+                                        <span
+                                            class="px-2 py-1 rounded-lg bg-orange-50 text-orange-600 text-[10px] font-bold uppercase tracking-wider">Labor</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1"
+                                            id="stat-manpower-label">Avg Manpower</h3>
+                                        <p class="text-3xl font-heading font-bold text-slate-900" id="stat-manpower">0
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Stat 4 (Issues) -->
+                                <div class="glass-card p-6 flex flex-col justify-between">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <div
+                                            class="w-10 h-10 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center shadow-sm">
+                                            <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                                        </div>
+                                        <span
+                                            class="px-2 py-1 rounded-lg bg-rose-50 text-rose-600 text-[10px] font-bold uppercase tracking-wider">Alerts</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">
+                                            Total Issues</h3>
+                                        <p class="text-3xl font-heading font-bold text-slate-900" id="anomaly-count">0
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Main Dashboard Content -->
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                <!-- Style Matrix (Full Width) -->
+                                <div class="lg:col-span-3">
+                                    <div id="dashboard-matrix" class="glass-card overflow-hidden">
+                                        <!-- Injected by PlanningLogic.renderDashboard -->
+                                    </div>
+                                </div>
+
+                                <!-- Factory Goals -->
+                                <div class="lg:col-span-1">
+                                    <div id="dashboard-goals"
+                                        class="glass-card h-[500px] flex flex-col overflow-hidden">
+                                        <!-- Injected by PlanningLogic.renderDashboard -->
+                                    </div>
+                                </div>
+
+                                <!-- Critical Items -->
+                                <div class="lg:col-span-2">
+                                    <div class="glass-card h-[500px] flex flex-col overflow-hidden">
+                                        <div
+                                            class="p-6 border-b border-slate-100 flex justify-between items-center bg-white/50">
+                                            <h3
+                                                class="text-lg font-heading font-bold text-slate-900 flex items-center gap-2">
+                                                <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500"></i>
+                                                System Anomalies & Remarks
+                                            </h3>
+                                        </div>
+                                        <div class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar"
+                                            id="anomaly-list">
+                                            <div class="text-slate-400 text-center py-12 italic">
+                                                Upload a file to see anomalies
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Timeline View -->
-                <div id="view-timeline" class="view-section hidden">
-                    <div class="glass-card p-8 overflow-hidden">
-                        <h3 class="text-xl font-heading font-bold text-slate-900 mb-6">Production Timeline</h3>
-                        <div class="overflow-x-auto pb-4 custom-scrollbar">
-                            <div id="timeline-container" class="min-w-max"></div>
+                        <!-- Timeline View -->
+                        <div id="view-timeline" class="view-section hidden">
+                            <div class="glass-card p-8 overflow-hidden">
+                                <h3 class="text-xl font-heading font-bold text-slate-900 mb-6">Production Timeline</h3>
+                                <div class="overflow-x-auto pb-4 custom-scrollbar">
+                                    <div id="timeline-container" class="min-w-max"></div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Grid View -->
-                <div id="view-grid" class="view-section hidden">
-                    <div class="glass-card p-8 overflow-hidden">
-                        <h3 class="text-xl font-heading font-bold text-slate-900 mb-6">Detailed Grid</h3>
-                        <div class="overflow-x-auto">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th>Line / Supervisor</th>
-                                        <th>Style</th>
-                                        <th>Current Running</th>
-                                        <th class="text-right">Target</th>
-                                        <th class="text-right">Manpower</th>
-                                        <th>Dates</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="grid-body">
-                                    <!-- Injected -->
-                                </tbody>
-                            </table>
+                        <!-- Grid View -->
+                        <div id="view-grid" class="view-section hidden">
+                            <div class="glass-card p-8 overflow-hidden">
+                                <h3 class="text-xl font-heading font-bold text-slate-900 mb-6">Detailed Grid</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Line / Supervisor</th>
+                                                <th>Style</th>
+                                                <th>Current Running</th>
+                                                <th class="text-right">Target</th>
+                                                <th class="text-right">Manpower</th>
+                                                <th>Dates</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="grid-body">
+                                            <!-- Injected -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
+
                     </div>
                 </div>
-
             </div>
+
+
+            <!-- Footer -->
+            <footer
+                class="mt-auto py-8 px-6 border-t border-slate-200/30 relative z-10 bg-white/30 backdrop-blur-md -mx-6 -mb-32">
+                <div class="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                    <p class="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase">© 2026 MANUFACTURING
+                        EXCELLENCE SYSTEM</p>
+                    <div class="flex gap-6">
+                        <a href="#" class="text-slate-400 hover:text-blue-500 transition-colors"><i data-lucide="github"
+                                class="w-4 h-4"></i></a>
+                        <a href="#" class="text-slate-400 hover:text-blue-500 transition-colors"><i
+                                data-lucide="twitter" class="w-4 h-4"></i></a>
+                        <a href="#" class="text-slate-400 hover:text-blue-500 transition-colors"><i data-lucide="mail"
+                                class="w-4 h-4"></i></a>
+                    </div>
+                </div>
+            </footer>
         </div>
     </div>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobileMenuOverlay"
+        class="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-30 opacity-0 pointer-events-none transition-opacity duration-300"
+        onclick="window.navSystem?.closeSidebar()"></div>
 
     <!-- Modal Overlay -->
     <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
@@ -600,156 +959,139 @@
 
     <!-- Page Scripts -->
     <script>
-        // Animations
-        try {
-            gsap.to("#mainApp", { opacity: 1, y: 0, duration: 0.8, ease: "power3.out", delay: 0.2 });
-        } catch (e) {
-            console.error("GSAP Animation failed due to missing library or other error", e);
-            document.getElementById('mainApp').style.opacity = '1';
+        // --- Navigation System ---
+        class NavigationSystem {
+            constructor() {
+                this.isOpen = false;
+                this.sidebar = document.getElementById('appSidebar');
+                this.toggleBtn = document.getElementById('navToggle');
+                this.backdrop = document.getElementById('sidebarBackdrop');
+                this.init();
+            }
+
+            init() {
+                if (!this.sidebar || !this.toggleBtn) return;
+
+                this.toggleBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.toggleSidebar();
+                });
+
+                if (this.backdrop) {
+                    this.backdrop.addEventListener('click', () => this.closeSidebar());
+                }
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.isOpen) this.closeSidebar();
+                });
+
+                window.addEventListener('resize', () => {
+                    if (window.innerWidth >= 1280 && this.isOpen) {
+                        this.closeSidebar();
+                    }
+                });
+
+                this.resolveActiveState();
+            }
+
+            toggleSidebar() {
+                this.isOpen ? this.closeSidebar() : this.openSidebar();
+            }
+
+            openSidebar() {
+                this.isOpen = true;
+                document.body.classList.add('sidebar-open');
+                this.sidebar.classList.remove('hidden');
+                setTimeout(() => {
+                    this.sidebar.classList.add('open');
+                    if (this.backdrop) this.backdrop.classList.add('active');
+                }, 10);
+                this.toggleBtn?.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            }
+
+            closeSidebar() {
+                this.isOpen = false;
+                document.body.classList.remove('sidebar-open');
+                this.sidebar.classList.remove('open');
+                if (this.backdrop) this.backdrop.classList.remove('active');
+                this.toggleBtn?.classList.remove('open');
+
+                setTimeout(() => {
+                    if (!this.isOpen) this.sidebar.classList.add('hidden');
+                }, 400);
+
+                document.body.style.overflow = '';
+            }
+
+            resolveActiveState() {
+                const currentPath = window.location.pathname;
+                const filename = currentPath.split('/').pop() || 'index.html';
+                const navItems = document.querySelectorAll('.nav-item');
+
+                navItems.forEach(item => {
+                    item.classList.remove('active');
+                    const href = item.getAttribute('href');
+                    if (href) {
+                        const hrefFilename = href.split('/').pop();
+                        if (filename === hrefFilename) {
+                            item.classList.add('active');
+                        }
+                    }
+                });
+            }
         }
 
-        // User Init
-        if (currentUser) {
-            document.getElementById('userInitials').textContent = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
-            document.getElementById('userName').textContent = currentUser.name;
-            try {
-                document.getElementById('userRoleDisplay').textContent = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
-            } catch (e) { }
-        }
-
-        function logout() {
+        function handleLogout() {
             localStorage.removeItem('qcoCurrentUser');
             window.location.href = '../index.html';
         }
 
-        // Toast Definitions
-        window.showToast = (message, type = 'info') => {
-            const container = document.getElementById('toastContainer');
-            if (!container) {
-                console.error("Toast container missing! Message:", message);
-                alert(message); // Fallback
-                return;
+        // Animations & Init
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Instant Reveal
+            gsap.to("#mainApp", { opacity: 1, y: 0, duration: 0.8, ease: "power3.out", delay: 0.2 });
+
+            // 2. Initialize Navigation
+            if (!window.navSystem) {
+                window.navSystem = new NavigationSystem();
             }
 
-            const toast = document.createElement('div');
-            let borderColor = 'border-blue-500';
-            let iconColor = 'text-blue-500';
-            let iconName = 'info';
+            // 3. Mobile Init
+            if (window.initMobileBehavior) window.initMobileBehavior();
 
-            if (type === 'success') { borderColor = 'border-green-500'; iconColor = 'text-green-500'; iconName = 'check-circle'; }
-            if (type === 'error') { borderColor = 'border-red-500'; iconColor = 'text-red-500'; iconName = 'alert-circle'; }
-            if (type === 'warning') { borderColor = 'border-orange-500'; iconColor = 'text-orange-500'; iconName = 'alert-triangle'; }
-
-            toast.className = `toast show glass flex items-center gap-3 p-4 mb-4 rounded-xl shadow-lg border-l-4 ${borderColor} bg-white min-w-[300px] transform transition-all duration-300`;
-
-            toast.innerHTML = `
-                <i data-lucide="${iconName}" class="w-5 h-5 ${iconColor}"></i>
-                <span class="text-sm font-semibold text-slate-700">${message}</span>
-            `;
-
-            container.appendChild(toast);
-            if (window.lucide) lucide.createIcons();
-
-            setTimeout(() => {
-                toast.classList.remove('show');
-                toast.style.transform = 'translateX(100%)';
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 400);
-            }, 5000);
-        };
-
-        // Bridge Functions with Safety Check
-        window.handleFileUpload = (input) => {
-            if (window.PlanningLogic) {
-                window.PlanningLogic.handleFileUpload(input);
-            } else {
-                console.error("PlanningLogic module not loaded");
-                window.showToast("System module not initialized. Please refresh.", "error");
-            }
-        };
-
-        // FIXED: Attach Event Listener via JS ensures function is defined before binding
-        const fileInput = document.getElementById('fileInput');
-        if (fileInput) {
-            fileInput.addEventListener('change', (e) => {
-                window.handleFileUpload(e.target);
+            // 4. Lenis Init
+            const lenis = new Lenis({
+                wrapper: document.getElementById('appContent'),
+                content: document.getElementById('mainApp'),
+                duration: 1.2,
+                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                smoothWheel: true,
+                smoothTouch: false,
+                touchMultiplier: 1.5,
+                topOffset: 0
             });
-        }
+            function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+            requestAnimationFrame(raf);
 
-        // Drag & Drop Logic
-        const dropZone = document.getElementById('uploadState');
+            // Scroll State
+            let isScrolling;
+            document.getElementById('appContent').addEventListener('scroll', () => {
+                document.body.classList.add('is-scrolling');
+                clearTimeout(isScrolling);
+                isScrolling = setTimeout(() => {
+                    document.body.classList.remove('is-scrolling');
+                }, 150);
+            }, { passive: true });
 
-        if (dropZone) {
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, preventDefaults, false);
-            });
-
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
+            // Check Auth
+            if (currentUser) {
+                const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+                document.querySelectorAll('.user-initials-display').forEach(el => el.textContent = initials);
+                document.querySelectorAll('.user-name-display').forEach(el => el.textContent = currentUser.name);
+                document.querySelectorAll('.user-role-display').forEach(el => el.textContent = (currentUser.role || 'Member').toUpperCase());
             }
-
-            ['dragenter', 'dragover'].forEach(eventName => {
-                dropZone.addEventListener(eventName, highlight, false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                dropZone.addEventListener(eventName, unhighlight, false);
-            });
-
-            function highlight(e) {
-                dropZone.classList.add('border-blue-500', 'bg-blue-50/50');
-                dropZone.classList.remove('border-slate-300');
-            }
-
-            function unhighlight(e) {
-                dropZone.classList.remove('border-blue-500', 'bg-blue-50/50');
-                dropZone.classList.add('border-slate-300');
-            }
-
-            dropZone.addEventListener('drop', handleDrop, false);
-
-            function handleDrop(e) {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-
-                if (files.length > 0) {
-                    const name = files[0].name.toLowerCase();
-                    if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
-                        // Pass an object mimicking input.files
-                        window.handleFileUpload({ files: files });
-                    } else {
-                        window.showToast('Invalid file type. Please upload an Excel file (.xlsx, .xls)', 'error');
-                    }
-                }
-            }
-
-            // Allow clicking the dropzone to trigger input (except if clicking label)
-            dropZone.addEventListener('click', (e) => {
-                if (e.target !== fileInput && !e.target.closest('label')) {
-                    fileInput.click();
-                }
-            });
-        }
-
-        window.switchView = (viewName) => {
-            if (window.PlanningLogic) {
-                window.PlanningLogic.switchView(viewName);
-
-                // Animate Buttons
-                const buttons = ['dashboard', 'timeline', 'grid'];
-                buttons.forEach(b => {
-                    const btn = document.getElementById(`btn-${b}`);
-                    if (b === viewName) {
-                        btn.classList.add('bg-slate-900', 'text-white', 'shadow-xl');
-                        btn.classList.remove('bg-white/60', 'text-slate-600');
-                    } else {
-                        btn.classList.remove('bg-slate-900', 'text-white', 'shadow-xl');
-                        btn.classList.add('bg-white/60', 'text-slate-600');
-                    }
-                });
-            }
-        };
+        });
 
         // Modal Logic
         window.closeModal = () => {
