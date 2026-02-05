@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Operations Sequence | Smart QCO System</title>
 
     <!-- Frameworks & Icons -->
@@ -23,6 +23,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lenis@1.1.2/dist/lenis.min.js"></script>
 
     <!-- Tailwind Config -->
     <script>
@@ -59,36 +60,224 @@
     </script>
 
     <style>
-        body {
-            background-color: #f8fafc;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-            color: #1e293b;
+        /* --- Core Variables & Reset --- */
+        :root {
+            --primary: #0f172a;
+            --primary-light: #334155;
+            --accent: #3b82f6;
+            --background: #f8fafc;
+            --surface: rgba(255, 255, 255, 0.9);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --sidebar-width: 280px;
+            --header-height: 80px;
         }
 
+        body {
+            background-color: var(--background);
+            color: #1e293b;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            /* Changed to hidden for App Shell layout */
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- App Shell Layout --- */
+        #appShell {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #appContent {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+        }
+
+        /* --- Glassmorphism Utilities --- */
         .glass {
-            background: rgba(255, 255, 255, 0.65);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
         }
 
         .glass-card {
             background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
             border-radius: 1.5rem;
-            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .glass-card:hover {
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
-            border-color: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+            border-color: rgba(255, 255, 255, 0.8);
         }
 
+        /* --- Retractable Sidebar --- */
+        .retractable-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: var(--sidebar-width);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.6);
+            z-index: 50;
+            transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 10px 0 30px -10px rgba(0, 0, 0, 0.05);
+        }
+
+        .retractable-sidebar.open {
+            transform: translateX(0);
+        }
+
+        /* Navigation Links */
+        .nav-item {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--accent);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+            border-top-right-radius: 4px;
+            border-bottom-right-radius: 4px;
+        }
+
+        .nav-item:hover::before,
+        .nav-item.active::before {
+            transform: scaleY(1);
+        }
+
+        .nav-item.active {
+            background: rgba(59, 130, 246, 0.08);
+            color: var(--accent);
+        }
+
+        .nav-item:hover {
+            background: rgba(59, 130, 246, 0.04);
+            padding-left: 1.25rem;
+        }
+
+        .section-header {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #94a3b8;
+            padding: 0 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* --- Backdrop --- */
+        .nav-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px) saturate(180%);
+            -webkit-backdrop-filter: blur(8px) saturate(180%);
+            z-index: 45;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-backdrop.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* --- Hamburger Button --- */
+        .hamburger-btn {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 6px;
+            width: 40px;
+            height: 40px;
+            padding: 8px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 60;
+            /* Above backdrop */
+        }
+
+        .hamburger-btn span {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background-color: #334155;
+            border-radius: 2px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .hamburger-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        /* Mobile Overrides (max-width: 768px) */
+        @media (max-width: 768px) {
+            #mainApp {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+                padding-top: 1rem !important;
+            }
+
+            .glass-card {
+                padding: 1rem !important;
+            }
+
+            .split-header {
+                font-size: 2rem !important;
+                line-height: 1.2 !important;
+            }
+
+            #headerActions {
+                flex-wrap: wrap;
+                width: 100%;
+                margin-top: 1rem;
+            }
+
+            #headerActions button {
+                flex: 1;
+                width: 100%;
+                justify-content: center;
+            }
+
+            footer {
+                margin-left: -1rem !important;
+                margin-right: -1rem !important;
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+
+            body,
+            #appContent {
+                overflow-x: hidden;
+            }
+        }
+
+        /* --- OPERATIONS SPECIFIC STYLES --- */
         .operation-card {
             background: rgba(255, 255, 255, 0.8);
             border: 1px solid rgba(226, 232, 240, 0.8);
@@ -102,15 +291,27 @@
             cursor: grabbing;
         }
 
-        .operation-card:hover {
+        .operation-card:hover:not(.selected) {
             border-color: #0ea5e9;
             box-shadow: 0 10px 25px -5px rgba(14, 165, 233, 0.15);
         }
 
         .operation-card.selected {
             border-color: #0ea5e9;
-            background: rgba(14, 165, 233, 0.05);
-            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+            background: rgba(14, 165, 233, 0.08);
+            /* Slightly darker for contrast */
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.3);
+            /* Stronger indicator */
+        }
+
+        .operation-card.selected:hover {
+            background: rgba(14, 165, 233, 0.12);
+        }
+
+        /* Focus state for keyboard navigation */
+        .operation-card:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px white, 0 0 0 4px #0ea5e9;
         }
 
         .operation-card.combined {
@@ -150,8 +351,18 @@
             border-left-color: #ef4444;
         }
 
-        .toast.success {
-            border-left-color: #10b981;
+        /* ... already handled by App Shell block above ... */
+
+        /* Prevent Sidebar from pushing content */
+        .retractable-sidebar {
+            position: fixed !important;
+            z-index: 100 !important;
+            pointer-events: auto;
+        }
+
+        /* Ensure smooth reveal */
+        #mainApp {
+            transition: opacity 0.5s ease;
         }
     </style>
 </head>
@@ -174,212 +385,405 @@
     <!-- Toast Container -->
     <div id="toastContainer"></div>
 
-    <!-- Navigation -->
-    <nav class="fixed top-0 w-full z-40 glass transition-all duration-300" id="navbar">
-        <div class="max-w-[1600px] mx-auto px-6">
-            <div class="flex justify-between h-24 items-center relative">
+    <!-- Navigation Backdrop -->
+    <div id="navBackdrop" class="nav-backdrop" aria-hidden="true"></div>
 
-                <!-- Centered Navigation -->
-                <div class="hidden xl:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-                    <div
-                        class="flex items-center gap-1 bg-white/50 p-1.5 rounded-full border border-white/20 shadow-sm backdrop-blur-md">
+    <!-- Retractable Sidebar -->
+    <aside id="appSidebar" class="retractable-sidebar hidden" aria-hidden="true">
+        <!-- Header - FIXED HEIGHT -->
+        <div class="sidebar-header h-20 flex-shrink-0 flex items-center px-6 border-b border-white/30">
+            <a href="../index.html" class="flex items-center gap-3 group transition-all hover:scale-105">
+                <div
+                    class="w-10 h-10 bg-gradient-to-br from-slate-900 to-slate-700 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-all group-hover:rotate-6">
+                    <i data-lucide="layers" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-800 text-sm tracking-wide">QCO Portal</h1>
+                    <p class="text-[10px] text-slate-500 font-medium">Enterprise v2.1</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Navigation - SCROLLABLE -->
+        <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-6">
+            <div>
+                <div class="section-header">General</div>
+                <ul class="space-y-1">
+                    <li>
                         <a href="../index.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Home</a>
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="home" class="w-4 h-4 text-slate-500"></i>
+                            <span>Home</span>
+                        </a>
+                    </li>
+                    <li>
                         <a href="dashboard.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Dashboard</a>
-                        <a href="creation.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Creation</a>
-                        <a href="operations.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-blue-900 bg-blue-100 shadow-sm transition-all">Operations</a>
-                        <a href="schedule.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Schedule</a>
-                        <a href="checklist.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Checklist</a>
-                        <a href="recorder.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Recorder</a>
-                        <a href="summary.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Reports</a>
-                        <a href="planning.html"
-                            class="px-5 py-2.5 rounded-full text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-white transition-all">Planning</a>
-                    </div>
-                </div>
-
-                <!-- Mobile Menu Button -->
-                <button onclick="toggleMobileMenu()"
-                    class="xl:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-all">
-                    <i data-lucide="menu" class="w-6 h-6"></i>
-                </button>
-
-                <!-- Logo -->
-                <a href="../index.html" class="flex items-center gap-4 group cursor-pointer">
-                    <div
-                        class="w-10 h-10 md:w-12 md:h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg group-hover:rotate-12 transition-transform duration-500 ease-out">
-                        <i data-lucide="layers" class="w-5 h-5 md:w-6 md:h-6"></i>
-                    </div>
-                    <div class="flex flex-col">
-                        <span class="font-heading font-bold text-slate-900 text-lg md:text-xl tracking-tight">QCO
-                            Portal</span>
-                        <span class="text-[10px] md:text-xs text-slate-500 font-medium tracking-wide">Manufacturing
-                            Excellence</span>
-                    </div>
-                </a>
-
-                <div class="flex items-center gap-4">
-                    <!-- User Profile Dropdown -->
-                    <div class="relative">
-                        <button onclick="document.getElementById('userDropdown').classList.toggle('hidden')"
-                            class="flex items-center gap-2 focus:outline-none group p-1 pr-1 md:p-1.5 md:pr-3 rounded-full hover:bg-white/60 transition-all border border-transparent hover:border-slate-200">
-                            <div
-                                class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border border-white shadow-sm flex items-center justify-center overflow-hidden">
-                                <i data-lucide="user" class="w-4 h-4 text-slate-500"></i>
-                            </div>
-                            <div class="text-left hidden sm:block">
-                                <p class="text-xs font-bold text-slate-900 leading-tight" id="userName">User</p>
-                                <p class="text-[10px] text-slate-500 leading-tight" id="userRole">Member</p>
-                            </div>
-                            <i data-lucide="chevron-down"
-                                class="w-3 h-3 text-slate-400 ml-1 group-hover:text-slate-600 transition-colors hidden sm:block"></i>
-                        </button>
-
-                        <div id="userDropdown"
-                            class="hidden absolute right-0 mt-3 w-48 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 ring-1 ring-black/5 divide-y divide-slate-100 transform origin-top-right transition-all z-50">
-                            <div class="p-2">
-                                <button onclick="handleLogout()"
-                                    class="w-full group flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left">
-                                    <i data-lucide="log-out"
-                                        class="w-4 h-4 text-red-400 group-hover:text-red-600 transition-colors mr-3"></i>
-                                    Sign Out
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="line-chart" class="w-4 h-4 text-slate-500"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                </ul>
             </div>
+            <div>
+                <div class="section-header">Workflow</div>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="creation.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="pen-tool" class="w-4 h-4 text-slate-500"></i>
+                            <span>QCO Creation</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="operations.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors active">
+                            <i data-lucide="list-ordered" class="w-4 h-4 text-slate-500"></i>
+                            <span>Operations</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="recorder.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="mic" class="w-4 h-4 text-slate-500"></i>
+                            <span>Recorder</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-header">Planning</div>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="planning.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="layout-grid" class="w-4 h-4 text-slate-500"></i>
+                            <span>Planning</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="schedule.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="calendar" class="w-4 h-4 text-slate-500"></i>
+                            <span>Schedule</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-header">Utilities</div>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="checklist.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="clipboard-list" class="w-4 h-4 text-slate-500"></i>
+                            <span>Checklist</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="summary.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
 
-            <!-- Mobile Menu -->
-            <div id="mobileMenu"
-                class="hidden xl:hidden bg-white/90 backdrop-blur-xl border-t border-slate-100 absolute left-0 right-0 top-24 p-4 shadow-xl z-50">
-                <div class="grid grid-cols-2 gap-2">
-                    <a href="../index.html"
-                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Home</a>
-                    <a href="dashboard.html"
-                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Dashboard</a>
-                    <a href="creation.html"
-                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Creation</a>
-                    <a href="operations.html"
-                        class="p-3 text-sm font-semibold text-white bg-blue-600 rounded-xl transition-colors text-center shadow-md">Operations</a>
-                    <a href="schedule.html"
-                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Schedule</a>
-                    <a href="checklist.html"
-                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Checklist</a>
-                    <a href="recorder.html"
-                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Recorder</a>
-                    <a href="summary.html"
-                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Reports</a>
-                    <a href="planning.html"
-                        class="p-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-colors text-center border border-slate-100">Planning</a>
-                </div>
+        <!-- Footer - FIXED HEIGHT -->
+        <div class="sidebar-footer flex-shrink-0 p-4 border-t border-white/30">
+            <div
+                class="flex items-center justify-center gap-2 text-[10px] font-bold text-slate-400 tracking-widest uppercase">
+                <i data-lucide="lock" class="w-3 h-3 text-slate-300"></i> Secure Access
             </div>
         </div>
-    </nav>
+    </aside>
 
-    <!-- Main Application -->
-    <div id="mainApp" class="pt-32 pb-12 px-6">
-        <div class="max-w-[1400px] mx-auto">
+    <!-- Main App Container Structure -->
+    <div id="appShell">
+        <!-- Header with Hamburger Menu -->
+        <header id="appHeader"
+            class="glass h-20 flex items-center justify-between px-4 md:px-8 z-20 flex-shrink-0 sticky top-0 border-b border-white/20">
+            <!-- Hamburger Menu Button -->
+            <button id="navToggle" class="hamburger-btn touch-target" aria-label="Toggle navigation">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
 
-            <!-- Page Header -->
-            <div class="flex flex-col md:flex-row justify-between items-end mb-10 gap-6">
-                <div>
-                    <div class="flex items-center gap-3 mb-2">
-                        <h1 class="text-4xl md:text-5xl font-heading font-bold text-slate-900 tracking-tight">
-                            Operations <span
-                                class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Sequence</span>
-                        </h1>
-                    </div>
-                    <p class="text-slate-500 text-lg max-w-xl leading-relaxed">
-                        View, combine, and reorder operations for upcoming styles. Changes are saved to Firebase.
-                    </p>
+            <!-- Right Actions (User, etc.) -->
+            <div class="flex items-center gap-4">
+                <!-- System Status -->
+                <div
+                    class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold text-emerald-700 tracking-wider uppercase">System Online</span>
                 </div>
-                <div class="flex gap-3 mb-2">
-                    <button onclick="saveOperations()" id="saveBtn"
-                        class="px-6 py-3 rounded-2xl bg-slate-900 text-white font-semibold shadow-xl shadow-blue-900/20 hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        disabled>
-                        <i data-lucide="save" class="w-4 h-4"></i> Save Changes
+
+                <!-- User Profile Dropdown -->
+                <div class="relative group">
+                    <button id="userMenuBtn"
+                        class="flex items-center gap-3 focus:outline-none group p-1.5 pr-3 rounded-full hover:bg-white/60 transition-all border border-transparent hover:border-slate-200">
+                        <div
+                            class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 border border-white shadow-sm flex items-center justify-center overflow-hidden">
+                            <span class="text-xs font-bold text-white user-initials-display">??</span>
+                        </div>
+                        <div class="text-left hidden md:block">
+                            <p class="text-xs font-bold text-slate-900 user-name-display leading-tight">User</p>
+                            <p
+                                class="text-[10px] text-slate-500 user-role-display leading-tight uppercase font-semibold">
+                                Member</p>
+                        </div>
+                        <i data-lucide="chevron-down"
+                            class="w-3 h-3 text-slate-400 ml-1 group-hover:text-slate-600 transition-colors"></i>
                     </button>
-                </div>
-            </div>
 
-            <!-- Style Selector -->
-            <div class="glass-card p-8 mb-8">
-                <div class="flex flex-wrap items-center gap-4">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600">
-                            <i data-lucide="shirt" class="w-5 h-5"></i>
+                    <!-- Profile Dropdown -->
+                    <div id="userDropdown"
+                        class="absolute right-0 mt-2 w-56 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 ring-1 ring-slate-900/5 transform opacity-0 scale-95 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 origin-top-right z-50">
+                        <div class="px-4 py-3 border-b border-slate-100/50">
+                            <p class="text-xs font-bold text-slate-900 user-name-display">User</p>
+                            <p class="text-[10px] text-slate-500 truncate user-email-display">email@example.com</p>
                         </div>
-                        <div>
-                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Select
-                                Style</label>
-                            <select id="styleSelector" onchange="loadOperationsForStyle(this.value)"
-                                class="block w-64 mt-1 px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all">
-                                <option value="">-- Select Upcoming Style --</option>
-                                <!-- Populated from Firebase -->
-                            </select>
-                        </div>
-                    </div>
-
-                    <div id="styleInfo" class="hidden flex-1 flex flex-wrap gap-6 ml-6">
-                        <div>
-                            <p class="text-xs text-slate-400 font-semibold">Style Number</p>
-                            <p class="text-lg font-bold text-slate-800" id="infoStyleNumber">-</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-slate-400 font-semibold">Total Operations</p>
-                            <p class="text-lg font-bold text-slate-800" id="infoTotalOps">-</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-slate-400 font-semibold">Total Allocated WP</p>
-                            <p class="text-lg font-bold text-emerald-600" id="infoTotalWP">-</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-slate-400 font-semibold">Total Allocated Direct</p>
-                            <p class="text-lg font-bold text-violet-600" id="infoTotalDirect">-</p>
+                        <div class="p-2">
+                            <button id="logoutBtn"
+                                class="w-full group flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left">
+                                <i data-lucide="log-out"
+                                    class="w-4 h-4 text-red-400 group-hover:text-red-600 transition-colors mr-3"></i>
+                                Sign Out
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
+        </header>
 
-            <!-- Action Bar -->
-            <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-                <div class="flex items-center gap-3">
-                    <button onclick="combineSelectedOperations()" id="combineBtn"
-                        class="px-5 py-2.5 rounded-xl bg-violet-600 text-white font-semibold hover:bg-violet-700 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-                        disabled>
-                        <i data-lucide="merge" class="w-4 h-4"></i> Combine Selected
-                    </button>
-                    <button onclick="clearSelection()" id="clearBtn"
-                        class="px-5 py-2.5 rounded-xl bg-slate-200 text-slate-700 font-semibold hover:bg-slate-300 transition-all flex items-center gap-2 hidden">
-                        <i data-lucide="x" class="w-4 h-4"></i> Clear Selection
-                    </button>
-                </div>
-                <p class="text-sm text-slate-500">
-                    <span id="selectedCount">0</span> operation(s) selected. Drag to reorder.
-                </p>
-            </div>
+        <!-- Scrollable Content Area -->
+        <div id="appContent" class="flex-1 relative overflow-y-auto">
+            <div id="mainApp" class="min-h-full flex flex-col pt-8 pb-32 px-6 opacity-0">
+                <div class="max-w-[1400px] mx-auto w-full">
 
-            <!-- Operations Container -->
-            <div class="glass-card p-6 min-h-[400px]">
-                <div id="operationsContainer" class="space-y-3">
-                    <div class="text-center py-20 text-slate-400">
-                        <i data-lucide="list-checks" class="w-16 h-16 mx-auto mb-4 opacity-30"></i>
-                        <p class="text-lg font-medium">Select a style to view operations</p>
+                    <!-- Page Header -->
+                    <div class="flex flex-col md:flex-row justify-between items-end mb-10 gap-6">
+                        <div>
+                            <div class="flex items-center gap-3 mb-2">
+                                <h1 class="text-4xl md:text-5xl font-heading font-bold text-slate-900 tracking-tight">
+                                    Operations <span
+                                        class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Sequence</span>
+                                </h1>
+                            </div>
+                            <p class="text-slate-500 text-lg max-w-xl leading-relaxed">
+                                View, combine, and reorder operations for upcoming styles. Changes are saved to
+                                Firebase.
+                            </p>
+                        </div>
+                        <div class="flex gap-3 mb-2">
+                            <button onclick="saveOperations()" id="saveBtn"
+                                class="px-6 py-3 rounded-2xl bg-slate-900 text-white font-semibold shadow-xl shadow-blue-900/20 hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled>
+                                <i data-lucide="save" class="w-4 h-4"></i> Save Changes
+                            </button>
+                        </div>
                     </div>
-                </div>
-            </div>
 
+                    <!-- Operations Tracker Card -->
+                    <div class="glass-card p-6 md:p-8 relative overflow-hidden mb-6">
+                        <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-violet-500 to-indigo-500">
+                        </div>
+
+                        <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-6">
+                            <!-- Title -->
+                            <div class="flex items-center gap-3">
+                                <span
+                                    class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-300">
+                                    <i data-lucide="scissors" class="w-5 h-5"></i>
+                                </span>
+                                <div>
+                                    <h2 class="text-2xl font-heading font-bold text-slate-900">Operations Sequence</h2>
+                                    <p class="text-xs text-slate-500 font-medium">Manage and optimize line balancing</p>
+                                </div>
+                            </div>
+
+                            <!-- Controls -->
+                            <div class="flex flex-col sm:flex-row items-stretch gap-3 w-full lg:w-auto">
+                                <!-- Search Box -->
+                                <div class="relative w-full sm:w-auto group">
+                                    <i data-lucide="search"
+                                        class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 group-focus-within:text-violet-500 transition-colors"></i>
+                                    <input type="text" id="styleSearch" onkeyup="handleStyleSearch(event)"
+                                        placeholder="Search Style..."
+                                        class="pl-10 pr-10 py-2.5 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 w-full sm:w-48 transition-all hover:border-violet-300">
+                                    <button onclick="clearStyleSearch()" id="clearSearchBtn"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors hidden">
+                                        <i data-lucide="x" class="w-3 h-3"></i>
+                                    </button>
+                                    <p id="searchStatus"
+                                        class="absolute top-full right-0 mt-1 text-[10px] font-bold hidden z-10 bg-white px-2 py-1 rounded shadow-sm border border-slate-100 min-w-full whitespace-nowrap">
+                                    </p>
+                                </div>
+
+                                <!-- Style Selector -->
+                                <div class="relative group w-full sm:w-auto flex-1 sm:flex-none">
+                                    <select id="styleSelector" onchange="loadOperationsForStyle(this.value)"
+                                        class="appearance-none w-full bg-white border border-slate-200 text-slate-700 font-bold py-2.5 pl-4 pr-10 rounded-xl hover:border-violet-400 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer text-sm min-w-[240px]">
+                                        <option value="">-- Select Upcoming Style --</option>
+                                    </select>
+                                    <i data-lucide="chevron-down"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none group-hover:text-violet-500 transition-colors"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Style Info Panel (Hidden by default) -->
+                        <div id="styleInfo"
+                            class="hidden mt-6 pt-6 border-t border-slate-100 grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Style Number
+                                </p>
+                                <p class="text-lg font-bold text-slate-800 break-all" id="infoStyleNumber">-</p>
+                            </div>
+                            <div class="bg-slate-50 p-3 rounded-lg border border-slate-100">
+                                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Total Ops</p>
+                                <p class="text-lg font-bold text-slate-800" id="infoTotalOps">-</p>
+                            </div>
+                            <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-100">
+                                <p class="text-xs text-emerald-600 font-bold uppercase tracking-wider mb-1">Allocated WP
+                                </p>
+                                <p class="text-lg font-bold text-emerald-700" id="infoTotalWP">-</p>
+                            </div>
+                            <div class="bg-violet-50 p-3 rounded-lg border border-violet-100">
+                                <p class="text-xs text-violet-600 font-bold uppercase tracking-wider mb-1">Direct Staff
+                                </p>
+                                <p class="text-lg font-bold text-violet-700" id="infoTotalDirect">-</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Bar -->
+                    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                        <div class="flex items-center gap-3">
+                            <button onclick="combineSelectedOperations()" id="combineBtn"
+                                class="px-5 py-2.5 rounded-xl bg-violet-600 text-white font-semibold hover:bg-violet-700 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                                disabled>
+                                <i data-lucide="merge" class="w-4 h-4"></i> Combine Selected
+                            </button>
+                            <button onclick="clearSelection()" id="clearBtn"
+                                class="px-5 py-2.5 rounded-xl bg-slate-200 text-slate-700 font-semibold hover:bg-slate-300 transition-all flex items-center gap-2 hidden">
+                                <i data-lucide="x" class="w-4 h-4"></i> Clear Selection
+                            </button>
+                        </div>
+                        <p class="text-sm text-slate-500">
+                            <span id="selectedCount">0</span> operation(s) selected. Drag to reorder.
+                        </p>
+                    </div>
+
+                    <!-- Operations Container -->
+                    <div class="glass-card p-6 min-h-[400px]">
+                        <div id="operationsContainer" class="space-y-3" role="list" aria-label="Operations Sequence">
+                            <div class="text-center py-20 text-slate-400">
+                                <i data-lucide="list-checks" class="w-16 h-16 mx-auto mb-4 opacity-30"></i>
+                                <p class="text-lg font-medium">Select a style to view operations</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- Simplified Footer -->
+                <footer
+                    class="mt-auto py-8 px-8 border-t border-slate-200/30 relative z-10 bg-white/30 backdrop-blur-md -mx-8 -mb-32">
+                    <div class="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                        <p class="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase">© 2026 MANUFACTURING
+                            EXCELLENCE SYSTEM</p>
+                        <div class="flex gap-6">
+                            <a href="#" class="text-slate-400 hover:text-slate-600 transition-colors"><i
+                                    data-lucide="twitter" class="w-4 h-4"></i></a>
+                            <a href="#" class="text-slate-400 hover:text-slate-600 transition-colors"><i
+                                    data-lucide="github" class="w-4 h-4"></i></a>
+                            <a href="#" class="text-slate-400 hover:text-slate-600 transition-colors"><i
+                                    data-lucide="linkedin" class="w-4 h-4"></i></a>
+                        </div>
+                    </div>
+                </footer>
+            </div>
         </div>
     </div>
 
     <script>
+        // --- Navigation System ---
+        class NavigationSystem {
+            constructor() {
+                this.sidebar = document.getElementById('appSidebar');
+                this.toggleBtn = document.getElementById('navToggle');
+                this.backdrop = document.getElementById('navBackdrop');
+                this.isOpen = false;
+
+                this.init();
+            }
+
+            init() {
+                if (this.toggleBtn) {
+                    this.toggleBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.toggleSidebar();
+                    });
+                }
+
+                if (this.backdrop) {
+                    this.backdrop.addEventListener('click', () => this.closeSidebar());
+                }
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.isOpen) this.closeSidebar();
+                });
+
+                // Close on resize if > xl
+                window.addEventListener('resize', () => {
+                    if (window.innerWidth >= 1280 && this.isOpen) {
+                        this.closeSidebar();
+                    }
+                });
+            }
+
+            toggleSidebar() {
+                this.isOpen ? this.closeSidebar() : this.openSidebar();
+            }
+
+            openSidebar() {
+                this.isOpen = true;
+                this.sidebar.classList.remove('hidden');
+                // Small delay to allow display:block to apply before transition
+                setTimeout(() => {
+                    this.sidebar.classList.add('open');
+                    this.backdrop.classList.add('active');
+                }, 10);
+                document.body.style.overflow = 'hidden';
+            }
+
+            closeSidebar() {
+                this.isOpen = false;
+                this.sidebar.classList.remove('open');
+                this.backdrop.classList.remove('active');
+
+                setTimeout(() => {
+                    this.sidebar.classList.add('hidden');
+                }, 300);
+
+                document.body.style.overflow = '';
+            }
+        }
+
+        // --- Mobile Behavior ---
+        function initMobileBehavior() {
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                // Adjust sortable on mobile if needed
+                const container = document.getElementById('operationsContainer');
+                if (container) {
+                    container.style.touchAction = 'none'; // Better drag handling
+                }
+            }
+        }
+
         // --- Firebase Configuration ---
         const firebaseConfig = {
             apiKey: "AIzaSyCayfWGQP1t3oBU9eFj-3Ww0uu7nSl3Q4g",
@@ -391,47 +795,154 @@
             measurementId: "G-NJ0QH6DEXG"
         };
 
-        let db;
+        let db, auth;
         let currentUser = null;
         let allChangeovers = [];
         let currentOperations = [];
         let selectedOperationIds = new Set();
         let currentQCOId = null;
         let hasUnsavedChanges = false;
+        let isSaving = false;
         let sortableInstance = null;
 
-        // --- Initialization ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            lucide.createIcons();
-            checkAuth();
-            await initFirebase();
-            await loadUpcomingStyles();
-            gsap.to('#mainApp', { opacity: 1, duration: 0.5 });
-        });
+        // --- DOM Cache ---
+        const uiCache = {
+            userInitials: null,
+            userName: null,
+            userRole: null,
+            userEmail: null,
+            infoStyleNumber: null,
+            infoTotalOps: null,
+            infoTotalWP: null,
+            infoTotalDirect: null,
+            styleInfo: null
+        };
 
-        function toggleMobileMenu() {
-            const menu = document.getElementById('mobileMenu');
-            menu.classList.toggle('hidden');
+        // --- Utils ---
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
         }
+
+        const handleStyleSearchDebounced = debounce((event) => {
+            performStyleSearch(event.target.value);
+        }, 150);
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Instant Reveal for structure
+            gsap.to('#mainApp', { opacity: 1, duration: 0.4, ease: "power2.out" });
+
+            // 2. Initialize Navigation System
+            if (!window.navSystem) {
+                window.navSystem = new NavigationSystem();
+            }
+
+            // 3. Initialize Mobile/Icons
+            initMobileBehavior();
+            window.addEventListener('resize', initMobileBehavior);
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            // 4. Background Data Loading
+            const initSequence = async () => {
+                try {
+                    await initFirebase();
+                    checkAuth();
+                    initLenis();
+                    await loadUpcomingStyles();
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                } catch (e) {
+                    console.error("Delayed data error:", e);
+                    if (typeof showToast === 'function') showToast('Still loading data...', 'info');
+                }
+            };
+
+            initSequence();
+        });
 
         function checkAuth() {
             const userStr = localStorage.getItem('qcoCurrentUser');
             if (userStr) {
                 currentUser = JSON.parse(userStr);
-                document.getElementById('userName').textContent = currentUser.name || 'User';
-                document.getElementById('userRole').textContent = currentUser.role || 'User';
+                updateUserUI();
+            } else {
+                window.location.href = '../index.html';
             }
         }
 
-        async function initFirebase() {
+        function updateUserUI() {
+            if (!currentUser) return;
+
+            // Cache UI elements if not already cached
+            if (!uiCache.userInitials) uiCache.userInitials = document.querySelectorAll('.user-initials-display');
+            if (!uiCache.userName) uiCache.userName = document.querySelectorAll('.user-name-display');
+            if (!uiCache.userRole) uiCache.userRole = document.querySelectorAll('.user-role-display');
+            if (!uiCache.userEmail) uiCache.userEmail = document.querySelectorAll('.user-email-display');
+
+            const name = currentUser.name || 'User';
+            const role = currentUser.role || 'Member';
+            const email = currentUser.email || '';
+            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+
+            uiCache.userInitials.forEach(el => el.textContent = initials);
+            uiCache.userName.forEach(el => el.textContent = name);
+            uiCache.userRole.forEach(el => el.textContent = role);
+            uiCache.userEmail.forEach(el => el.textContent = email);
+        }
+
+        // --- Logout Handler ---
+        document.getElementById('logoutBtn')?.addEventListener('click', () => {
+            localStorage.removeItem('qcoCurrentUser');
+            firebase.auth().signOut().then(() => {
+                window.location.href = '../index.html';
+            }).catch(() => {
+                window.location.href = '../index.html';
+            });
+        });
+
+        async function initFirebase(retries = 3) {
             try {
                 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
                 db = firebase.firestore();
+                auth = firebase.auth();
+
+                // Set persistence to Local
+                await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
                 showToast('Connected to database', 'success');
             } catch (error) {
-                console.error('Firebase init error:', error);
-                showToast('Database connection failed', 'error');
+                console.error(`Firebase init error (${retries} retries left):`, error);
+                if (retries > 0) {
+                    setTimeout(() => initFirebase(retries - 1), 2000);
+                } else {
+                    showToast('Database connection failed. Please check your network.', 'error');
+                }
             }
+        }
+
+        function initLenis() {
+            const container = document.getElementById('appContent');
+            if (!container) return;
+
+            window.lenis = new Lenis({
+                wrapper: container,
+                content: container.querySelector('#mainApp'),
+                duration: 1.2,
+                smoothWheel: true
+            });
+
+            function raf(time) {
+                window.lenis.raf(time);
+                requestAnimationFrame(raf);
+            }
+            requestAnimationFrame(raf);
         }
 
         // --- Load Styles ---
@@ -529,15 +1040,103 @@
 
         function updateStyleInfo(changeover, operations) {
             const upcomingStyle = changeover.upcomingStyle || changeover.newStyle || 'Unknown';
-            document.getElementById('infoStyleNumber').textContent = upcomingStyle;
-            document.getElementById('infoTotalOps').textContent = operations.length;
+
+            if (!uiCache.infoStyleNumber) uiCache.infoStyleNumber = document.getElementById('infoStyleNumber');
+            if (!uiCache.infoTotalOps) uiCache.infoTotalOps = document.getElementById('infoTotalOps');
+            if (!uiCache.infoTotalWP) uiCache.infoTotalWP = document.getElementById('infoTotalWP');
+            if (!uiCache.infoTotalDirect) uiCache.infoTotalDirect = document.getElementById('infoTotalDirect');
+            if (!uiCache.styleInfo) uiCache.styleInfo = document.getElementById('styleInfo');
+
+            uiCache.infoStyleNumber.textContent = upcomingStyle;
+            uiCache.infoTotalOps.textContent = operations.length;
 
             const totalWP = operations.reduce((sum, op) => sum + (parseFloat(op.allocatedWP) || 0), 0);
             const totalDirect = operations.reduce((sum, op) => sum + (parseFloat(op.allocatedDirect) || 0), 0);
 
-            document.getElementById('infoTotalWP').textContent = totalWP.toFixed(2);
-            document.getElementById('infoTotalDirect').textContent = totalDirect.toFixed(2);
-            document.getElementById('styleInfo').classList.remove('hidden');
+            uiCache.infoTotalWP.textContent = totalWP.toFixed(2);
+            uiCache.infoTotalDirect.textContent = totalDirect.toFixed(2);
+            uiCache.styleInfo.classList.remove('hidden');
+        }
+
+        // --- Search Logic ---
+        function handleStyleSearch(event) {
+            handleStyleSearchDebounced(event);
+        }
+
+        let searchTimeout = null;
+
+        function performStyleSearch(query) {
+            const searchTerm = query.toLowerCase().trim();
+            const selector = document.getElementById('styleSelector');
+            const options = selector.options;
+            const clearBtn = document.getElementById('clearSearchBtn');
+            const statusEl = document.getElementById('searchStatus');
+
+            // Show/Hide Clear Button
+            if (searchTerm.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+                statusEl.classList.add('hidden');
+            }
+
+            if (!searchTerm) return;
+
+            // Filter Options and find match
+            let matchCount = 0;
+            let firstMatchId = null;
+            let matchedName = "";
+
+            for (let i = 1; i < options.length; i++) {
+                const text = options[i].text.toLowerCase();
+                const isMatch = text.includes(searchTerm);
+                options[i].style.display = isMatch ? "" : "none";
+
+                if (isMatch) {
+                    matchCount++;
+                    firstMatchId = options[i].value;
+                    matchedName = options[i].text;
+                }
+            }
+
+            // Status Display Logic (debounced slightly to avoid flickering)
+            if (searchTimeout) clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                if (matchCount === 1) {
+                    statusEl.textContent = `Found: ${matchedName.split(' - ')[0]}`;
+                    statusEl.classList.remove('hidden', 'text-rose-500');
+                    statusEl.classList.add('text-emerald-600');
+
+                    // Auto-select
+                    if (selector.value !== firstMatchId) {
+                        selector.value = firstMatchId;
+                        loadOperationsForStyle(firstMatchId);
+                    }
+                } else if (matchCount > 1) {
+                    statusEl.textContent = `${matchCount} styles match`;
+                    statusEl.classList.remove('hidden', 'text-rose-500', 'text-emerald-600');
+                    statusEl.classList.add('text-slate-500');
+                } else {
+                    statusEl.textContent = `No matches found`;
+                    statusEl.classList.remove('hidden', 'text-emerald-600');
+                    statusEl.classList.add('text-rose-500');
+                }
+            }, 100);
+        }
+
+        function clearStyleSearch() {
+            const searchInput = document.getElementById('styleSearch');
+            searchInput.value = '';
+            document.getElementById('clearSearchBtn').classList.add('hidden');
+            document.getElementById('searchStatus').classList.add('hidden');
+
+            const selector = document.getElementById('styleSelector');
+            const options = selector.options;
+
+            for (let i = 0; i < options.length; i++) {
+                options[i].style.display = "";
+            }
+            searchInput.focus();
         }
 
         // --- Render Operations ---
@@ -558,17 +1157,25 @@
 
             container.innerHTML = currentOperations.map((op, index) => `
                 <div class="operation-card ${selectedOperationIds.has(op.id) ? 'selected' : ''} ${op.isCombined ? 'combined' : ''}"
-                     data-id="${op.id}" onclick="toggleOperationSelection('${op.id}')">
+                     data-id="${op.id}" 
+                     role="listitem"
+                     aria-selected="${selectedOperationIds.has(op.id)}"
+                     tabindex="0"
+                     onkeydown="if(event.key === ' ' || event.key === 'Enter') { event.preventDefault(); toggleOperationSelection('${op.id}'); }"
+                     onclick="toggleOperationSelection('${op.id}')">
                     <div class="flex items-center gap-4">
                         <!-- Drag Handle -->
-                        <div class="cursor-grab text-slate-300 hover:text-slate-500 transition-colors">
+                        <div class="cursor-grab text-slate-300 hover:text-slate-500 transition-colors p-1" 
+                             aria-label="Drag handle for reordering"
+                             title="Drag to reorder">
                             <i data-lucide="grip-vertical" class="w-5 h-5"></i>
                         </div>
                         
                         <!-- Checkbox -->
                         <input type="checkbox" ${selectedOperationIds.has(op.id) ? 'checked' : ''} 
                                onclick="event.stopPropagation(); toggleOperationSelection('${op.id}')"
-                               class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                               aria-label="Select operation ${op.serialNumber}"
+                               class="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 pointer-events-auto">
                         
                         <!-- Serial Number -->
                         <div class="w-16 text-center">
@@ -650,13 +1257,23 @@
 
         // --- Selection ---
         function toggleOperationSelection(id) {
-            if (selectedOperationIds.has(id)) {
+            const isSelected = selectedOperationIds.has(id);
+            if (isSelected) {
                 selectedOperationIds.delete(id);
             } else {
                 selectedOperationIds.add(id);
             }
+
+            // Incremental DOM update instead of full render
+            const card = document.querySelector(`.operation-card[data-id="${id}"]`);
+            if (card) {
+                card.classList.toggle('selected', !isSelected);
+                card.setAttribute('aria-selected', !isSelected);
+                const checkbox = card.querySelector('input[type="checkbox"]');
+                if (checkbox) checkbox.checked = !isSelected;
+            }
+
             updateSelectionUI();
-            renderOperations();
         }
 
         function updateSelectionUI() {
@@ -686,7 +1303,7 @@
 
             // Create combined operation - store full source data for split
             const combinedOp = {
-                id: `combined-${Date.now()}`,
+                id: `combined-${crypto.randomUUID()}`,
                 serialNumber: selectedOps.map(op => op.serialNumber).join(' + '),
                 name: selectedOps.map(op => op.name).join(' + '),
                 smv: selectedOps.map(op => op.smv).join(' + '),
@@ -770,10 +1387,13 @@
 
         // --- Save Operations ---
         async function saveOperations() {
+            if (isSaving) return;
             if (!currentQCOId || currentOperations.length === 0) {
                 showToast('No operations to save', 'warning');
                 return;
             }
+
+            isSaving = true;
 
             const saveBtn = document.getElementById('saveBtn');
             saveBtn.disabled = true;
@@ -806,6 +1426,7 @@
                 console.error('Save error:', error);
                 showToast('Failed to save operations', 'error');
             } finally {
+                isSaving = false;
                 updateSaveButton();
             }
         }
@@ -820,6 +1441,12 @@
         // --- Toast ---
         function showToast(message, type = 'info') {
             const container = document.getElementById('toastContainer');
+
+            // Limit concurrent toasts to 3
+            if (container.children.length >= 3) {
+                container.firstElementChild.remove();
+            }
+
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
             toast.innerHTML = `
@@ -835,7 +1462,7 @@
             setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => toast.remove(), 400);
-            }, 3000);
+            }, 4000);
         }
 
         // --- Logout ---
@@ -846,12 +1473,13 @@
         }
 
         // Warn on unsaved changes
-        window.addEventListener('beforeunload', (e) => {
+        const handleBeforeUnload = (e) => {
             if (hasUnsavedChanges) {
                 e.preventDefault();
                 e.returnValue = '';
             }
-        });
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
     </script>
 
 </body>
