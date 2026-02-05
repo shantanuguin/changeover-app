@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Changeover Meeting Initiator - Manufacturing Excellence</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -67,6 +67,41 @@
         body {
             background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
             min-height: 100vh;
+            /* Safe area support for notched devices */
+            padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        }
+
+        /* Touch Optimization CSS */
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        button,
+        .btn,
+        .btn-primary,
+        .btn-secondary,
+        input[type="submit"],
+        select,
+        .machine-card {
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* Ensure inputs don't trigger zoom on iOS (16px minimum) */
+        input,
+        select,
+        textarea {
+            font-size: 16px;
+        }
+
+        /* Touch-friendly target sizing */
+        button,
+        .btn,
+        .btn-primary,
+        input[type="submit"] {
+            min-height: 44px;
+            min-width: 44px;
         }
 
         .glass-panel {
