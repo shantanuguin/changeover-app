@@ -218,6 +218,43 @@
             margin-bottom: 0.5rem;
         }
 
+        /* Premium Glassmorphism & Shadows */
+        .glass {
+            background: linear-gradient(135deg,
+                    rgba(255, 255, 255, 0.9),
+                    rgba(240, 249, 255, 0.9));
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 1);
+            box-shadow:
+                0 40px 100px -12px rgba(0, 0, 0, 0.08),
+                0 20px 50px -12px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 1.5rem;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow:
+                0 40px 100px -12px rgba(0, 0, 0, 0.08),
+                0 20px 50px -12px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.6);
+            border-color: rgba(14, 165, 233, 0.2);
+            box-shadow:
+                0 40px 100px -12px rgba(14, 165, 233, 0.15),
+                0 20px 50px -12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+
         /* --- Backdrop --- */
         .nav-backdrop {
             position: fixed;
@@ -345,6 +382,118 @@
             #appContent {
                 overflow-x: hidden;
             }
+
+            /* Optimized Mobile Visibility & Layout Fix - V3 */
+            .operation-card {
+                padding: 0.875rem !important;
+            }
+
+            .operation-card .flex {
+                display: grid !important;
+                /* Columns: Drag(auto), Check(auto), Serial(auto), Name/Content(1fr) */
+                grid-template-columns: auto auto auto 1fr;
+                grid-template-rows: auto auto auto;
+                gap: 0.625rem 0.75rem !important;
+                align-items: start;
+            }
+
+            /* Top Row: handle, checkbox, serial, name */
+            .operation-card .drag-handle {
+                grid-column: 1;
+                grid-row: 1;
+                margin-top: 2px;
+            }
+
+            .operation-card input[type="checkbox"] {
+                grid-column: 2;
+                grid-row: 1;
+                margin: 0;
+            }
+
+            .operation-card .w-16 {
+                grid-column: 3;
+                grid-row: 1;
+                width: auto !important;
+                margin: 0;
+                text-align: left !important;
+            }
+
+            /* Name: Allowing wrapping for visibility */
+            .operation-card .flex-1 {
+                grid-column: 4;
+                grid-row: 1;
+                width: auto !important;
+                margin: 0;
+                border: none !important;
+                padding: 0 !important;
+                min-width: 0;
+                white-space: normal !important;
+            }
+
+            /* Split Button: Dedicated row to prevent name/stat overlaps */
+            .operation-card button {
+                grid-column: 4;
+                grid-row: 2;
+                width: fit-content !important;
+                margin: 0 !important;
+                padding: 0.4rem 0.75rem !important;
+                font-size: 0.75rem !important;
+                justify-self: start;
+            }
+
+            /* Bottom Row: metrics container */
+            .operation-card .w-24,
+            .operation-card .w-32,
+            .operation-card .w-20 {
+                grid-row: 3;
+                width: auto !important;
+                text-align: center !important;
+                padding: 0.625rem 0.25rem 0 0.25rem;
+                margin: 0;
+                border-top: 1px solid rgba(226, 232, 240, 0.6);
+            }
+
+            /* Distribution */
+            .operation-card .w-24 {
+                grid-column: 1 / span 1;
+            }
+
+            .operation-card .w-32 {
+                grid-column: 2 / span 2;
+            }
+
+            .operation-card>.flex>.w-20:nth-of-type(7) {
+                grid-column: 4 / span 1;
+            }
+
+            .operation-card>.flex>.w-20:nth-last-of-type(2) {
+                grid-column: 4 / span 1;
+                text-align: right !important;
+                justify-self: end;
+            }
+
+            /* Contrast & Sizing Upgrades */
+            .operation-card p.text-xs.text-slate-400 {
+                font-size: 0.65rem !important;
+                color: #64748b !important;
+                /* Higher contrast Slate-500 */
+                font-weight: 600 !important;
+                margin-bottom: 0.125rem !important;
+            }
+
+            .operation-card .font-bold,
+            .operation-card .font-medium {
+                font-size: 0.8125rem !important;
+                color: #0f172a !important;
+                /* High contrast Slate-900 */
+            }
+
+            /* Cleanup previous implementation leftovers */
+            .operation-card .w-24::before,
+            .operation-card .w-32::before,
+            .operation-card .w-20::before {
+                display: none !important;
+            }
         }
 
         /* --- OPERATIONS SPECIFIC STYLES --- */
@@ -354,12 +503,34 @@
             border-radius: 1rem;
             padding: 1rem 1.25rem;
             transition: all 0.2s ease;
-            cursor: grab;
+            position: relative;
         }
 
-        .operation-card:active {
+        .drag-handle {
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            color: #cbd5e1;
+            /* slate-300 */
+            transition: color 0.2s ease, background-color 0.2s ease;
+            border-radius: 0.5rem;
+            touch-action: none;
+            /* Critical for mobile */
+        }
+
+        .drag-handle:hover {
+            color: #64748b;
+            /* slate-500 */
+            background-color: #f1f5f9;
+        }
+
+        .drag-handle:active {
             cursor: grabbing;
         }
+
+
 
         .operation-card:hover:not(.selected) {
             border-color: #0ea5e9;
@@ -459,7 +630,7 @@
     <div id="navBackdrop" class="nav-backdrop" aria-hidden="true"></div>
 
     <!-- Retractable Sidebar -->
-    <aside id="appSidebar" class="retractable-sidebar hidden" aria-hidden="true">
+    <aside id="appSidebar" class="retractable-sidebar" aria-hidden="true">
         <!-- Header - FIXED HEIGHT -->
         <div class="sidebar-header h-20 flex-shrink-0 flex items-center px-6 border-b border-white/30">
             <a href="../index.html" class="flex items-center gap-3 group transition-all hover:scale-105">
@@ -779,39 +950,52 @@
     </div>
 
     <script>
-        // --- Navigation System ---
+        // Standardized Navigation System
         class NavigationSystem {
             constructor() {
                 this.isOpen = false;
-                this.sidebar = document.getElementById('appSidebar');
-                this.toggleBtn = document.getElementById('navToggle');
-                this.backdrop = document.getElementById('navBackdrop') || document.getElementById('sidebarBackdrop');
                 this.init();
             }
 
             init() {
-                if (!this.sidebar || !this.toggleBtn) return;
+                this.toggleBtn = document.getElementById('navToggle');
+                this.sidebar = document.getElementById('appSidebar');
+                this.backdrop = document.getElementById('navBackdrop');
+                this.body = document.body;
 
-                this.toggleBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.toggleSidebar();
-                });
+                this.setupEventListeners();
+                this.resolveActiveState();
+                this.setupScrollableNav();
+            }
+
+            setupEventListeners() {
+                if (this.toggleBtn) {
+                    this.toggleBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.toggleSidebar();
+                    });
+                }
 
                 if (this.backdrop) {
-                    this.backdrop.addEventListener('click', () => this.closeSidebar());
+                    this.backdrop.addEventListener('click', (e) => {
+                        if (e.target === this.backdrop) this.closeSidebar();
+                    });
+
+                    this.backdrop.addEventListener('touchstart', (e) => {
+                        if (e.target === this.backdrop) this.closeSidebar();
+                    }, { passive: true });
+                }
+
+                if (this.sidebar) {
+                    this.sidebar.querySelectorAll('a').forEach(link => {
+                        link.addEventListener('click', () => this.closeSidebar());
+                    });
                 }
 
                 document.addEventListener('keydown', (e) => {
                     if (e.key === 'Escape' && this.isOpen) this.closeSidebar();
                 });
-
-                window.addEventListener('resize', () => {
-                    if (window.innerWidth >= 1280 && this.isOpen) {
-                        this.closeSidebar();
-                    }
-                });
-
-                this.resolveActiveState();
             }
 
             toggleSidebar() {
@@ -820,41 +1004,39 @@
 
             openSidebar() {
                 this.isOpen = true;
-                this.sidebar.classList.remove('hidden');
-                setTimeout(() => {
-                    this.sidebar.classList.add('open');
-                    if (this.backdrop) this.backdrop.classList.add('active');
-                }, 10);
-                document.body.style.overflow = 'hidden';
+                this.sidebar?.classList.add('open');
+                this.toggleBtn?.classList.add('open');
+                this.backdrop?.classList.add('active');
+                this.body.style.overflow = 'hidden';
             }
 
             closeSidebar() {
                 this.isOpen = false;
-                this.sidebar.classList.remove('open');
-                if (this.backdrop) this.backdrop.classList.remove('active');
-
-                setTimeout(() => {
-                    if (!this.isOpen) this.sidebar.classList.add('hidden');
-                }, 400);
-
-                document.body.style.overflow = '';
+                this.sidebar?.classList.remove('open');
+                this.toggleBtn?.classList.remove('open');
+                this.backdrop?.classList.remove('active');
+                this.body.style.overflow = '';
             }
 
             resolveActiveState() {
                 const currentPath = window.location.pathname;
                 const filename = currentPath.split('/').pop() || 'index.html';
-                const navItems = document.querySelectorAll('.nav-item');
-
-                navItems.forEach(item => {
+                document.querySelectorAll('.nav-item').forEach(item => {
                     item.classList.remove('active');
                     const href = item.getAttribute('href');
-                    if (href) {
-                        const hrefFilename = href.split('/').pop();
-                        if (filename === hrefFilename) {
-                            item.classList.add('active');
-                        }
+                    if (href && (filename === href.split('/').pop())) {
+                        item.classList.add('active');
                     }
                 });
+            }
+
+            setupScrollableNav() {
+                const nav = this.sidebar?.querySelector('nav');
+                if (nav) {
+                    this.sidebar.addEventListener('touchmove', (e) => {
+                        if (this.isOpen) e.stopPropagation();
+                    }, { passive: false });
+                }
             }
         }
 
@@ -1264,7 +1446,7 @@
                      onclick="toggleOperationSelection('${op.id}')">
                     <div class="flex items-center gap-4">
                         <!-- Drag Handle -->
-                        <div class="cursor-grab text-slate-300 hover:text-slate-500 transition-colors p-1" 
+                        <div class="drag-handle" 
                              aria-label="Drag handle for reordering"
                              title="Drag to reorder">
                             <i data-lucide="grip-vertical" class="w-5 h-5"></i>
@@ -1285,30 +1467,30 @@
                         
                         <!-- Operation Name -->
                         <div class="flex-1 min-w-0">
-                            <p class="font-semibold text-slate-800 truncate">${op.name}</p>
+                            <p class="font-semibold text-slate-800">${op.name}</p>
                             ${op.isCombined ? '<span class="text-xs text-violet-600 font-medium">Combined Operation</span>' : ''}
                         </div>
                         
                         <!-- SMV -->
-                        <div class="w-24 text-center">
+                        <div class="w-24 text-center" data-label="SMV">
                             <p class="text-xs text-slate-400 font-semibold">SMV</p>
                             <p class="font-bold text-slate-700">${op.smv}</p>
                         </div>
                         
                         <!-- Machine Type -->
-                        <div class="w-32 text-center">
+                        <div class="w-32 text-center" data-label="Machine">
                             <p class="text-xs text-slate-400 font-semibold">Machine</p>
                             <p class="font-medium text-slate-600 text-sm truncate">${op.machineType}</p>
                         </div>
                         
                         <!-- Allocated WP -->
-                        <div class="w-20 text-center">
+                        <div class="w-20 text-center" data-label="WP">
                             <p class="text-xs text-slate-400 font-semibold">WP</p>
                             <p class="font-bold text-emerald-600">${op.allocatedWP}</p>
                         </div>
                         
                         <!-- Allocated Direct -->
-                        <div class="w-20 text-center">
+                        <div class="w-20 text-center" data-label="Direct">
                             <p class="text-xs text-slate-400 font-semibold">Direct</p>
                             <p class="font-bold text-violet-600">${op.allocatedDirect}</p>
                         </div>
@@ -1337,9 +1519,12 @@
 
             sortableInstance = Sortable.create(container, {
                 animation: 200,
-                handle: '.cursor-grab',
+                handle: '.drag-handle',
                 ghostClass: 'sortable-ghost',
                 chosenClass: 'sortable-chosen',
+                delay: 100, // Important for mobile to allow tap/scroll vs drag
+                delayOnTouchOnly: true,
+                touchStartThreshold: 5,
                 onEnd: function (evt) {
                     // Reorder currentOperations array
                     const movedItem = currentOperations.splice(evt.oldIndex, 1)[0];

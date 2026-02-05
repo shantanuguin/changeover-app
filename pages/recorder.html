@@ -137,44 +137,118 @@
             }
         }
 
-        /* --- Retractable Sidebar --- */
+        /* Section headers - Premium Divider Style */
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            padding: 0 1rem;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #475569;
+            /* Slate 600 */
+            position: relative;
+        }
+
+        .section-header::before {
+            content: '';
+            width: 4px;
+            height: 4px;
+            background: #0ea5e9;
+            border-radius: 50%;
+            margin-right: 0.75rem;
+            box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+        }
+
+        .section-header::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, rgba(226, 232, 240, 0.8), transparent);
+            margin-left: 1rem;
+        }
+
+        /* --- Navigation & Backdrop --- */
+        .nav-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.3);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 40;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-backdrop.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
         .retractable-sidebar {
             position: fixed;
             left: 0;
             top: 0;
             bottom: 0;
-            width: var(--sidebar-width);
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            width: 280px;
+            max-width: 85vw;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
             border-right: 1px solid rgba(255, 255, 255, 0.6);
             z-index: 50;
             transform: translateX(-100%);
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
-            box-shadow: 10px 0 30px -10px rgba(0, 0, 0, 0.05);
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
+            will-change: transform;
         }
 
-        .sidebar-open .retractable-sidebar {
+        .retractable-sidebar.open {
             transform: translateX(0);
         }
 
-        .sidebar-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.2);
-            backdrop-filter: blur(4px);
-            z-index: 40;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
+        /* Premium Glassmorphism & Shadows */
+        .glass {
+            background: linear-gradient(135deg,
+                    rgba(255, 255, 255, 0.9),
+                    rgba(240, 249, 255, 0.9));
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 1);
+            box-shadow:
+                0 40px 100px -12px rgba(0, 0, 0, 0.08),
+                0 20px 50px -12px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .sidebar-open .sidebar-backdrop {
-            opacity: 1;
-            pointer-events: auto;
+        .glass-card {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 1.5rem;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow:
+                0 40px 100px -12px rgba(0, 0, 0, 0.08),
+                0 20px 50px -12px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.6);
+            border-color: rgba(14, 165, 233, 0.2);
+            box-shadow:
+                0 40px 100px -12px rgba(14, 165, 233, 0.15),
+                0 20px 50px -12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
 
         /* Hamburger Menu Button - Squircle Glassmorphism */
         #appHeader .hamburger-btn {
@@ -327,12 +401,12 @@
         </div>
     </div>
 
-    <!-- Sidebar Backdrop -->
-    <div id="sidebarBackdrop" class="sidebar-backdrop" onclick="window.navSystem?.closeSidebar()"></div>
+    <!-- Navigation Backdrop -->
+    <div id="navBackdrop" class="nav-backdrop" aria-hidden="true"></div>
 
     <!-- Retractable Sidebar -->
     <!-- Retractable Sidebar (Hidden by default) -->
-    <aside id="appSidebar" class="retractable-sidebar hidden" aria-hidden="true">
+    <aside id="appSidebar" class="retractable-sidebar" aria-hidden="true">
         <!-- Header - FIXED HEIGHT -->
         <div class="sidebar-header h-20 flex-shrink-0 flex items-center px-6 border-b border-white/30">
             <a href="../index.html" class="flex items-center gap-3 group transition-all hover:scale-105">
@@ -641,10 +715,7 @@
     </div>
     </div>
 
-    <!-- Mobile Menu Overlay -->
-    <div id="mobileMenuOverlay"
-        class="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-30 opacity-0 pointer-events-none transition-opacity duration-300"
-        onclick="window.navSystem?.closeSidebar()"></div>
+
 
     <!-- Edit Modal -->
     <div id="editModal" class="fixed inset-0 z-50 hidden transition-opacity duration-300 opacity-0">
@@ -753,49 +824,92 @@
 
     <script>
         // --- Navigation System ---
+        // Standardized Navigation System
         class NavigationSystem {
             constructor() {
-                this.sidebar = document.getElementById('appSidebar');
-                this.toggleBtn = document.getElementById('navToggle');
-                this.backdrop = document.getElementById('sidebarBackdrop');
-                this.body = document.body;
                 this.isOpen = false;
-
                 this.init();
             }
 
             init() {
+                this.toggleBtn = document.getElementById('navToggle');
+                this.sidebar = document.getElementById('appSidebar');
+                this.backdrop = document.getElementById('navBackdrop');
+                this.body = document.body;
+
+                this.setupEventListeners();
+                this.resolveActiveState();
+                this.setupScrollableNav();
+            }
+
+            setupEventListeners() {
                 if (this.toggleBtn) {
                     this.toggleBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
                         e.stopPropagation();
                         this.toggleSidebar();
                     });
                 }
 
                 if (this.backdrop) {
-                    this.backdrop.addEventListener('click', () => this.closeSidebar());
+                    this.backdrop.addEventListener('click', (e) => {
+                        if (e.target === this.backdrop) this.closeSidebar();
+                    });
+
+                    this.backdrop.addEventListener('touchstart', (e) => {
+                        if (e.target === this.backdrop) this.closeSidebar();
+                    }, { passive: true });
                 }
+
+                if (this.sidebar) {
+                    this.sidebar.querySelectorAll('a').forEach(link => {
+                        link.addEventListener('click', () => this.closeSidebar());
+                    });
+                }
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.isOpen) this.closeSidebar();
+                });
             }
 
             toggleSidebar() {
-                this.isOpen = !this.isOpen;
-                this.updateState();
+                this.isOpen ? this.closeSidebar() : this.openSidebar();
+            }
+
+            openSidebar() {
+                this.isOpen = true;
+                this.sidebar?.classList.add('open');
+                this.toggleBtn?.classList.add('open');
+                this.backdrop?.classList.add('active');
+                this.body.style.overflow = 'hidden';
             }
 
             closeSidebar() {
                 this.isOpen = false;
-                this.updateState();
+                this.sidebar?.classList.remove('open');
+                this.toggleBtn?.classList.remove('open');
+                this.backdrop?.classList.remove('active');
+                this.body.style.overflow = '';
             }
 
-            updateState() {
-                if (this.isOpen) {
-                    this.body.classList.add('sidebar-open');
-                    this.body.style.overflow = 'hidden';
-                    this.toggleBtn?.classList.add('open');
-                } else {
-                    this.body.classList.remove('sidebar-open');
-                    this.body.style.overflow = '';
-                    this.toggleBtn?.classList.remove('open');
+            resolveActiveState() {
+                const currentPath = window.location.pathname;
+                const filename = currentPath.split('/').pop() || 'index.html';
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('active');
+                    const href = item.getAttribute('href');
+                    if (href && (filename === href.split('/').pop())) {
+                        item.classList.add('active');
+                    }
+                });
+            }
+
+            setupScrollableNav() {
+                const nav = this.sidebar?.querySelector('nav');
+                if (nav) {
+                    this.sidebar.addEventListener('touchmove', (e) => {
+                        if (this.isOpen) e.stopPropagation();
+                    }, { passive: false });
                 }
             }
         }
