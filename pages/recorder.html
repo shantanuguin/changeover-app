@@ -1843,9 +1843,17 @@
 
                 const fieldPath = new firebase.firestore.FieldPath('operationTimings', opName);
 
-                await db.collection('changeovers').doc(qcoId).update(
-                    fieldPath, { start: timestamp }
-                );
+                if (currentQCOData.status === 'pending') {
+                    await db.collection('changeovers').doc(qcoId).update(
+                        fieldPath, { start: timestamp },
+                        'status', 'in-progress'
+                    );
+                    currentQCOData.status = 'in-progress'; // Optimistic update
+                } else {
+                    await db.collection('changeovers').doc(qcoId).update(
+                        fieldPath, { start: timestamp }
+                    );
+                }
 
                 // Refresh data to update status
                 loadData();
