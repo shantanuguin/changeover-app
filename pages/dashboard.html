@@ -712,6 +712,29 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: #94a3b8;
+        }
+
+        .custom-scrollbar {
+            scroll-behavior: smooth;
+            overscroll-behavior: contain;
+        }
+
         /* Mobile-specific overrides (max-width: 768px) */
         @media (max-width: 768px) {
 
@@ -1362,111 +1385,130 @@
                         </div>
                     </div>
 
-                    <!-- Main Content Grid -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <!-- Main Content Grid - Restructured 2x2 Layout -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
 
-                        <!-- Chart Section -->
-                        <div class="glass-card p-8 lg:col-span-2 group" data-tilt>
-                            <div class="flex justify-between items-center mb-6">
+                        <!-- Chart 1: COPT Trend / Daily Count -->
+                        <div class="glass-card p-6 group" data-tilt>
+                            <div class="flex justify-between items-center mb-4">
                                 <div>
-                                    <h3 class="text-xl font-heading font-bold text-slate-900">Performance Analytics</h3>
-                                    <p class="text-sm text-slate-500">Multi-dimensional insights</p>
+                                    <h3 class="text-lg font-heading font-bold text-slate-900">Performance</h3>
+                                    <p class="text-xs text-slate-500">COPT & Daily insights</p>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <select id="chartRange" onchange="updateChartRange()"
-                                        class="text-sm border border-slate-200 rounded-lg px-3 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                        <option value="7">Last 7 Days</option>
-                                        <option value="30" selected>Last 30 Days</option>
-                                        <option value="90">Last 90 Days</option>
-                                    </select>
-                                    <div
-                                        class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm">
-                                        <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                                        <span class="text-xs font-bold text-slate-600">Live</span>
-                                    </div>
-                                </div>
+                                <select id="chartRange" onchange="updateChartRange()"
+                                    class="text-xs border border-slate-200 rounded-lg px-2 py-1 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="7">7 Days</option>
+                                    <option value="30" selected>30 Days</option>
+                                    <option value="90">90 Days</option>
+                                </select>
                             </div>
 
-                            <!-- Chart Tabs -->
-                            <div class="flex gap-2 mb-6 border-b border-slate-200 pb-2 overflow-x-auto">
-                                <button onclick="switchChartTab('copt')" id="tab-copt"
-                                    class="chart-tab active flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all">
-                                    <i data-lucide="trending-up" class="w-4 h-4"></i>
+                            <!-- Chart 1 Tabs -->
+                            <div class="flex gap-1 mb-4 bg-slate-100 p-1 rounded-lg">
+                                <button onclick="switchChart1Tab('copt')" id="tab-copt"
+                                    class="chart-tab chart1-tab active flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-xs font-semibold transition-all">
+                                    <i data-lucide="trending-up" class="w-3.5 h-3.5"></i>
                                     <span>COPT Trend</span>
                                 </button>
-                                <button onclick="switchChartTab('daily')" id="tab-daily"
-                                    class="chart-tab flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all">
-                                    <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                                <button onclick="switchChart1Tab('daily')" id="tab-daily"
+                                    class="chart-tab chart1-tab flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-xs font-semibold transition-all">
+                                    <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
                                     <span>Daily Count</span>
-                                </button>
-                                <button onclick="switchChartTab('efficiency')" id="tab-efficiency"
-                                    class="chart-tab flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all">
-                                    <i data-lucide="activity" class="w-4 h-4"></i>
-                                    <span>Efficiency</span>
-                                </button>
-                                <button onclick="switchChartTab('multi')" id="tab-multi"
-                                    class="chart-tab flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all">
-                                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-                                    <span>Multi-Metric</span>
                                 </button>
                             </div>
 
-                            <!-- Chart Canvas -->
-                            <div class="relative h-[380px] w-full">
+                            <!-- Chart 1 Canvas -->
+                            <div class="relative h-[280px] w-full">
                                 <canvas id="performanceChart"></canvas>
                             </div>
                         </div>
 
-                        <!-- Live Status & Quick Stats -->
-                        <div class="space-y-6">
-                            <!-- Active Changeovers -->
-                            <div class="glass-card p-8 relative overflow-hidden">
-                                <div class="flex justify-between items-center mb-6">
-                                    <h3 class="text-xl font-heading font-bold text-slate-900">Active Now</h3>
-                                    <span class="badge badge-live bg-emerald-50 text-emerald-700">2 Live</span>
+                        <!-- Chart 2: Efficiency / Multi-Metric -->
+                        <div class="glass-card p-6 group" data-tilt>
+                            <div class="flex justify-between items-center mb-4">
+                                <div>
+                                    <h3 class="text-lg font-heading font-bold text-slate-900">Efficiency</h3>
+                                    <p class="text-xs text-slate-500">Multi-dimensional insights</p>
                                 </div>
-                                <div class="space-y-4" id="activeChangeoversList">
-                                    <!-- Injected dynamically -->
+                                <div
+                                    class="flex items-center gap-2 px-2 py-1 rounded-full bg-white border border-slate-200 shadow-sm">
+                                    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                                    <span class="text-xs font-bold text-slate-600">Live</span>
                                 </div>
                             </div>
 
-                            <!-- Operations Analytics Widget -->
-                            <div class="glass-card p-6">
-                                <div class="flex justify-between items-center mb-4">
-                                    <h3 class="text-lg font-heading font-bold text-slate-900">Operations Analytics</h3>
-                                    <button onclick="refreshOperationsData()"
-                                        class="p-1.5 hover:bg-slate-100 rounded-lg transition-colors">
-                                        <i data-lucide="refresh-cw" class="w-4 h-4 text-slate-500"></i>
-                                    </button>
-                                </div>
+                            <!-- Chart 2 Tabs -->
+                            <div class="flex gap-1 mb-4 bg-slate-100 p-1 rounded-lg">
+                                <button onclick="switchChart2Tab('efficiency')" id="tab-efficiency"
+                                    class="chart-tab chart2-tab active flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-xs font-semibold transition-all">
+                                    <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+                                    <span>Efficiency</span>
+                                </button>
+                                <button onclick="switchChart2Tab('multi')" id="tab-multi"
+                                    class="chart-tab chart2-tab flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-xs font-semibold transition-all">
+                                    <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
+                                    <span>Multi-Metric</span>
+                                </button>
+                            </div>
 
-                                <!-- Operation Tabs -->
-                                <div class="flex gap-1 mb-4 bg-slate-100 p-1 rounded-lg">
-                                    <button onclick="switchOperationTab('top')" id="optab-top"
-                                        class="operation-tab active flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-xs font-semibold transition-all">
-                                        <i data-lucide="zap" class="w-3.5 h-3.5"></i>
-                                        <span>Top Ops</span>
-                                    </button>
-                                    <button onclick="switchOperationTab('dept')" id="optab-dept"
-                                        class="operation-tab flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-xs font-semibold transition-all">
-                                        <i data-lucide="layers" class="w-3.5 h-3.5"></i>
-                                        <span>Depts</span>
-                                    </button>
-                                    <button onclick="switchOperationTab('line')" id="optab-line"
-                                        class="operation-tab flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-xs font-semibold transition-all">
-                                        <i data-lucide="list" class="w-3.5 h-3.5"></i>
-                                        <span>Lines</span>
-                                    </button>
-                                    <button onclick="switchOperationTab('recent')" id="optab-recent"
-                                        class="operation-tab flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-xs font-semibold transition-all">
-                                        <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-                                        <span>Recent</span>
-                                    </button>
-                                </div>
+                            <!-- Chart 2 Canvas -->
+                            <div class="relative h-[280px] w-full">
+                                <canvas id="efficiencyChart"></canvas>
+                            </div>
+                        </div>
 
-                                <!-- Tab Content -->
-                                <div class="space-y-3 max-h-[380px] overflow-y-auto custom-scrollbar"
-                                    id="operationsContent">
+                        <!-- Active Changeovers -->
+                        <div class="glass-card p-6 relative overflow-hidden">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-heading font-bold text-slate-900">Active Now</h3>
+                                <span class="badge badge-live bg-emerald-50 text-emerald-700">0 Live</span>
+                            </div>
+                            <div class="space-y-4 max-h-[600px] overflow-y-auto custom-scrollbar pr-2"
+                                id="activeChangeoversList">
+                                <div id="activeChangeoversInner" class="space-y-4">
+                                    <!-- Injected dynamically -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Operations Analytics Widget -->
+                        <div class="glass-card p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-heading font-bold text-slate-900">Operations Analytics</h3>
+                                <button onclick="refreshOperationsData()"
+                                    class="p-1.5 hover:bg-slate-100 rounded-lg transition-colors">
+                                    <i data-lucide="refresh-cw" class="w-4 h-4 text-slate-500"></i>
+                                </button>
+                            </div>
+
+                            <!-- Operation Tabs -->
+                            <div class="flex gap-1 mb-4 bg-slate-100 p-1 rounded-lg">
+                                <button onclick="switchOperationTab('top')" id="optab-top"
+                                    class="operation-tab active flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-xs font-semibold transition-all">
+                                    <i data-lucide="zap" class="w-3.5 h-3.5"></i>
+                                    <span>Top Ops</span>
+                                </button>
+                                <button onclick="switchOperationTab('dept')" id="optab-dept"
+                                    class="operation-tab flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-xs font-semibold transition-all">
+                                    <i data-lucide="layers" class="w-3.5 h-3.5"></i>
+                                    <span>Depts</span>
+                                </button>
+                                <button onclick="switchOperationTab('line')" id="optab-line"
+                                    class="operation-tab flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-xs font-semibold transition-all">
+                                    <i data-lucide="list" class="w-3.5 h-3.5"></i>
+                                    <span>Lines</span>
+                                </button>
+                                <button onclick="switchOperationTab('recent')" id="optab-recent"
+                                    class="operation-tab flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded text-xs font-semibold transition-all">
+                                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                    <span>Recent</span>
+                                </button>
+                            </div>
+
+                            <!-- Tab Content -->
+                            <div class="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2"
+                                id="operationsContent">
+                                <div id="operationsInner" class="space-y-3">
                                     <!-- Injected dynamically -->
                                 </div>
                             </div>
@@ -1876,11 +1918,11 @@
 
                 // --- Active Changeovers Widget ---
                 function updateActiveChangeovers() {
-                    const active = getFilteredDashboardData().filter(c => c.status === 'in-progress').slice(0, 3);
-                    const container = document.getElementById('activeChangeoversList');
+                    const active = getFilteredDashboardData().filter(c => c.status === 'in-progress').slice(0, 10);
+                    const container = document.getElementById('activeChangeoversInner') || document.getElementById('activeChangeoversList');
 
                     if (active.length === 0) {
-                        container.innerHTML = '<p class="text-slate-400 text-sm italic">No active changeovers</p>';
+                        container.innerHTML = '<p class="text-slate-400 text-sm italic py-8 text-center">No active changeovers</p>';
                         return;
                     }
 
@@ -2153,18 +2195,182 @@
 
                     // Refresh all dashboard components with new filter
                     currentPage = 1;
-                    refreshDashboardWithFilters();
+                    applyCurrentFilters();
+                }
+
+                // Central refresh function that updates all components
+                /**
+                 * Load initial data immediately on page load with current filters
+                 */
+                async function loadInitialData() {
+                    try {
+                        showToast('Loading dashboard data...', 'info');
+
+                        // Load changeovers from Firebase
+                        const changeoversRef = firebase.firestore().collection('changeovers');
+                        const snapshot = await changeoversRef.get();
+
+                        allChangeovers = snapshot.docs.map(doc => ({
+                            id: doc.id,
+                            ...doc.data()
+                        })).filter(qco => qco.qcoNumber && qco.qcoNumber !== 'Unknown');
+
+                        // Sort by creation date (newest first)
+                        allChangeovers.sort((a, b) => {
+                            const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+                            const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+                            return dateB - dateA;
+                        });
+
+                        // Load current filters from localStorage or use defaults
+                        loadFilterSettings();
+
+                        // Apply filters and update ALL dashboard components
+                        applyCurrentFilters();
+
+                        showToast('Dashboard loaded successfully', 'success');
+
+                    } catch (error) {
+                        console.error('Error loading initial data:', error);
+                        showToast('Error loading dashboard data', 'error');
+                    }
+                }
+
+                /**
+                 * Save current filter settings to localStorage
+                 */
+                function saveFilterSettings() {
+                    const settings = {
+                        statusFilter: currentStatusFilter,
+                        styleFilter: currentStyleFilter,
+                        qcoFilter: currentQCOFilter,
+                        timeRange: currentTimeRange,
+                        filterMode: currentFilterMode,
+                        chartRange: document.getElementById('chartRange')?.value || '30',
+                        operationTab: currentOperationTab,
+                        chart1Tab: currentChartType,
+                        chart2Tab: chart2Type || 'efficiency'
+                    };
+
+                    localStorage.setItem('dashboardFilters', JSON.stringify(settings));
+                }
+
+                /**
+                 * Load filter settings from localStorage
+                 */
+                function loadFilterSettings() {
+                    try {
+                        const saved = localStorage.getItem('dashboardFilters');
+                        if (!saved) return;
+
+                        const settings = JSON.parse(saved);
+
+                        // Restore filter values
+                        currentStatusFilter = settings.statusFilter || 'all';
+                        currentStyleFilter = settings.styleFilter || 'all';
+                        currentQCOFilter = settings.qcoFilter || 'all';
+                        currentTimeRange = settings.timeRange || 'week';
+                        currentFilterMode = settings.filterMode || 'style';
+                        currentOperationTab = settings.operationTab || 'top';
+                        currentChartType = settings.chart1Tab || 'copt';
+                        chart2Type = settings.chart2Tab || 'efficiency';
+
+                        // Restore UI elements
+                        restoreFilterUI(settings);
+
+                    } catch (error) {
+                        console.error('Error loading filter settings:', error);
+                    }
+                }
+
+                /**
+                 * Restore filter UI elements
+                 */
+                function restoreFilterUI(settings) {
+                    // Restore filter chips
+                    document.querySelectorAll('.filter-chip').forEach(chip => {
+                        chip.classList.remove('active');
+                        const chipText = chip.textContent.toLowerCase();
+                        if (chipText.includes(settings.statusFilter) ||
+                            (settings.statusFilter === 'all' && chipText.includes('all changeovers'))) {
+                            chip.classList.add('active');
+                        }
+                    });
+
+                    // Restore filter mode
+                    const modeSelector = document.getElementById('filterModeSelector');
+                    if (modeSelector) {
+                        modeSelector.value = settings.filterMode || 'style';
+                        toggleFilterMode(settings.filterMode || 'style');
+                    }
+
+                    // Restore time range buttons
+                    document.querySelectorAll('.time-range-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                        if (btn.id === `range-${settings.timeRange}`) {
+                            btn.classList.add('active');
+                        }
+                    });
+
+                    // Restore chart range
+                    const chartRange = document.getElementById('chartRange');
+                    if (chartRange) {
+                        chartRange.value = settings.chartRange || '30';
+                    }
+
+                    // Restore chart tabs
+                    document.querySelectorAll('.chart1-tab').forEach(tab => tab.classList.remove('active'));
+                    document.querySelectorAll('.chart2-tab').forEach(tab => tab.classList.remove('active'));
+                    document.querySelectorAll('.operation-tab').forEach(tab => tab.classList.remove('active'));
+
+                    if (document.getElementById(`tab-${settings.chart1Tab}`)) {
+                        document.getElementById(`tab-${settings.chart1Tab}`).classList.add('active');
+                    }
+
+                    if (document.getElementById(`tab-${settings.chart2Tab}`)) {
+                        document.getElementById(`tab-${settings.chart2Tab}`).classList.add('active');
+                    }
+
+                    if (document.getElementById(`optab-${settings.operationTab}`)) {
+                        document.getElementById(`optab-${settings.operationTab}`).classList.add('active');
+                    }
+
+                    lucide.createIcons();
+                }
+
+                /**
+                 * Apply current filters and update ALL dashboard components
+                 */
+                function applyCurrentFilters() {
+                    // First, populate dropdowns with data
+                    populateStyleSelector();
+
+                    // Apply filters to data
+                    filteredChangeovers = getFilteredDashboardData();
+
+                    // Update ALL dashboard components
+                    updateStatistics();
+                    updateChartData();
+                    updateChart2Data();
+                    updateActiveChangeovers();
+                    updateMachineStatus();
+                    refreshOperationsData();
+                    calculateCriticalIssues();
+                    if (typeof generateNotifications === 'function') {
+                        generateNotifications(allChangeovers);
+                    }
+
+                    // Update table with filtered data
+                    currentPage = 1;
+                    updateTable();
+
+                    // Save current filters for next time
+                    saveFilterSettings();
                 }
 
                 // Central refresh function that updates all components
                 function refreshDashboardWithFilters() {
-                    filteredChangeovers = getFilteredDashboardData();
-                    updateStatistics();
-                    updateChartData();
-                    refreshOperationsData();
-                    calculateCriticalIssues();
-                    renderActiveChangeovers();
-                    updateTable();
+                    applyCurrentFilters();
                 }
 
                 let searchTimeout = null;
@@ -2269,7 +2475,9 @@
                 }
 
                 function applyDateFilter() {
-                    const date = document.getElementById('dateFilter').value;
+                    const dateEl = document.getElementById('dateFilter');
+                    if (!dateEl) return; // Prevent crash if element missing
+                    const date = dateEl.value;
                     if (!date) {
                         filteredChangeovers = [...allChangeovers];
                     } else {
@@ -2318,7 +2526,7 @@
                     </div>
                     <div class="bg-slate-50 p-4 rounded-xl">
                         <p class="text-xs text-slate-500 uppercase mb-1">Status</p>
-                        <span class="badge ${getStatusColor(qco.status)}">${qco.status || 'Unknown'}</span>
+                        <span class="badge ${getStatusColor(deriveQCOStatus(qco))}">${deriveQCOStatus(qco)}</span>
                     </div>
                 </div>
 
@@ -2424,7 +2632,7 @@
                         qco.currentStyle,
                         qco.upcomingStyle,
                         qco.lineNumber,
-                        qco.status,
+                        deriveQCOStatus(qco),
                         qco.targetCOPT,
                         qco.actualCOPT,
                         qco.createdAt ? new Date(qco.createdAt.toDate()).toISOString() : ''
@@ -2599,7 +2807,7 @@
                             });
                         }
                         // Completed Event
-                        if (qco.status === 'completed' && qco.completedAt) { // Assuming completedAt exists or fallback
+                        if (deriveQCOStatus(qco) === 'completed' && qco.completedAt) { // Assuming completedAt exists or fallback
                             // If no completedAt, use last operation end?
                             // For now, let's skip if no completedAt
                         }
@@ -2622,7 +2830,7 @@
 
                     data.forEach(qco => {
                         // 1. Overdue Check (In Progress + High COPT)
-                        if (qco.status === 'in-progress') {
+                        if (deriveQCOStatus(qco) === 'in-progress') {
                             const actual = calculateActualCOPT(qco);
                             const target = calculateTargetCOPT(qco);
                             if (target > 0 && actual > target * 1.2) {
@@ -2637,7 +2845,7 @@
                         }
 
                         // 2. Deadline Check (Pending + Scheduled < 24h)
-                        if (qco.status === 'pending' && qco.date) {
+                        if (deriveQCOStatus(qco) === 'pending' && qco.date) {
                             const schedDate = new Date(qco.date); // String or Date
                             const diffHours = (schedDate - now) / 36e5;
                             if (diffHours > 0 && diffHours < 24) {
@@ -2713,9 +2921,10 @@
                     const list = document.getElementById('activeChangeoversList');
                     if (!list) return;
 
+                    // USE DERIVED STATUS
                     const activeQCOs = allChangeovers
-                        .filter(c => c.status === 'in-progress')
-                        .sort((a, b) => b.createdAt - a.createdAt); // Sort by newest
+                        .filter(c => deriveQCOStatus(c) === 'in-progress')
+                        .sort((a, b) => b.createdAt - a.createdAt);
 
                     if (activeQCOs.length === 0) {
                         list.innerHTML = `
@@ -2743,19 +2952,23 @@
                         const target = calculateTargetCOPT(qco) || 0;
                         const isOverTarget = target > 0 && actual > target;
 
+                        // Rounding for display to prevent overflow
+                        const actualDisp = Math.round(actual);
+                        const targetDisp = Math.round(target);
+
                         return `
-                    <div class="p-4 rounded-xl bg-white border border-slate-100 hover:border-blue-100 transition-colors shadow-sm">
-                        <div class="flex justify-between items-start mb-3">
-                            <div>
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="font-bold text-slate-900">#${qco.qcoNumber}</span>
-                                    <span class="text-xs font-mono text-slate-400">Line ${qco.lineNumber || '?'}</span>
+                    <div class="p-4 rounded-xl bg-white border border-slate-100 hover:border-blue-100 transition-colors shadow-sm group">
+                        <div class="flex justify-between items-start mb-3 gap-3">
+                            <div class="min-w-0 flex-1">
+                                <div class="flex flex-wrap items-baseline gap-2 mb-1">
+                                    <span class="font-bold text-slate-900 truncate" title="${qco.qcoNumber}">#${qco.qcoNumber}</span>
+                                    <span class="text-xs font-mono text-slate-400 whitespace-nowrap">Line ${qco.lineNumber || '?'}</span>
                                 </div>
-                                <p class="text-sm text-slate-600 truncate">${qco.upcomingStyle || 'Unknown Style'}</p>
+                                <p class="text-xs text-slate-600 truncate" title="${qco.upcomingStyle}">${qco.upcomingStyle || 'Unknown Style'}</p>
                             </div>
-                            <div class="text-right">
-                                <span class="block text-lg font-bold ${isOverTarget ? 'text-red-600' : 'text-slate-900'}">${actual}m</span>
-                                <span class="text-xs text-slate-400">Target: ${target}m</span>
+                            <div class="text-right flex-shrink-0">
+                                <span class="block text-lg font-bold font-mono ${isOverTarget ? 'text-red-500' : 'text-slate-900'}">${actualDisp}m</span>
+                                <span class="text-xs text-slate-400">Target: ${targetDisp}m</span>
                             </div>
                         </div>
 
@@ -2820,7 +3033,7 @@
 
                     lucide.createIcons();
                     currentPage = 1;
-                    refreshDashboardWithFilters();
+                    applyCurrentFilters();
                 }
 
                 function populateStyleSelector() {
@@ -2863,13 +3076,44 @@
                 function filterByStyle(val) {
                     currentStyleFilter = val;
                     currentPage = 1;
-                    refreshDashboardWithFilters();
+                    applyCurrentFilters();
                 }
 
                 function filterByQCO(val) {
                     currentQCOFilter = val;
                     currentPage = 1;
-                    refreshDashboardWithFilters();
+                    applyCurrentFilters();
+                }
+
+                // --- Dynamic Status Helper ---
+                function deriveQCOStatus(qco) {
+                    // 1. If explicitly completed, trust it
+                    if (qco.status === 'completed') return 'completed';
+
+                    const ops = qco.operationsList || [];
+                    const timings = qco.operationTimings || {};
+
+                    // 2. Check operation progress
+                    if (ops.length > 0) {
+                        const completedOps = ops.filter(op => {
+                            const name = typeof op === 'string' ? op : op.name;
+                            return timings[name] && timings[name].end;
+                        });
+
+                        // If all operations are done -> Completed
+                        if (completedOps.length === ops.length) return 'completed';
+
+                        const startedOps = ops.filter(op => {
+                            const name = typeof op === 'string' ? op : op.name;
+                            return timings[name] && timings[name].start;
+                        });
+
+                        // If any operation started -> In Progress
+                        if (startedOps.length > 0) return 'in-progress';
+                    }
+
+                    // 3. Fallback to existing status or pending
+                    return qco.status === 'in-progress' ? 'in-progress' : 'pending';
                 }
 
                 function getFilteredDashboardData(searchQuery = '') {
@@ -2877,8 +3121,8 @@
 
                     // 1. Apply Status Filter
                     if (currentStatusFilter !== 'all') {
-                        const dbStatus = currentStatusFilter === 'live' ? 'in-progress' : currentStatusFilter;
-                        data = data.filter(c => c.status === dbStatus);
+                        const targetStatus = currentStatusFilter === 'live' ? 'in-progress' : currentStatusFilter;
+                        data = data.filter(c => deriveQCOStatus(c) === targetStatus);
                     }
 
                     // 2. Apply Style Filter (using upcomingStyle)
@@ -2955,27 +3199,169 @@
                             }
                         }
                     });
+
+                    // Initialize efficiency chart
+                    initializeEfficiencyChart();
+
                     updateChartData();
                 }
 
-                function switchChartTab(type) {
+                // Second chart instance for Efficiency/Multi-Metric
+                let efficiencyChartInstance = null;
+                let chart2Type = 'efficiency'; // 'efficiency' or 'multi'
+
+                function initializeEfficiencyChart() {
+                    const ctx2 = document.getElementById('efficiencyChart');
+                    if (!ctx2) return;
+
+                    efficiencyChartInstance = new Chart(ctx2.getContext('2d'), {
+                        type: 'line',
+                        data: { labels: [], datasets: [] },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: true, position: 'top' },
+                                tooltip: { mode: 'index', intersect: false }
+                            },
+                            scales: {
+                                y: { beginAtZero: true }
+                            }
+                        }
+                    });
+
+                    updateChart2Data();
+                }
+
+                // Chart 1 Tab Switcher (COPT, Daily)
+                function switchChart1Tab(type) {
                     currentChartType = type;
-                    // Update tab styles
-                    document.querySelectorAll('.chart-tab').forEach(tab => tab.classList.remove('active'));
+                    document.querySelectorAll('.chart1-tab').forEach(tab => tab.classList.remove('active'));
+                    document.getElementById(`tab-${type}`).classList.add('active');
+                    lucide.createIcons();
                     document.getElementById(`tab-${type}`).classList.add('active');
                     lucide.createIcons();
                     updateChartData();
+                    saveFilterSettings();
+                }
+
+                // Chart 2 Tab Switcher (Efficiency, Multi)
+                function switchChart2Tab(type) {
+                    chart2Type = type;
+                    document.querySelectorAll('.chart2-tab').forEach(tab => tab.classList.remove('active'));
+                    document.getElementById(`tab-${type}`).classList.add('active');
+                    lucide.createIcons();
+                    document.getElementById(`tab-${type}`).classList.add('active');
+                    lucide.createIcons();
+                    updateChart2Data();
+                    saveFilterSettings();
+                }
+
+                // Update Chart 2 based on chart2Type
+                function updateChart2Data() {
+                    if (!efficiencyChartInstance || allChangeovers.length === 0) return;
+                    const filtered = getFilteredDashboardData();
+
+                    if (chart2Type === 'efficiency') {
+                        renderEfficiencyChartOnChart2(filtered);
+                    } else {
+                        renderMultiMetricChartOnChart2(filtered);
+                    }
+                }
+
+                // Render efficiency chart on Chart 2 canvas
+                function renderEfficiencyChartOnChart2(data) {
+                    const grouped = {};
+                    data.forEach(qco => {
+                        const dateKey = (qco.createdAt?.toDate?.() || new Date(qco.createdAt)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        if (!grouped[dateKey]) grouped[dateKey] = [];
+                        const target = calculateTargetCOPT(qco);
+                        const actual = calculateActualCOPT(qco);
+                        grouped[dateKey].push(calculateEfficiency(target, actual));
+                    });
+
+                    const labels = Object.keys(grouped);
+                    const avgEff = labels.map(date => {
+                        const effs = grouped[date].filter(e => e > 0);
+                        return effs.length > 0 ? Math.round(effs.reduce((a, b) => a + b, 0) / effs.length) : 0;
+                    });
+
+                    efficiencyChartInstance.config.type = 'bar';
+                    efficiencyChartInstance.data = {
+                        labels,
+                        datasets: [{
+                            label: 'Efficiency %',
+                            data: avgEff,
+                            backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                            borderColor: '#10b981',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }]
+                    };
+                    efficiencyChartInstance.update();
+                }
+
+                // Render multi-metric chart on Chart 2 canvas
+                function renderMultiMetricChartOnChart2(data) {
+                    const grouped = {};
+                    data.forEach(qco => {
+                        const dateKey = (qco.createdAt?.toDate?.() || new Date(qco.createdAt)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        if (!grouped[dateKey]) grouped[dateKey] = { copt: [], eff: [], count: 0 };
+                        const target = calculateTargetCOPT(qco);
+                        const actual = calculateActualCOPT(qco);
+                        grouped[dateKey].copt.push(actual || 0);
+                        grouped[dateKey].eff.push(calculateEfficiency(target, actual));
+                        grouped[dateKey].count++;
+                    });
+
+                    const labels = Object.keys(grouped);
+                    const avgCopt = labels.map(d => Math.round(grouped[d].copt.reduce((a, b) => a + b, 0) / grouped[d].copt.length || 0));
+                    const avgEff = labels.map(d => Math.round(grouped[d].eff.reduce((a, b) => a + b, 0) / grouped[d].eff.length || 0));
+
+                    efficiencyChartInstance.config.type = 'line';
+                    efficiencyChartInstance.data = {
+                        labels,
+                        datasets: [
+                            {
+                                label: 'Avg COPT (min)',
+                                data: avgCopt,
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Efficiency %',
+                                data: avgEff,
+                                borderColor: '#10b981',
+                                backgroundColor: 'transparent',
+                                tension: 0.4,
+                                borderDash: [5, 5],
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    };
+                    efficiencyChartInstance.options.scales = {
+                        y: { beginAtZero: true, position: 'left', title: { display: true, text: 'COPT (min)' } },
+                        y1: { beginAtZero: true, position: 'right', max: 100, title: { display: true, text: 'Efficiency %' }, grid: { drawOnChartArea: false } }
+                    };
+                    efficiencyChartInstance.update();
+                }
+
+                // Keep old switchChartTab for backward compat (routes to Chart 1)
+                function switchChartTab(type) {
+                    if (type === 'copt' || type === 'daily') {
+                        switchChart1Tab(type);
+                    } else {
+                        switchChart2Tab(type);
+                    }
                 }
 
                 function updateChartRange() {
                     const range = document.getElementById('chartRange').value;
                     // Update all dashboard components when date range changes
-                    updateStatistics();
-                    updateChartData();
-                    refreshOperationsData();
-                    calculateCriticalIssues();
-                    updateActiveChangeovers();
-                    updateTable();
+                    applyCurrentFilters();
                 }
 
                 /**
@@ -3090,9 +3476,9 @@
 
                     const labels = Object.keys(grouped).sort();
                     const counts = {
-                        completed: labels.map(date => Array.from(grouped[date].values()).filter(q => q.status === 'completed').length),
-                        live: labels.map(date => Array.from(grouped[date].values()).filter(q => q.status === 'in-progress').length),
-                        pending: labels.map(date => Array.from(grouped[date].values()).filter(q => q.status === 'pending').length)
+                        completed: labels.map(date => Array.from(grouped[date].values()).filter(q => deriveQCOStatus(q) === 'completed').length),
+                        live: labels.map(date => Array.from(grouped[date].values()).filter(q => deriveQCOStatus(q) === 'in-progress').length),
+                        pending: labels.map(date => Array.from(grouped[date].values()).filter(q => deriveQCOStatus(q) === 'pending').length)
                     };
 
                     performanceChart.data = {
@@ -3223,7 +3609,7 @@
                 }
 
                 function refreshOperationsData() {
-                    const container = document.getElementById('operationsContent');
+                    const container = document.getElementById('operationsInner') || document.getElementById('operationsContent');
                     if (!container) return;
 
                     switch (currentOperationTab) {
@@ -3452,7 +3838,7 @@
 
                     // Refresh dashboard with new time filter
                     currentPage = 1;
-                    refreshDashboardWithFilters();
+                    applyCurrentFilters();
                 }
 
                 function openCustomRangePicker() {
@@ -3512,7 +3898,7 @@
 
                         closeCustomDateModal();
                         currentPage = 1;
-                        refreshDashboardWithFilters();
+                        applyCurrentFilters();
 
                         showToast(`Showing data from ${startInput.value} to ${endInput.value}`, 'success');
                     } else {
@@ -3580,6 +3966,7 @@
 
                 function updateNotificationUI() {
                     const badge = document.getElementById('notificationBadge');
+                    if (!badge) return; // Prevent crash if badge missing
                     const unreadCount = notifications.filter(n => !n.read).length;
 
                     if (unreadCount > 0) {
@@ -3774,24 +4161,24 @@
                             return dateB - dateA;
                         });
 
-                        filteredChangeovers = allChangeovers;
-
-                        // Populate QCO dropdown
-                        populateStyleSelector();
-
-                        // Update all components
-                        updateStatistics();
-                        updateChartData();
-                        refreshOperationsData();
-                        renderActiveChangeovers();
-                        updateTable();
-                        checkForNotifications();
-                        calculateCriticalIssues();
-
-                        lucide.createIcons();
+                        // Apply current filters to the updated data
+                        applyCurrentFilters();
                     });
 
                     realTimeUnsubscribes.push(unsubscribe);
+                }
+
+                function refreshAllData() {
+                    const refreshIcon = document.getElementById('refreshIcon');
+                    if (refreshIcon) refreshIcon.classList.add('animate-spin');
+
+                    // Apply current filters (which reloads all components)
+                    applyCurrentFilters();
+
+                    // Stop spin after 500ms
+                    setTimeout(() => {
+                        if (refreshIcon) refreshIcon.classList.remove('animate-spin');
+                    }, 500);
                 }
 
                 // Cleanup on page unload
@@ -3984,20 +4371,25 @@
                     initCursor();
                     initializeChart();
                     checkAuth();
-                    refreshOperationsData();
-                    startRealtimeListeners();
+                    // ==========================================
+                    // CRITICAL: Load data immediately on startup
+                    // ==========================================
+                    loadInitialData();
 
-                    // Initial comprehensive refresh as soon as possible
-                    setTimeout(refreshAllData, 100);
+                    // Then set up real-time listeners
+                    startRealtimeListeners();
 
                     // Auto-Refresh Interval every 30 seconds
                     setInterval(refreshAllData, 30000);
 
+                    // Auto-Refresh Interval every 30 seconds
+                    // setInterval(refreshAllData, 30000);
+
                     // Status and Notification Checks
-                    setInterval(() => {
-                        checkForNotifications();
-                        calculateCriticalIssues();
-                    }, 60000);
+                    // setInterval(() => {
+                    //     checkForNotifications();
+                    //     calculateCriticalIssues();
+                    // }, 60000);
 
                     // Mobile behavior init
                     initMobileBehavior();
@@ -4025,7 +4417,7 @@
                     const container = document.getElementById('appContent');
                     if (!container) return;
 
-                    const lenis = new Lenis({
+                    window.mainLenis = new Lenis({
                         wrapper: container,
                         content: document.getElementById('mainApp'),
                         duration: 1.2,
@@ -4034,7 +4426,39 @@
                         smoothTouch: false,
                         touchMultiplier: 1.5,
                     });
-                    function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+
+                    // Active Now Lenis
+                    const activeWrapper = document.getElementById('activeChangeoversList');
+                    if (activeWrapper) {
+                        window.activeLenis = new Lenis({
+                            wrapper: activeWrapper,
+                            content: document.getElementById('activeChangeoversInner'),
+                            duration: 1.2,
+                            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                            smoothWheel: true,
+                            smoothTouch: true
+                        });
+                    }
+
+                    // Operations Lenis
+                    const opsWrapper = document.getElementById('operationsContent');
+                    if (opsWrapper) {
+                        window.opsLenis = new Lenis({
+                            wrapper: opsWrapper,
+                            content: document.getElementById('operationsInner'),
+                            duration: 1.2,
+                            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                            smoothWheel: true,
+                            smoothTouch: true
+                        });
+                    }
+
+                    function raf(time) {
+                        if (window.mainLenis) window.mainLenis.raf(time);
+                        if (window.activeLenis) window.activeLenis.raf(time);
+                        if (window.opsLenis) window.opsLenis.raf(time);
+                        requestAnimationFrame(raf);
+                    }
                     requestAnimationFrame(raf);
 
                     // Scroll State
@@ -4063,7 +4487,7 @@
 
                         // Adjust chart dimensions
                         const chartCanvas = document.getElementById('performanceChart');
-                        if (window.performanceChart && chartCanvas) {
+                        if (window.performanceChart && window.performanceChart.options && chartCanvas) {
                             window.performanceChart.options.maintainAspectRatio = false;
                             chartCanvas.parentNode.style.height = '250px';
                             window.performanceChart.resize();
