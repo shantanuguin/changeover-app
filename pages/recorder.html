@@ -960,7 +960,12 @@
             if (!currentQCOData) return;
 
             const ops = currentQCOData.operationsList || [];
-            const completed = ops.filter(o => o.endTime).length;
+            const timings = currentQCOData.operationTimings || {};
+            const completed = ops.filter(op => {
+                const opName = typeof op === 'string' ? op : op.name;
+                const timing = timings[opName];
+                return timing && timing.end;
+            }).length;
             const total = ops.length;
             const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
@@ -1024,8 +1029,13 @@
             }
 
             const modal = document.getElementById('completeConfirmModal');
-            const ops = currentQCOData.operations || [];
-            const completed = ops.filter(o => o.endTime).length;
+            const ops = currentQCOData.operationsList || [];
+            const timings = currentQCOData.operationTimings || {};
+            const completed = ops.filter(op => {
+                const opName = typeof op === 'string' ? op : op.name;
+                const timing = timings[opName];
+                return timing && timing.end;
+            }).length;
 
             // Populate modal data
             document.getElementById('confirmQcoNumber').textContent = currentQCOData.qcoNumber || '-';
