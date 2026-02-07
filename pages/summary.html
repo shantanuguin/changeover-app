@@ -80,10 +80,16 @@
 
         .glass-card {
             background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.6);
             border-radius: 2rem;
             box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.05);
+            /* GPU Performance Fixes */
+            transform-style: preserve-3d;
+            will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
         }
 
         .cursor-dot {
@@ -357,12 +363,8 @@
     <div class="cursor-outline hidden md:block"></div>
 
     <div class="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
-        <div
-            class="absolute top-[10%] right-[20%] w-[40vw] h-[40vw] bg-violet-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-pulse">
-        </div>
-        <div
-            class="absolute bottom-[10%] left-[20%] w-[40vw] h-[40vw] bg-indigo-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-pulse">
-        </div>
+        <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(196,181,253,0.4)_0%,rgba(255,255,255,0)_70%)] animate-pulse"></div>
+        <div class="absolute bottom-0 left-[20%] w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(199,210,254,0.4)_0%,rgba(255,255,255,0)_70%)] animate-pulse"></div>
     </div>
 
     <!-- Nav -->

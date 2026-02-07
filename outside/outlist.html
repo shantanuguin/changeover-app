@@ -109,11 +109,20 @@
 
         .glass-card {
             background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            /* Reduced blur slightly for performance */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.8);
             border-radius: 1.5rem;
             box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+
+            /* PERFORMANCE FIXES */
+            transform-style: preserve-3d;
+            will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            /* END FIXES */
+
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -288,10 +297,10 @@
     <!-- Background Blobs -->
     <div class="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
         <div
-            class="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-emerald-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob">
+            class="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-[radial-gradient(circle,rgba(167,243,208,0.4)_0%,rgba(255,255,255,0)_70%)] animate-blob mix-blend-multiply">
         </div>
         <div
-            class="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-blue-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-4000">
+            class="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-[radial-gradient(circle,rgba(191,219,254,0.4)_0%,rgba(255,255,255,0)_70%)] animate-blob animation-delay-4000 mix-blend-multiply">
         </div>
     </div>
 

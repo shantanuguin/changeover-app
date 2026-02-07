@@ -337,11 +337,20 @@
 
         .glass-card {
             background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            /* Reduced blur slightly for performance */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.6);
             border-radius: 2rem;
             box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.05);
+
+            /* PERFORMANCE FIXES */
+            transform-style: preserve-3d;
+            will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            /* END FIXES */
+
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
@@ -522,13 +531,13 @@
     <!-- Animated Background Blobs -->
     <div class="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
         <div
-            class="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-blue-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob">
+            class="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-[radial-gradient(circle,rgba(191,219,254,0.4)_0%,rgba(255,255,255,0)_70%)] animate-blob mix-blend-multiply">
         </div>
         <div
-            class="absolute top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-indigo-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-2000">
+            class="absolute top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-[radial-gradient(circle,rgba(199,210,254,0.4)_0%,rgba(255,255,255,0)_70%)] animate-blob animation-delay-2000 mix-blend-multiply">
         </div>
         <div
-            class="absolute bottom-[-20%] left-[20%] w-[60vw] h-[60vw] bg-pink-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-4000">
+            class="absolute bottom-[-20%] left-[20%] w-[60vw] h-[60vw] bg-[radial-gradient(circle,rgba(251,207,232,0.4)_0%,rgba(255,255,255,0)_70%)] animate-blob animation-delay-4000 mix-blend-multiply">
         </div>
     </div>
 

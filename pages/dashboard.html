@@ -391,15 +391,24 @@
 
         .glass-card {
             background: rgba(255, 255, 255, 0.6);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            /* Reduced blur slightly for performance */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.6);
             border-radius: 2rem;
             box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.05);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+            /* PERFORMANCE FIXES */
             transform-style: preserve-3d;
-            perspective: 1000px;
             will-change: transform;
+            /* Tells browser to expect changes */
+            transform: translateZ(0);
+            /* Forces GPU Acceleration */
+            backface-visibility: hidden;
+            /* Prevents flickering during rotation */
+            /* END FIXES */
+
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .glass-card:hover {
@@ -927,13 +936,13 @@
     <!-- Animated Background Blobs -->
     <div class="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
         <div
-            class="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-blue-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob">
+            class="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-[radial-gradient(circle,rgba(191,219,254,0.4)_0%,rgba(255,255,255,0)_70%)] animate-blob mix-blend-multiply">
         </div>
         <div
-            class="absolute top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-indigo-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-2000">
+            class="absolute top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-[radial-gradient(circle,rgba(199,210,254,0.4)_0%,rgba(255,255,255,0)_70%)] animate-blob animation-delay-2000 mix-blend-multiply">
         </div>
         <div
-            class="absolute bottom-[-20%] left-[20%] w-[60vw] h-[60vw] bg-pink-200/30 rounded-full mix-blend-multiply filter blur-[80px] animate-blob animation-delay-4000">
+            class="absolute bottom-[-20%] left-[20%] w-[60vw] h-[60vw] bg-[radial-gradient(circle,rgba(251,207,232,0.4)_0%,rgba(255,255,255,0)_70%)] animate-blob animation-delay-4000 mix-blend-multiply">
         </div>
     </div>
 
@@ -1181,13 +1190,39 @@
                             <button class="filter-chip" onclick="filterData('pending')">Pending</button>
                         </div>
                         <div class="flex flex-wrap gap-3 items-center">
-                            <!-- QCO Selection Dropdown -->
+                            <!-- Filter Mode Toggle -->
                             <div class="relative group">
+                                <i data-lucide="filter"
+                                    class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-500 transition-colors"></i>
+                                <select id="filterModeSelector" onchange="toggleFilterMode(this.value)"
+                                    class="pl-10 pr-8 py-2 rounded-xl bg-indigo-50 border border-indigo-200 text-sm font-bold text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all appearance-none cursor-pointer hover:shadow-md min-w-[140px]">
+                                    <option value="style">By Style</option>
+                                    <option value="qco">By QCO</option>
+                                </select>
+                                <i data-lucide="chevron-down"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-indigo-400 pointer-events-none"></i>
+                            </div>
+
+                            <!-- Style Selection Dropdown -->
+                            <div class="relative group" id="styleFilterContainer">
+                                <i data-lucide="palette"
+                                    class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors"></i>
+                                <select id="styleSelector" onchange="filterByStyle(this.value)"
+                                    class="pl-10 pr-8 py-2 rounded-xl bg-white/60 border border-white/60 text-sm font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all appearance-none cursor-pointer hover:shadow-md min-w-[160px]">
+                                    <option value="all">All Styles</option>
+                                    <!-- Populated dynamically -->
+                                </select>
+                                <i data-lucide="chevron-down"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                            </div>
+
+                            <!-- QCO Selection Dropdown (hidden by default) -->
+                            <div class="relative group hidden" id="qcoFilterContainer">
                                 <i data-lucide="hash"
                                     class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-500 transition-colors"></i>
                                 <select id="qcoSelector" onchange="filterByQCO(this.value)"
                                     class="pl-10 pr-8 py-2 rounded-xl bg-white/60 border border-white/60 text-sm font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all appearance-none cursor-pointer hover:shadow-md min-w-[160px]">
-                                    <option value="all">All Styles</option>
+                                    <option value="all">All QCOs</option>
                                     <!-- Populated dynamically -->
                                 </select>
                                 <i data-lucide="chevron-down"
@@ -1237,13 +1272,12 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" id="statsGrid">
                         <!-- Stat Card 1 -->
                         <div class="glass-card p-8 group relative overflow-hidden" data-tilt>
-                            <div
-                                class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-[4rem] transition-transform duration-700 group-hover:scale-125">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-[4rem]">
                             </div>
                             <div class="stat-card-inner relative z-10">
                                 <div class="flex justify-between items-start mb-6">
                                     <div
-                                        class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm border border-slate-100 group-hover:rotate-12 transition-all duration-500">
+                                        class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-blue-600 shadow-sm border border-slate-100">
                                         <i data-lucide="arrow-left-right" class="w-6 h-6"></i>
                                     </div>
                                     <span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold"
@@ -1259,8 +1293,7 @@
 
                         <!-- Stat Card 2 - Target COPT -->
                         <div class="glass-card p-8 group relative overflow-hidden" data-tilt>
-                            <div
-                                class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-bl-[4rem] transition-transform duration-700 group-hover:scale-125">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-bl-[4rem]">
                             </div>
                             <div class="stat-card-inner relative z-10">
                                 <div class="flex justify-between items-start mb-6">
@@ -1282,13 +1315,12 @@
 
                         <!-- Stat Card 3 -->
                         <div class="glass-card p-8 group relative overflow-hidden" data-tilt>
-                            <div
-                                class="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-bl-[4rem] transition-transform duration-700 group-hover:scale-125">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-bl-[4rem]">
                             </div>
                             <div class="stat-card-inner relative z-10">
                                 <div class="flex justify-between items-start mb-6">
                                     <div
-                                        class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-violet-600 shadow-sm border border-slate-100 group-hover:rotate-12 transition-all duration-500">
+                                        class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-violet-600 shadow-sm border border-slate-100">
                                         <i data-lucide="target" class="w-6 h-6"></i>
                                     </div>
                                     <span
@@ -1310,8 +1342,7 @@
 
                         <!-- Stat Card 4 -->
                         <div class="glass-card p-8 group relative overflow-hidden" data-tilt>
-                            <div
-                                class="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 rounded-bl-[4rem] transition-transform duration-700 group-hover:scale-125">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 rounded-bl-[4rem]">
                             </div>
                             <div class="stat-card-inner relative z-10">
                                 <div class="flex justify-between items-start mb-6">
@@ -1542,6 +1573,10 @@
                 let performanceChart = null;
                 let currentChartType = 'copt';
                 let currentTimeRange = 'week';
+                let currentStatusFilter = 'all';  // all, live, pending, completed
+                let currentStyleFilter = 'all';   // all or specific style name
+                let customDateStart = null;
+                let customDateEnd = null;
                 let currentOperationTab = 'top';
                 let notifications = [];
                 let realTimeUnsubscribes = [];
@@ -2044,22 +2079,34 @@
 
                 // --- Filtering & Search ---
                 function filterData(type) {
-                    // Update active chip
+                    // Update global state
+                    currentStatusFilter = type;
+
+                    // Update active chip UI
                     document.querySelectorAll('.filter-chip').forEach(chip => {
                         chip.classList.remove('active');
-                        if (chip.textContent.toLowerCase().includes(type.toLowerCase())) chip.classList.add('active');
+                        if (chip.textContent.toLowerCase().includes(type === 'all' ? 'all changeovers' : type)) {
+                            chip.classList.add('active');
+                        }
                     });
-
-                    const data = getFilteredDashboardData();
+                    // Special case for 'all' chip
                     if (type === 'all') {
-                        filteredChangeovers = data;
-                    } else {
-                        // Map UI 'live' to DB 'in-progress'
-                        const dbStatus = type === 'live' ? 'in-progress' : type;
-                        filteredChangeovers = data.filter(c => c.status === dbStatus);
+                        document.querySelector('.filter-chip')?.classList.add('active');
                     }
 
+                    // Refresh all dashboard components with new filter
                     currentPage = 1;
+                    refreshDashboardWithFilters();
+                }
+
+                // Central refresh function that updates all components
+                function refreshDashboardWithFilters() {
+                    filteredChangeovers = getFilteredDashboardData();
+                    updateStatistics();
+                    updateChartData();
+                    refreshOperationsData();
+                    calculateCriticalIssues();
+                    renderActiveChangeovers();
                     updateTable();
                 }
 
@@ -2105,13 +2152,27 @@
                             statusEl.classList.remove('hidden', 'text-red-500');
                             statusEl.classList.add('text-emerald-600');
 
-                            // Auto-select in dropdown IF it exists in the dropdown (it should)
-                            const selector = document.getElementById('qcoSelector');
-                            let optionExists = Array.from(selector.options).some(opt => opt.value === matchedQCO.qcoNumber);
-
-                            if (optionExists) {
-                                selector.value = matchedQCO.qcoNumber;
-                                filterByQCO(matchedQCO.qcoNumber);
+                            // Auto-select based on current filter mode
+                            if (currentFilterMode === 'style') {
+                                const selector = document.getElementById('styleSelector');
+                                const styleToSelect = matchedQCO.upcomingStyle;
+                                if (selector && styleToSelect) {
+                                    let optionExists = Array.from(selector.options).some(opt => opt.value === styleToSelect);
+                                    if (optionExists) {
+                                        selector.value = styleToSelect;
+                                        filterByStyle(styleToSelect);
+                                    }
+                                }
+                            } else {
+                                const selector = document.getElementById('qcoSelector');
+                                const qcoToSelect = matchedQCO.qcoNumber;
+                                if (selector && qcoToSelect) {
+                                    let optionExists = Array.from(selector.options).some(opt => opt.value === qcoToSelect);
+                                    if (optionExists) {
+                                        selector.value = qcoToSelect;
+                                        filterByQCO(qcoToSelect);
+                                    }
+                                }
                             }
 
                         } else {
@@ -2406,34 +2467,57 @@
                 }
 
                 function initTilt() {
+                    // 1. Performance Guard: Disable on mobile or if user prefers reduced motion
+                    if (window.innerWidth < 768 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
                     const cards = document.querySelectorAll('[data-tilt]');
+
                     cards.forEach(card => {
+                        // Use GSAP quickTo for high-performance interpolation
                         const xTo = gsap.quickTo(card, "rotationY", { duration: 0.4, ease: "power2.out" });
                         const yTo = gsap.quickTo(card, "rotationX", { duration: 0.4, ease: "power2.out" });
                         const scaleTo = gsap.quickTo(card, "scale", { duration: 0.4, ease: "power2.out" });
 
-                        card.addEventListener('mousemove', (e) => {
-                            const rect = card.getBoundingClientRect();
-                            const x = e.clientX - rect.left;
-                            const y = e.clientY - rect.top;
-                            const centerX = rect.width / 2;
-                            const centerY = rect.height / 2;
-                            const rotateX = ((y - centerY) / centerY) * -5;
-                            const rotateY = ((x - centerX) / centerX) * 5;
+                        let isHovering = false;
 
-                            gsap.set(card, { transformPerspective: 1000 });
-                            xTo(rotateY);
-                            yTo(rotateX);
+                        card.addEventListener('mouseenter', () => {
+                            isHovering = true;
+                            // Lift card slightly on Z-axis to detach from blur context
+                            gsap.to(card, { z: 50, duration: 0.2 });
+                        });
+
+                        card.addEventListener('mousemove', (e) => {
+                            if (!isHovering) return;
+
+                            const rect = card.getBoundingClientRect();
+                            const width = rect.width;
+                            const height = rect.height;
+
+                            // Calculate relative to element
+                            const mouseX = e.clientX - rect.left;
+                            const mouseY = e.clientY - rect.top;
+
+                            const xPct = mouseX / width - 0.5;
+                            const yPct = mouseY / height - 0.5;
+
+                            // REDUCED ROTATION: High rotation + glass = lag. 
+                            // Using multiplier 7 as requested by user.
+                            xTo(xPct * 7);
+                            yTo(-yPct * 7);
                             scaleTo(1.02);
-                        }, { passive: true });
+                        }, { passive: true }); // passive: true improves scroll performance
 
                         card.addEventListener('mouseleave', () => {
+                            isHovering = false;
+                            // Explicitly reset transforms
                             gsap.to(card, {
                                 rotationX: 0,
                                 rotationY: 0,
                                 scale: 1,
-                                duration: 0.8,
-                                ease: "elastic.out(1, 0.5)"
+                                z: 0,
+                                duration: 0.5,
+                                ease: "elastic.out(1, 0.5)",
+                                overwrite: true // Kill active quickTo tweens
                             });
                         });
                     });
@@ -2573,42 +2657,99 @@
                 currentChartType = 'copt';
                 currentTimeRange = 'week';
                 let currentQCOFilter = 'all';
+                let currentFilterMode = 'style'; // 'style' or 'qco'
 
-                function populateQCOSelector() {
-                    const selector = document.getElementById('qcoSelector');
-                    if (!selector) return;
-                    const currentSelection = selector.value;
+                function toggleFilterMode(mode) {
+                    currentFilterMode = mode;
+                    const styleContainer = document.getElementById('styleFilterContainer');
+                    const qcoContainer = document.getElementById('qcoFilterContainer');
 
-                    // Extract unique QCO numbers
-                    const qcos = [...new Set(allChangeovers.map(q => q.qcoNumber).filter(n => n && n !== 'Unknown'))].sort();
-
-                    selector.innerHTML = '<option value="all">All Styles</option>' +
-                        qcos.map(qco => `<option value="${qco}">${qco}</option>`).join('');
-
-                    if (qcos.includes(currentSelection)) {
-                        selector.value = currentSelection;
-                    } else {
-                        selector.value = 'all';
+                    if (mode === 'style') {
+                        styleContainer?.classList.remove('hidden');
+                        qcoContainer?.classList.add('hidden');
+                        // Reset QCO filter when switching to style
                         currentQCOFilter = 'all';
+                        document.getElementById('qcoSelector').value = 'all';
+                    } else {
+                        styleContainer?.classList.add('hidden');
+                        qcoContainer?.classList.remove('hidden');
+                        // Reset style filter when switching to QCO
+                        currentStyleFilter = 'all';
+                        document.getElementById('styleSelector').value = 'all';
                     }
+
+                    lucide.createIcons();
+                    currentPage = 1;
+                    refreshDashboardWithFilters();
+                }
+
+                function populateStyleSelector() {
+                    const styleSelector = document.getElementById('styleSelector');
+                    const qcoSelector = document.getElementById('qcoSelector');
+
+                    // Populate Style dropdown
+                    if (styleSelector) {
+                        const currentSelection = styleSelector.value;
+                        const styles = [...new Set(allChangeovers.map(q => q.upcomingStyle).filter(s => s && s !== 'Unknown'))].sort();
+
+                        styleSelector.innerHTML = '<option value="all">All Styles</option>' +
+                            styles.map(style => `<option value="${style}">${style}</option>`).join('');
+
+                        if (styles.includes(currentSelection)) {
+                            styleSelector.value = currentSelection;
+                        } else {
+                            styleSelector.value = 'all';
+                            currentStyleFilter = 'all';
+                        }
+                    }
+
+                    // Populate QCO dropdown
+                    if (qcoSelector) {
+                        const currentQCOSelection = qcoSelector.value;
+                        const qcos = [...new Set(allChangeovers.map(q => q.qcoNumber).filter(n => n && n !== 'Unknown'))].sort();
+
+                        qcoSelector.innerHTML = '<option value="all">All QCOs</option>' +
+                            qcos.map(qco => `<option value="${qco}">${qco}</option>`).join('');
+
+                        if (qcos.includes(currentQCOSelection)) {
+                            qcoSelector.value = currentQCOSelection;
+                        } else {
+                            qcoSelector.value = 'all';
+                            currentQCOFilter = 'all';
+                        }
+                    }
+                }
+
+                function filterByStyle(val) {
+                    currentStyleFilter = val;
+                    currentPage = 1;
+                    refreshDashboardWithFilters();
                 }
 
                 function filterByQCO(val) {
                     currentQCOFilter = val;
-                    updateStatistics();
-                    updateChartData();
-                    refreshOperationsData();
-                    calculateCriticalIssues();
-                    renderActiveChangeovers();
+                    currentPage = 1;
+                    refreshDashboardWithFilters();
                 }
 
                 function getFilteredDashboardData(searchQuery = '') {
                     let data = allChangeovers;
 
-                    // Apply QCO filter
+                    // 1. Apply Status Filter
+                    if (currentStatusFilter !== 'all') {
+                        const dbStatus = currentStatusFilter === 'live' ? 'in-progress' : currentStatusFilter;
+                        data = data.filter(c => c.status === dbStatus);
+                    }
+
+                    // 2. Apply Style Filter (using upcomingStyle)
+                    if (currentStyleFilter !== 'all') {
+                        data = data.filter(c => c.upcomingStyle === currentStyleFilter);
+                    }
+
+                    // 3. Apply QCO Filter (legacy - for specific QCO selection)
                     if (currentQCOFilter !== 'all') {
                         data = data.filter(qco => qco.qcoNumber === currentQCOFilter);
-                        return data; // If specific QCO selected, ignore all other filters (date range, etc.)
+                        return data; // If specific QCO selected, ignore date filters
                     }
 
                     // If searching, bypass date filters to allow finding old records
@@ -2616,17 +2757,45 @@
                         return data;
                     }
 
-                    // Apply date range filter
-                    const days = parseInt(document.getElementById('chartRange')?.value) || 30;
-                    const cutoffDate = new Date();
-                    cutoffDate.setDate(cutoffDate.getDate() - days);
-
-                    data = data.filter(qco => {
-                        const qcoDate = qco.createdAt?.toDate?.() || new Date(qco.createdAt);
-                        return qcoDate >= cutoffDate;
-                    });
+                    // 4. Apply Time Range Filter
+                    const cutoffDate = getTimeRangeCutoff();
+                    if (cutoffDate) {
+                        data = data.filter(qco => {
+                            const qcoDate = qco.createdAt?.toDate?.() || new Date(qco.createdAt);
+                            if (customDateEnd) {
+                                // Custom range: check both start and end
+                                return qcoDate >= cutoffDate && qcoDate <= customDateEnd;
+                            }
+                            return qcoDate >= cutoffDate;
+                        });
+                    }
 
                     return data;
+                }
+
+                // Helper to get cutoff date based on currentTimeRange
+                function getTimeRangeCutoff() {
+                    const now = new Date();
+                    switch (currentTimeRange) {
+                        case 'today':
+                            return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+                        case 'week':
+                            const weekAgo = new Date(now);
+                            weekAgo.setDate(weekAgo.getDate() - 7);
+                            return weekAgo;
+                        case 'month':
+                            const monthAgo = new Date(now);
+                            monthAgo.setMonth(monthAgo.getMonth() - 1);
+                            return monthAgo;
+                        case 'custom':
+                            return customDateStart;
+                        default:
+                            // Fallback to chart range dropdown
+                            const days = parseInt(document.getElementById('chartRange')?.value) || 30;
+                            const fallback = new Date();
+                            fallback.setDate(fallback.getDate() - days);
+                            return fallback;
+                    }
                 }
 
                 function initializeChart() {
@@ -2677,7 +2846,7 @@
                     if (refreshIcon) refreshIcon.classList.add('animate-spin');
 
                     // 1. Update everything from existing data
-                    populateQCOSelector();
+                    populateStyleSelector();
                     updateStatistics();
                     updateChartData();
                     refreshOperationsData();
@@ -3129,41 +3298,86 @@
                 // =====================================================
                 function setTimeRange(range) {
                     currentTimeRange = range;
-                    document.querySelectorAll('.time-range-btn').forEach(btn => btn.classList.remove('active'));
-                    document.getElementById(`range-${range}`).classList.add('active');
-                    lucide.createIcons();
-
-                    applyTimeRangeFilter();
-                }
-
-                function applyTimeRangeFilter() {
-                    let startDate;
-                    const now = new Date();
-
-                    switch (currentTimeRange) {
-                        case 'today':
-                            startDate = new Date(now.setHours(0, 0, 0, 0));
-                            break;
-                        case 'week':
-                            startDate = new Date(now.setDate(now.getDate() - 7));
-                            break;
-                        case 'month':
-                            startDate = new Date(now.setMonth(now.getMonth() - 1));
-                            break;
-                        default:
-                            return;
+                    // Clear custom dates when switching to preset
+                    if (range !== 'custom') {
+                        customDateStart = null;
+                        customDateEnd = null;
                     }
 
-                    // Apply filter to all dashboard components
-                    updateStatistics();
-                    updateChartData();
-                    refreshOperationsData();
-                    renderActiveChangeovers();
+                    // Update UI
+                    document.querySelectorAll('.time-range-btn').forEach(btn => btn.classList.remove('active'));
+                    const btn = document.getElementById(`range-${range}`);
+                    if (btn) btn.classList.add('active');
+                    lucide.createIcons();
+
+                    // Refresh dashboard with new time filter
+                    currentPage = 1;
+                    refreshDashboardWithFilters();
                 }
 
                 function openCustomRangePicker() {
-                    // Placeholder for custom range picker modal
-                    showToast('Custom range picker coming soon', 'info');
+                    // Create and show custom date range modal
+                    const modal = document.createElement('div');
+                    modal.id = 'customDateModal';
+                    modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50';
+                    modal.innerHTML = `
+                        <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md mx-4">
+                            <h3 class="text-lg font-heading font-bold text-slate-900 mb-4">Custom Date Range</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-600 mb-1">Start Date</label>
+                                    <input type="date" id="customStartDate" class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-600 mb-1">End Date</label>
+                                    <input type="date" id="customEndDate" class="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                            </div>
+                            <div class="flex gap-3 mt-6">
+                                <button onclick="closeCustomDateModal()" class="flex-1 px-4 py-2 border border-slate-200 rounded-xl text-slate-600 font-semibold hover:bg-slate-50">Cancel</button>
+                                <button onclick="applyCustomDateRange()" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700">Apply</button>
+                            </div>
+                        </div>
+                    `;
+                    document.body.appendChild(modal);
+
+                    // Set default dates
+                    const today = new Date().toISOString().split('T')[0];
+                    const weekAgo = new Date();
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    document.getElementById('customStartDate').value = weekAgo.toISOString().split('T')[0];
+                    document.getElementById('customEndDate').value = today;
+                }
+
+                function closeCustomDateModal() {
+                    const modal = document.getElementById('customDateModal');
+                    if (modal) modal.remove();
+                }
+
+                function applyCustomDateRange() {
+                    const startInput = document.getElementById('customStartDate');
+                    const endInput = document.getElementById('customEndDate');
+
+                    if (startInput.value && endInput.value) {
+                        customDateStart = new Date(startInput.value);
+                        customDateStart.setHours(0, 0, 0, 0);
+                        customDateEnd = new Date(endInput.value);
+                        customDateEnd.setHours(23, 59, 59, 999);
+
+                        currentTimeRange = 'custom';
+
+                        // Update UI
+                        document.querySelectorAll('.time-range-btn').forEach(btn => btn.classList.remove('active'));
+                        document.getElementById('range-custom')?.classList.add('active');
+
+                        closeCustomDateModal();
+                        currentPage = 1;
+                        refreshDashboardWithFilters();
+
+                        showToast(`Showing data from ${startInput.value} to ${endInput.value}`, 'success');
+                    } else {
+                        showToast('Please select both start and end dates', 'error');
+                    }
                 }
 
                 // =====================================================
@@ -3423,7 +3637,7 @@
                         filteredChangeovers = allChangeovers;
 
                         // Populate QCO dropdown
-                        populateQCOSelector();
+                        populateStyleSelector();
 
                         // Update all components
                         updateStatistics();
@@ -3623,8 +3837,8 @@
                     lucide.createIcons();
                     initClock();
                     initAnimations();
-                    initTilt();
-                    initTilt();
+                    // initTilt(); // DISABLED for performance
+                    // initTilt(); // DISABLED for performance
                     // initScroll(); // Replaced by Lenis
                     initLenis();
                     initCursor();
