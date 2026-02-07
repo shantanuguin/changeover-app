@@ -864,49 +864,7 @@
             </div>
         </div>
 
-        <!-- Checklist Detail Modal -->
-        <div id="checklistModal" class="fixed inset-0 z-50 hidden">
-            <div class="absolute inset-0 bg-slate-900/20 backdrop-blur-sm" onclick="closeModal()"></div>
-            <div class="absolute bottom-6 left-6 right-6 md:left-auto md:right-6 md:w-[500px] md:top-24 glass-panel shadow-2xl transform transition-transform duration-300 translate-y-full flex flex-col"
-                id="modalContent">
 
-                <div class="p-6 border-b border-slate-200/60 flex justify-between items-start">
-                    <div>
-                        <div class="flex items-center gap-2 mb-1">
-                            <span id="modalDeptBadge"
-                                class="px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-700">DEPT</span>
-                            <span class="text-xs text-slate-400 font-medium">Stage Checklist</span>
-                        </div>
-                        <h2 class="text-xl font-heading font-bold text-slate-900" id="modalTitle">Stage Title</h2>
-                        <p class="text-sm text-slate-500 mt-1" id="modalSubtitle">Department Name</p>
-                    </div>
-                    <button onclick="closeModal()"
-                        class="text-slate-400 hover:text-slate-600 transition-colors p-1 hover:bg-slate-100 rounded-full">
-                        <i data-lucide="x" class="w-5 h-5"></i>
-                    </button>
-                </div>
-
-                <div id="checklistItems" class="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar max-h-[50vh]">
-                    <!-- Items injected here -->
-                </div>
-
-                <div class="p-6 border-t border-slate-200/60 bg-slate-50/50 rounded-b-2xl">
-                    <div class="flex gap-3">
-                        <button onclick="saveCurrentProgress()"
-                            class="flex-1 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
-                            <i data-lucide="save" class="w-4 h-4 text-slate-400"></i>
-                            Save Progress
-                        </button>
-                        <button onclick="completeStage()"
-                            class="flex-1 py-3 rounded-xl bg-slate-900 text-white font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 group">
-                            <i data-lucide="check-circle-2"
-                                class="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform"></i>
-                            Mark Complete
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
     </div>
 
@@ -959,6 +917,7 @@
                     this.backdrop.classList.add('active');
                 }, 10);
                 document.body.style.overflow = 'hidden';
+                if (window.lenis) window.lenis.stop();
             }
 
             closeSidebar() {
@@ -971,6 +930,7 @@
                 }, 300);
 
                 document.body.style.overflow = '';
+                if (window.lenis) window.lenis.start();
             }
         }
 
@@ -2034,6 +1994,7 @@
                 </div>
             `}).join('');
 
+            if (window.lenis) window.lenis.stop();
             document.getElementById('checklistModal').classList.remove('hidden');
             setTimeout(() => {
                 document.getElementById('modalContent').classList.remove('translate-y-full');
@@ -2076,6 +2037,7 @@
 
         function closeModal() {
             document.getElementById('modalContent').classList.add('translate-y-full');
+            if (window.lenis) window.lenis.start();
             setTimeout(() => {
                 document.getElementById('checklistModal').classList.add('hidden');
                 currentStageId = null;
@@ -2484,6 +2446,46 @@
         }
 
     </script>
+    <!-- Checklist Detail Modal -->
+    <div id="checklistModal" class="fixed inset-0 z-[9000] hidden">
+        <div class="absolute inset-0 bg-slate-900/20 backdrop-blur-sm" onclick="closeModal()"></div>
+        <div class="absolute bottom-6 left-6 right-6 md:left-auto md:right-6 md:w-[500px] md:top-24 glass-panel shadow-2xl transform transition-transform duration-300 translate-y-full flex flex-col"
+            id="modalContent">
+            <div class="p-6 border-b border-slate-200/60 flex justify-between items-start">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span id="modalDeptBadge"
+                            class="px-2 py-0.5 rounded text-xs font-bold bg-blue-100 text-blue-700">DEPT</span>
+                        <span class="text-xs text-slate-400 font-medium">Stage Checklist</span>
+                    </div>
+                    <h2 class="text-xl font-heading font-bold text-slate-900" id="modalTitle">Stage Title</h2>
+                    <p class="text-sm text-slate-500 mt-1" id="modalSubtitle">Department Name</p>
+                </div>
+                <button onclick="closeModal()"
+                    class="text-slate-400 hover:text-slate-600 transition-colors p-1 hover:bg-slate-100 rounded-full">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div id="checklistItems" class="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar max-h-[50vh]">
+                <!-- Items injected here -->
+            </div>
+            <div class="p-6 border-t border-slate-200/60 bg-slate-50/50 rounded-b-2xl">
+                <div class="flex gap-3">
+                    <button onclick="saveCurrentProgress()"
+                        class="flex-1 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4 text-slate-400"></i>
+                        Save Progress
+                    </button>
+                    <button onclick="completeStage()"
+                        class="flex-1 py-3 rounded-xl bg-slate-900 text-white font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2 group">
+                        <i data-lucide="check-circle-2"
+                            class="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform"></i>
+                        Mark Complete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
