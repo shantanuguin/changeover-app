@@ -1886,25 +1886,36 @@
 
                     container.innerHTML = active.map(qco => {
                         const elapsed = qco.startedAt ? Math.floor((Date.now() - qco.startedAt.toDate()) / 60000) : 0;
-                        const target = calculateTargetCOPT(qco) || 45;
-                        const progress = Math.min(100, (elapsed / target) * 100);
+
+                        // Operations Progress
+                        const ops = qco.operationsList || [];
+                        const completedOps = ops.filter(op => op.endTime).length;
+                        const totalOps = ops.length;
+                        const opsProgress = totalOps > 0 ? (completedOps / totalOps) * 100 : 0;
+                        const progress = opsProgress;
 
                         return `
-                    <div class="bg-white/50 rounded-xl p-4 border border-white/60">
+                    <div class="bg-white/50 rounded-xl p-4 border border-white/60 hover:shadow-md transition-all group cursor-pointer" onclick="showDetails('${qco.id}')">
                         <div class="flex justify-between items-center mb-2">
-                            <span class="font-semibold text-slate-900">#${qco.qcoNumber}</span>
-                            <span class="text-xs font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded">${elapsed} min elapsed</span>
+                            <span class="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">#${qco.qcoNumber || 'N/A'}</span>
+                            <div class="flex flex-col items-end">
+                                <span class="text-xs font-mono text-blue-600 bg-blue-50 px-2 py-0.5 rounded mb-0.5 font-bold">${completedOps}/${totalOps} Ops</span>
+                                <span class="text-[10px] text-slate-400">${elapsed} min elapsed</span>
+                            </div>
                         </div>
                         <div class="flex justify-between text-sm text-slate-600 mb-2">
-                            <span>${qco.currentStyle || 'N/A'}</span>
-                            <span>${qco.upcomingStyle || 'N/A'}</span>
+                            <span class="font-medium">${qco.currentStyle || 'N/A'}</span>
+                            <i data-lucide="arrow-right" class="w-4 h-4 text-slate-300"></i>
+                            <span class="font-medium">${qco.upcomingStyle || 'N/A'}</span>
                         </div>
-                        <div class="w-full bg-slate-200 rounded-full h-2">
-                            <div class="bg-emerald-500 h-full rounded-full transition-all duration-1000" style="width: ${progress}%"></div>
+                        <div class="w-full bg-slate-200 rounded-full h-2 mb-1 overflow-hidden">
+                            <div class="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-1000 relative" style="width: ${progress}%">
+                                <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+                            </div>
                         </div>
-                        <div class="mt-2 flex justify-between text-xs text-slate-400">
+                        <div class="flex justify-between text-xs text-slate-400">
                             <span>Line ${qco.lineNumber || 'N/A'}</span>
-                            <span>${Math.round(progress)}% complete</span>
+                            <span class="font-bold text-blue-600">${Math.round(progress)}% Complete</span>
                         </div>
                     </div>
                 `;

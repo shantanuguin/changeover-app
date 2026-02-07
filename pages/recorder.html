@@ -712,6 +712,7 @@
                                 </div>
                                 <div class="text-sm text-slate-500">
                                     <span id="completedOpsCount">0</span>/<span id="totalOpsCount">0</span> Operations
+                                    <span id="opsPercentage" class="ml-1 font-bold text-slate-700">(0%)</span>
                                 </div>
                             </div>
 
@@ -1015,9 +1016,10 @@
         // Initialize
         let db, auth;
         let currentQCOId = null;
-        let allChangeovers = [];
+        let currentQCOData = null;
         let currentLineSchedule = null;
-        let shiftMode = localStorage.getItem('shiftMode') || 'day';
+        let shiftMode = "day"; // Default
+        const allChangeovers = []; // For dropdown population
 
         const RAW_LINE_SCHEDULES = {
             "S-01": { supervisor: "WASANA-1", breaks: [{ start: "09:30", end: "09:45" }, { start: "12:30", end: "13:00" }, { start: "16:45", end: "17:00" }] },
@@ -1108,12 +1110,23 @@
 
             if (!currentQCOData) return;
 
-            const ops = currentQCOData.operations || [];
+            const ops = currentQCOData.operationsList || [];
             const completed = ops.filter(o => o.endTime).length;
             const total = ops.length;
+            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
             if (completedCount) completedCount.textContent = completed;
             if (totalCount) totalCount.textContent = total;
+
+            const percentageEl = document.getElementById('opsPercentage');
+            if (percentageEl) {
+                percentageEl.textContent = `(${percentage}%)`;
+                // Add color indication based on progress
+                percentageEl.className = 'ml-1 font-bold ' +
+                    (percentage === 100 ? 'text-emerald-600' :
+                        percentage > 50 ? 'text-blue-600' :
+                            'text-slate-700');
+            }
 
             // Update status based on current state
             const status = currentQCOData.status || 'pending';
@@ -1449,6 +1462,7 @@
                 const doc = await db.collection('changeovers').doc(currentQCOId).get();
                 if (doc.exists) {
                     const data = doc.data();
+                    currentQCOData = { id: doc.id, ...data };
 
                     // --- Extract Line ID and Load Schedule ---
                     // Fix: Prioritize 'lineNumber' field from data, fallback to QCO number parsing
