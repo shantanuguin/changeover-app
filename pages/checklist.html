@@ -530,6 +530,14 @@
                 min-width: 100% !important;
             }
         }
+
+        .modal-z-index {
+            z-index: 9000;
+        }
+
+        .sweetalert-z-index {
+            z-index: 10000 !important;
+        }
     </style>
 </head>
 
@@ -1649,6 +1657,10 @@
             }
 
             if (saveToStorage) localStorage.setItem('currentQCOId', qcoId);
+
+            // Clear any pending saves from previous QCO
+            if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+
             currentQCOId = qcoId;
 
             const selector = document.getElementById('qcoSelector');
@@ -1666,6 +1678,7 @@
             await loadData();
         }
 
+        // Update the loadData function to properly handle missing data:
         async function loadData() {
             if (!currentQCOId || !db) return;
 
@@ -1675,6 +1688,8 @@
                 if (doc.exists) {
                     const data = doc.data();
                     currentQCOData = data;
+
+                    console.log("Loading QCO:", currentQCOId, "Data:", data.departments ? "Has department data" : "No department data");
 
                     // Update Schedule Display
                     const dateEl = document.getElementById('scheduledDateContainer');
@@ -1694,14 +1709,11 @@
                         startCountdown(null, null);
                     }
 
-                    if (data.departments && Array.isArray(data.departments)) {
-                        // Merge saved data with default structure to ensure completeness
-                        departments = mergeDepartmentData(data.departments, JSON.parse(JSON.stringify(defaultStructure)));
-                    } else {
-                        // Initialize fresh
-                        await saveToFirebase();
-                    }
+                    // Always merge with template, even if we have saved data
+                    departments = mergeDepartmentData(data.departments, JSON.parse(JSON.stringify(defaultStructure)));
                 } else {
+                    // Document doesn't exist yet - create fresh structure
+                    console.log("QCO document doesn't exist, creating fresh structure");
                     departments = JSON.parse(JSON.stringify(defaultStructure));
                     await saveToFirebase();
                 }
@@ -1710,37 +1722,52 @@
                 updateOverallProgress();
             } catch (error) {
                 console.error("Load error:", error);
-                // Try localStorage fallback
-                const local = localStorage.getItem(`dept_checklist_${currentQCOId}`);
-                if (local) {
-                    departments = JSON.parse(local);
-                    resetToDepartments();
-                }
+                // On error, still reset to template
+                departments = JSON.parse(JSON.stringify(defaultStructure));
+                resetToDepartments();
             }
         }
 
+
+        // Replace the mergeDepartmentData function:
         function mergeDepartmentData(saved, template) {
-            return template.map(dept => {
-                const savedDept = saved.find(d => d.id === dept.id);
-                if (!savedDept) return dept;
+            if (!saved || !Array.isArray(saved)) {
+                console.warn("No saved department data found, using template");
+                return JSON.parse(JSON.stringify(template));
+            }
 
-                return {
-                    ...dept,
-                    stages: dept.stages.map(stage => {
-                        const savedStage = savedDept.stages.find(s => s.id === stage.id);
-                        if (!savedStage) return stage;
+            // Create a deep copy of the template to avoid mutation
+            const merged = JSON.parse(JSON.stringify(template));
 
-                        return {
-                            ...stage,
-                            status: savedStage.status || stage.status,
-                            items: stage.items.map(item => {
-                                const savedItem = savedStage.items.find(i => i.id === item.id);
-                                return savedItem || item;
-                            })
-                        };
-                    })
-                };
+            saved.forEach(savedDept => {
+                const templateDept = merged.find(d => d.id === savedDept.id);
+                if (!templateDept) return;
+
+                savedDept.stages?.forEach(savedStage => {
+                    const templateStage = templateDept.stages.find(s => s.id === savedStage.id);
+                    if (!templateStage) return;
+
+                    // Copy status
+                    if (savedStage.status) templateStage.status = savedStage.status;
+
+                    // Copy items
+                    savedStage.items?.forEach(savedItem => {
+                        const templateItem = templateStage.items.find(i => i.id === savedItem.id);
+                        if (!templateItem) return;
+
+                        // Copy completion status
+                        if (savedItem.completed !== undefined) templateItem.completed = savedItem.completed;
+                        // Copy remarks
+                        if (savedItem.remarks !== undefined) templateItem.remarks = savedItem.remarks;
+                        // Copy timestamp
+                        if (savedItem.timestamp) templateItem.timestamp = savedItem.timestamp;
+                        // Copy history
+                        if (savedItem.history) templateItem.history = savedItem.history;
+                    });
+                });
             });
+
+            return merged;
         }
 
         async function saveToFirebase() {
@@ -1987,7 +2014,7 @@
                         <input type="text" 
                                value="${item.remarks || ''}"
                                placeholder="Add remarks (optional)..."
-                               onchange="updateRemark('${item.id}', this.value)"
+                               oninput="updateRemark('${item.id}', this.value)"
                                onclick="event.stopPropagation()"
                                class="w-full text-xs px-3 py-2 bg-white/50 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-400 focus:bg-white transition-all">
                     </div>
@@ -2004,6 +2031,7 @@
 
         function viewHistory(e, itemId) {
             e.stopPropagation(); // Prevent toggling the checklist item
+            e.preventDefault(); // Prevent any default behavior
 
             if (!selectedDeptId || !currentStageId) return;
             const dept = departments.find(d => d.id === selectedDeptId);
@@ -2011,28 +2039,62 @@
             const item = stage.items.find(i => i.id === itemId);
             const history = item.history || [];
 
-            if (history.length === 0) return;
+            if (history.length === 0) {
+                Swal.fire({
+                    title: 'No History',
+                    text: 'No history available for this item.',
+                    icon: 'info',
+                    confirmButtonColor: '#0ea5e9'
+                });
+                return;
+            }
 
             // Sort history by timestamp desc (newest first)
             const sortedHistory = [...history].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
             const historyHtml = sortedHistory.map(h => `
-                <div class="flex items-center justify-between p-2 border-b border-slate-100 last:border-0 text-sm">
-                    <span class="font-mono text-xs text-slate-500">${new Date(h.timestamp).toLocaleString()}</span>
-                    <span class="font-bold ml-2 ${h.action === 'checked' ? 'text-emerald-600' : 'text-slate-400'}">
-                        ${h.action === 'checked' ? 'Checked' : 'Unchecked'}
-                    </span>
+                <div class="flex items-center justify-between p-2 border-b border-slate-100 last:border-0">
+                    <div class="flex-1">
+                        <div class="text-xs text-slate-500 font-mono">${new Date(h.timestamp).toLocaleString()}</div>
+                        <div class="text-sm font-medium ${h.action === 'checked' ? 'text-emerald-600' : 'text-amber-600'}">
+                            ${h.action === 'checked' ? '✓ Checked' : '✗ Unchecked'}
+                        </div>
+                    </div>
                 </div>
             `).join('');
 
-            Swal.fire({
-                title: 'Item History',
-                html: `<div class="text-left bg-slate-50 rounded-lg border border-slate-200 p-2 max-h-60 overflow-y-auto custom-scrollbar">${historyHtml}</div>`,
-                showCloseButton: true,
-                focusConfirm: false,
-                confirmButtonText: 'Close',
-                confirmButtonColor: '#64748b'
-            });
+            // TEMPORARILY close the checklist modal to show history
+            closeModal();
+
+            // Small delay to ensure modal is closed
+            setTimeout(() => {
+                Swal.fire({
+                    title: 'Item History',
+                    html: `
+                        <div class="text-left">
+                            <div class="mb-4 p-3 bg-slate-50 rounded-lg">
+                                <p class="text-sm text-slate-600">${item.text}</p>
+                            </div>
+                            <div class="max-h-60 overflow-y-auto bg-white rounded-lg border border-slate-200">
+                                ${historyHtml}
+                            </div>
+                        </div>
+                    `,
+                    showCloseButton: true,
+                    showConfirmButton: false,
+                    width: '500px',
+                    customClass: {
+                        container: 'z-[9999]', // Ensure high z-index
+                        popup: 'z-[10000]'
+                    },
+                    didClose: () => {
+                        // Re-open the checklist modal after viewing history
+                        if (currentStageId) {
+                            setTimeout(() => openStageModal(currentStageId), 100);
+                        }
+                    }
+                });
+            }, 300);
         }
 
         function closeModal() {
@@ -2447,7 +2509,8 @@
 
     </script>
     <!-- Checklist Detail Modal -->
-    <div id="checklistModal" class="fixed inset-0 z-[9000] hidden">
+    <!-- Checklist Detail Modal -->
+    <div id="checklistModal" class="fixed inset-0 z-[9000] hidden modal-z-index">
         <div class="absolute inset-0 bg-slate-900/20 backdrop-blur-sm" onclick="closeModal()"></div>
         <div class="absolute bottom-6 left-6 right-6 md:left-auto md:right-6 md:w-[500px] md:top-24 glass-panel shadow-2xl transform transition-transform duration-300 translate-y-full flex flex-col"
             id="modalContent">
