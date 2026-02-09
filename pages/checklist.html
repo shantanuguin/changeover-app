@@ -1771,29 +1771,41 @@
         }
 
         async function saveToFirebase() {
-            if (!currentQCOId || !db) return false;
+            if (!currentQCOId || !db) {
+                console.warn("Cannot save: No QCO ID or DB connection");
+                return false;
+            }
 
             try {
+                // Create a deep copy of departments to save
+                const dataToSave = JSON.parse(JSON.stringify(departments));
+
                 await db.collection('changeovers').doc(currentQCOId).set({
-                    departments: departments,
+                    departments: dataToSave,
                     lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
                     lastUpdatedBy: 'checklist_system'
                 }, { merge: true });
 
-                // Local backup
-                localStorage.setItem(`dept_checklist_${currentQCOId}`, JSON.stringify(departments));
-                showSavedState();
+                // Local backup with QCO-specific key
+                localStorage.setItem(`dept_checklist_${currentQCOId}`, JSON.stringify(dataToSave));
+
+                console.log("Saved data for QCO:", currentQCOId);
                 return true;
             } catch (error) {
-                console.error("Save error:", error);
+                console.error("Save error for QCO:", currentQCOId, error);
+                // Fallback to localStorage
                 localStorage.setItem(`dept_checklist_${currentQCOId}`, JSON.stringify(departments));
                 return false;
             }
         }
 
         function debouncedSave() {
+            if (!currentQCOId) {
+                console.warn("No QCO selected, skipping save");
+                return;
+            }
             if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
-            showSavingState();
+            // No visual indicator on every keystroke - just debounce
             autoSaveTimeout = setTimeout(() => saveToFirebase(), 1000);
         }
 
@@ -1914,7 +1926,7 @@
                 const stageRemarks = stage.items.filter(i => i.remarks && i.remarks.trim() !== '').length;
 
                 let statusColor = 'bg-slate-100 text-slate-500';
-                let statusIcon = 'fa-circle';
+                let statusIcon = 'circle';
                 let borderColor = 'border-transparent';
 
                 if (stage.status === 'completed') {
@@ -2063,6 +2075,9 @@
                 </div>
             `).join('');
 
+            // Save the stage ID before closing so we can reopen
+            const stageIdToReopen = currentStageId;
+
             // TEMPORARILY close the checklist modal to show history
             closeModal();
 
@@ -2089,8 +2104,8 @@
                     },
                     didClose: () => {
                         // Re-open the checklist modal after viewing history
-                        if (currentStageId) {
-                            setTimeout(() => openStageModal(currentStageId), 100);
+                        if (stageIdToReopen) {
+                            setTimeout(() => openStageModal(stageIdToReopen), 100);
                         }
                     }
                 });
@@ -2138,10 +2153,18 @@
         }
 
         function updateRemark(itemId, value) {
-            if (!selectedDeptId || !currentStageId) return;
+            // Guard against saving to wrong QCO
+            if (!currentQCOId || !selectedDeptId || !currentStageId) {
+                console.warn("Cannot update remark: Missing context", { currentQCOId, selectedDeptId, currentStageId });
+                return;
+            }
+
             const dept = departments.find(d => d.id === selectedDeptId);
+            if (!dept) return;
             const stage = dept.stages.find(s => s.id === currentStageId);
+            if (!stage) return;
             const item = stage.items.find(i => i.id === itemId);
+            if (!item) return;
 
             item.remarks = value;
             debouncedSave();
@@ -2307,23 +2330,24 @@
             assessRisk();
         }
 
+        // Simple toast for save status (no DOM element dependency)
         function showSavingState() {
-            const status = document.getElementById('saveStatus');
-            status.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin text-emerald-500"></i> Saving...';
-            status.classList.remove('hidden');
-            status.classList.add('flex');
-            lucide.createIcons();
+            // No-op: We don't want to spam toasts on every keystroke
+            // The save is debounced and happens silently
         }
 
         function showSavedState() {
-            const status = document.getElementById('saveStatus');
-            status.innerHTML = '<div class="w-2 h-2 bg-emerald-500 rounded-full live-dot"></div> Auto-saved';
-            status.classList.remove('hidden');
-            status.classList.add('flex');
-            setTimeout(() => {
-                status.classList.add('hidden');
-                status.classList.remove('flex');
-            }, 2000);
+            // Show a subtle toast only when explicitly requested
+            Swal.fire({
+                icon: 'success',
+                title: 'Saved',
+                timer: 1000,
+                showConfirmButton: false,
+                position: 'top-end',
+                toast: true,
+                background: '#ecfdf5',
+                color: '#065f46'
+            });
         }
 
         // --- Countdown Logic ---

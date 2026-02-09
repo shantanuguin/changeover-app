@@ -1310,7 +1310,7 @@
                                     Changeovers
                                 </h3>
                                 <p class="text-4xl font-heading font-bold text-slate-900" id="totalChangeovers">-</p>
-                                <p class="text-xs text-slate-400 mt-2">This week</p>
+                                <p class="text-xs text-slate-400 mt-2">Grand Total</p>
                             </div>
                         </div>
 
@@ -1463,7 +1463,7 @@
                                 <h3 class="text-lg font-heading font-bold text-slate-900">Active Now</h3>
                                 <span class="badge badge-live bg-emerald-50 text-emerald-700">0 Live</span>
                             </div>
-                            <div class="space-y-4 max-h-[600px] overflow-y-auto custom-scrollbar pr-2"
+                            <div class="space-y-4 max-h-[500px] overflow-y-auto custom-scrollbar pr-2"
                                 id="activeChangeoversList">
                                 <div id="activeChangeoversInner" class="space-y-4">
                                     <!-- Injected dynamically -->
@@ -1506,7 +1506,7 @@
                             </div>
 
                             <!-- Tab Content -->
-                            <div class="space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2"
+                            <div class="space-y-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-2"
                                 id="operationsContent">
                                 <div id="operationsInner" class="space-y-3">
                                     <!-- Injected dynamically -->
@@ -1752,7 +1752,19 @@
                     }).length;
 
                     // Update DOM
-                    document.getElementById('totalChangeovers').textContent = total;
+                    const filteredTotal = data.length;
+                    const absoluteTotal = allChangeovers.length;
+
+                    const totalElement = document.getElementById('totalChangeovers');
+                    totalElement.textContent = filteredTotal;
+
+                    // Add hover tooltip for clarity
+                    if (filteredTotal < absoluteTotal) {
+                        totalElement.title = `${filteredTotal} of ${absoluteTotal} records shown (filters active)`;
+                    } else {
+                        totalElement.title = `Showing all ${absoluteTotal} records`;
+                    }
+
                     document.getElementById('targetCOPT').textContent = avgTargetCOPT || '-';
                     document.getElementById('efficiencyScore').textContent = efficiency + '%';
                     document.getElementById('efficiencyBar').style.width = Math.min(efficiency, 100) + '%';
@@ -1918,50 +1930,91 @@
 
                 // --- Active Changeovers Widget ---
                 function updateActiveChangeovers() {
-                    const active = getFilteredDashboardData().filter(c => c.status === 'in-progress').slice(0, 10);
-                    const container = document.getElementById('activeChangeoversInner') || document.getElementById('activeChangeoversList');
+                    const container = document.getElementById('activeChangeoversInner');
+                    const liveBadge = document.querySelector('.badge-live');
+
+                    if (!container) {
+                        console.error('Active changeovers container not found');
+                        return;
+                    }
+
+                    // Get ALL changeovers (not filtered) and find active ones
+                    const active = allChangeovers.filter(c => {
+                        const status = deriveQCOStatus(c);
+                        return status === 'in-progress';
+                    }); // REMOVED LIMIT
+
+                    // Update live badge
+                    if (liveBadge) {
+                        liveBadge.textContent = `${active.length} Live`;
+                        liveBadge.className = `badge badge-live ${active.length > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-500'}`;
+                    }
 
                     if (active.length === 0) {
-                        container.innerHTML = '<p class="text-slate-400 text-sm italic py-8 text-center">No active changeovers</p>';
+                        container.innerHTML = `
+                            <div class="flex flex-col items-center justify-center py-10 text-center h-full">
+                                <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                                    <i data-lucide="coffee" class="w-8 h-8 text-slate-400"></i>
+                                </div>
+                                <p class="text-sm font-medium text-slate-600 mb-1">No active changeovers</p>
+                                <p class="text-xs text-slate-400">Start a changeover from the schedule</p>
+                            </div>`;
+                        lucide.createIcons();
                         return;
                     }
 
                     container.innerHTML = active.map(qco => {
-                        const elapsed = qco.startedAt ? Math.floor((Date.now() - qco.startedAt.toDate()) / 60000) : 0;
-
-                        // Operations Progress
+                        // Calculate progress
                         const ops = qco.operationsList || [];
-                        const completedOps = ops.filter(op => op.endTime).length;
+                        const timings = qco.operationTimings || {};
+                        const completedOps = ops.filter(op => {
+                            const opName = typeof op === 'string' ? op : op.name;
+                            return timings[opName] && timings[opName].end;
+                        }).length;
                         const totalOps = ops.length;
-                        const opsProgress = totalOps > 0 ? (completedOps / totalOps) * 100 : 0;
-                        const progress = opsProgress;
+                        const progress = totalOps > 0 ? Math.round((completedOps / totalOps) * 100) : 0;
+
+                        // Calculate elapsed time
+                        let elapsed = 0;
+                        if (qco.startedAt) {
+                            const startTime = qco.startedAt.toDate ? qco.startedAt.toDate() : new Date(qco.startedAt);
+                            elapsed = Math.floor((Date.now() - startTime.getTime()) / 60000);
+                        } else if (qco.createdAt) {
+                            const createdTime = qco.createdAt.toDate ? qco.createdAt.toDate() : new Date(qco.createdAt);
+                            elapsed = Math.floor((Date.now() - createdTime.getTime()) / 60000);
+                        }
 
                         return `
-                    <div class="bg-white/50 rounded-xl p-4 border border-white/60 hover:shadow-md transition-all group cursor-pointer" onclick="showDetails('${qco.id}')">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">#${qco.qcoNumber || 'N/A'}</span>
-                            <div class="flex flex-col items-end">
-                                <span class="text-xs font-mono text-blue-600 bg-blue-50 px-2 py-0.5 rounded mb-0.5 font-bold">${completedOps}/${totalOps} Ops</span>
-                                <span class="text-[10px] text-slate-400">${elapsed} min elapsed</span>
+                            <div class="bg-white/70 rounded-xl p-4 border border-white/80 hover:shadow-md transition-all group cursor-pointer h-36 flex flex-col justify-between" onclick="showDetails('${qco.id}')">
+                                <div>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <span class="font-semibold text-slate-900 group-hover:text-blue-600 transition-colors truncate max-w-[140px]">#${qco.qcoNumber || 'N/A'}</span>
+                                    <div class="flex flex-col items-end">
+                                        <span class="text-xs font-mono text-blue-600 bg-blue-50 px-2 py-0.5 rounded mb-0.5 font-bold">${completedOps}/${totalOps} Ops</span>
+                                        <span class="text-[10px] text-slate-400">${elapsed} min elapsed</span>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between text-sm text-slate-600 mb-2">
+                                    <span class="font-medium truncate max-w-[85px]" title="${qco.currentStyle || 'N/A'}">${qco.currentStyle || 'N/A'}</span>
+                                    <i data-lucide="arrow-right" class="w-4 h-4 text-slate-300 flex-shrink-0 mx-1"></i>
+                                    <span class="font-medium truncate max-w-[85px]" title="${qco.upcomingStyle || 'N/A'}">${qco.upcomingStyle || 'N/A'}</span>
+                                </div>
+                                </div>
+                                <div>
+                                <div class="w-full bg-slate-200 rounded-full h-2 mb-1 overflow-hidden">
+                                    <div class="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-1000 relative" style="width: ${progress}%">
+                                        <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between text-xs text-slate-400">
+                                    <span class="truncate max-w-[100px]">Line ${qco.lineNumber || 'N/A'}</span>
+                                    <span class="font-bold text-blue-600">${Math.round(progress)}% Complete</span>
+                                </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="flex justify-between text-sm text-slate-600 mb-2">
-                            <span class="font-medium">${qco.currentStyle || 'N/A'}</span>
-                            <i data-lucide="arrow-right" class="w-4 h-4 text-slate-300"></i>
-                            <span class="font-medium">${qco.upcomingStyle || 'N/A'}</span>
-                        </div>
-                        <div class="w-full bg-slate-200 rounded-full h-2 mb-1 overflow-hidden">
-                            <div class="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-1000 relative" style="width: ${progress}%">
-                                <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
-                            </div>
-                        </div>
-                        <div class="flex justify-between text-xs text-slate-400">
-                            <span>Line ${qco.lineNumber || 'N/A'}</span>
-                            <span class="font-bold text-blue-600">${Math.round(progress)}% Complete</span>
-                        </div>
-                    </div>
-                `;
+                        `;
                     }).join('');
+
                     lucide.createIcons();
                 }
 
@@ -3270,18 +3323,25 @@
                 }
 
                 // Render efficiency chart on Chart 2 canvas
+                // Render efficiency chart on Chart 2 canvas
                 function renderEfficiencyChartOnChart2(data) {
                     const grouped = {};
                     data.forEach(qco => {
-                        const dateKey = (qco.createdAt?.toDate?.() || new Date(qco.createdAt)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        if (!qco.createdAt) return;
+                        const dateKey = (qco.createdAt.toDate ? qco.createdAt.toDate() : new Date(qco.createdAt)).toISOString().split('T')[0];
                         if (!grouped[dateKey]) grouped[dateKey] = [];
                         const target = calculateTargetCOPT(qco);
                         const actual = calculateActualCOPT(qco);
                         grouped[dateKey].push(calculateEfficiency(target, actual));
                     });
 
-                    const labels = Object.keys(grouped);
-                    const avgEff = labels.map(date => {
+                    // Sort chronological keys first
+                    const sortedKeys = Object.keys(grouped).sort();
+
+                    // Generate display labels from sorted keys
+                    const labels = sortedKeys.map(date => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+
+                    const avgEff = sortedKeys.map(date => {
                         const effs = grouped[date].filter(e => e > 0);
                         return effs.length > 0 ? Math.round(effs.reduce((a, b) => a + b, 0) / effs.length) : 0;
                     });
@@ -3305,7 +3365,8 @@
                 function renderMultiMetricChartOnChart2(data) {
                     const grouped = {};
                     data.forEach(qco => {
-                        const dateKey = (qco.createdAt?.toDate?.() || new Date(qco.createdAt)).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        if (!qco.createdAt) return;
+                        const dateKey = (qco.createdAt.toDate ? qco.createdAt.toDate() : new Date(qco.createdAt)).toISOString().split('T')[0];
                         if (!grouped[dateKey]) grouped[dateKey] = { copt: [], eff: [], count: 0 };
                         const target = calculateTargetCOPT(qco);
                         const actual = calculateActualCOPT(qco);
@@ -3314,9 +3375,14 @@
                         grouped[dateKey].count++;
                     });
 
-                    const labels = Object.keys(grouped);
-                    const avgCopt = labels.map(d => Math.round(grouped[d].copt.reduce((a, b) => a + b, 0) / grouped[d].copt.length || 0));
-                    const avgEff = labels.map(d => Math.round(grouped[d].eff.reduce((a, b) => a + b, 0) / grouped[d].eff.length || 0));
+                    // Sort chronological keys first
+                    const sortedKeys = Object.keys(grouped).sort();
+
+                    // Generate display labels
+                    const labels = sortedKeys.map(date => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+
+                    const avgCopt = sortedKeys.map(d => Math.round(grouped[d].copt.reduce((a, b) => a + b, 0) / grouped[d].copt.length || 0));
+                    const avgEff = sortedKeys.map(d => Math.round(grouped[d].eff.reduce((a, b) => a + b, 0) / grouped[d].eff.length || 0));
 
                     efficiencyChartInstance.config.type = 'line';
                     efficiencyChartInstance.data = {
@@ -3770,7 +3836,7 @@
                         }
                     });
 
-                    const recent = allOps.sort((a, b) => b.endTime - a.endTime).slice(0, 10);
+                    const recent = allOps.sort((a, b) => b.endTime - a.endTime).slice(0, 20);
 
                     container.innerHTML = recent.length === 0
                         ? '<p class="text-sm text-slate-400 text-center py-8">No recent operations</p>'
