@@ -830,3 +830,14 @@ window.PlanningLogic = {
     switchView,
     openStyleModal
 };
+
+// --- Initialization ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Re-attach file input listener
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            handleFileUpload(e.target);
+        });
+    }
+});
