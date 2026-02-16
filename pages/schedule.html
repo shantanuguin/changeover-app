@@ -1880,6 +1880,21 @@
         function generateMeetingEmail(data) {
             const { qcoNumber, line, style, meetDate, changeoverDate, category, location, personnel, emails, checklistLink } = data;
 
+            // Dynamic Footer Logic
+            let footerName = "Planning Department";
+            try {
+                const userStr = localStorage.getItem('qcoCurrentUser');
+                if (userStr) {
+                    const currentUser = JSON.parse(userStr);
+                    // If role is NOT planning, use the user's name
+                    if (currentUser.role && currentUser.role.toLowerCase() !== 'planning') {
+                        footerName = currentUser.name || "Planning Team";
+                    }
+                }
+            } catch (e) {
+                console.error("Error determining email footer:", e);
+            }
+
             const attendeesHtml = `
                 <ul style="margin: 0 0 20px 0; padding-left: 20px;">
                     <li><strong>Supervisor:</strong> ${personnel.supervisor} ${emails.supervisor ? `(${emails.supervisor})` : ''}</li>
@@ -1973,7 +1988,7 @@
                         
                         <p style="margin-top: 30px; font-size: 14px; color: #334155;">
                             Regards,<br>
-                            <strong>Planning Department</strong><br>
+                            <strong>${footerName}</strong><br>
                             Sidney Apparels
                         </p>
 
@@ -2012,7 +2027,7 @@ REQUIRED ATTENDEES
 ${attendeesText}
 
 Regards,
-Planning Department
+${footerName}
 Sidney Apparels
 
 ------------------------------------------------
