@@ -5025,7 +5025,7 @@
                         MEETING LOGISTICS
                     </h3>
                     <table style="width: 100%; margin-bottom: 20px;">
-                        <tr><td style="width: 140px; font-weight: bold;">Date:</td><td>( to be decided by planning team )</td></tr>
+                        <tr><td style="width: 140px; font-weight: bold;">Date:</td><td>( to be decided by planning team in a follow up email)</td></tr>
                         <tr><td style="font-weight: bold;">Checklist:</td><td><a href="https://shantanuguin.github.io/sidneyme/outlist.html" style="color: #047857; font-weight: bold; text-decoration: underline; background-color: #ecfdf5; padding: 3px 6px; border-radius: 4px; border: 1px solid #a7f3d0;">Department Checklist Link</a></td></tr>
                         <tr><td style="font-weight: bold;">Location:</td><td>Line ${selectedLine} - Production Floor</td></tr>
                         <tr><td style="font-weight: bold;">Purpose:</td><td>Detailed Layout & Resource Planning</td></tr>
@@ -5112,7 +5112,7 @@
                         MEETING LOGISTICS
                     </h3>
                     <table style="width: 100%; margin-bottom: 20px;">
-                        <tr><td style="width: 120px; padding: 4px 0;"><strong>Date:</strong></td><td style="padding: 4px 0;">( to be decided by planning team )</td></tr>
+                        <tr><td style="width: 120px; padding: 4px 0;"><strong>Date:</strong></td><td style="padding: 4px 0;">( to be decided by planning team in a follow up email)</td></tr>
                         <tr><td style="padding: 4px 0;"><strong>Checklist:</strong></td><td style="padding: 4px 0;"><a href="https://shantanuguin.github.io/sidneyme/outlist.html" style="color: #2563eb; font-weight: bold; text-decoration: underline; background-color: #eff6ff; padding: 4px 8px; border-radius: 4px; border: 1px solid #bfdbfe;">Department Checklist Link</a></td></tr>
                         <tr><td style="padding: 4px 0;"><strong>Location:</strong></td><td style="padding: 4px 0;">Line ${selectedLine} - Production Floor</td></tr>
                         <tr><td style="padding: 4px 0;"><strong>Purpose:</strong></td><td style="padding: 4px 0;">Pre-production layout review and resource allocation</td></tr>
@@ -5185,14 +5185,13 @@
                         <li><strong>IE:</strong> ${lineData.ie} ${lineEmails.ie ? `(${lineEmails.ie})` : ''}</li>
                         <li><strong>Line Incharge:</strong> ${lineData.lineIncharge} ${lineEmails.lineIncharge ? `(${lineEmails.lineIncharge})` : ''}</li>
                         ${lineData.qam && lineData.qam !== 'TBD' ? `<li><strong>QAM:</strong> ${lineData.qam} ${lineEmails.qam ? `(${lineEmails.qam})` : ''}</li>` : (lineEmails.qam ? `<li><strong>QAM:</strong> ${lineEmails.qam}</li>` : '')}
+                        <li><strong>Planning:</strong> Yash Mhetre/ Rawan Mazen</li>
+                        <li><strong>Production:</strong> Ramesh Perumal</li>
+                        <li><strong>Fabric/Cutting:</strong> Shanoop V, Majeed</li>
+                        <li><strong>Maintenance:</strong> Abdul Nasar</li>
                         <li><strong>Maintenance:</strong> ${lineData.mechIncharge} ${lineEmails.maintenance ? `(${lineEmails.maintenance})` : ''}</li>
                         <li><strong>Technical:</strong> ${lineData.technical} ${lineEmails.technical ? `(${lineEmails.technical})` : ''}</li>
-                        <li><strong>Planning:</strong> ${lineEmails.planning || 'TBD'}</li>
-                        <li><strong>Production:</strong> ${lineEmails.production || 'TBD'}</li>
-                        <li><strong>Fabric/Cutting:</strong> ${lineEmails.fabric || ''} ${lineEmails.cutting ? `/ ${lineEmails.cutting}` : ''}</li>
-                        <li style="margin-top: 10px; font-weight: bold; color: #4b5563;">Maintenance Department</li>
-                        <li style="font-weight: bold; color: #4b5563;">Production Manager</li>
-                        <li style="font-weight: bold; color: #4b5563;">IE Manager</li>
+                        <li style="font-weight: bold; color: #4b5563;">IE Manager : Sathvik Bhat</li>
                     </ul>
              `;
         }
@@ -5238,7 +5237,7 @@ Please be advised that a style changeover is scheduled for Line ${selectedLine}.
 
 MEETING LOGISTICS
 ------------------------------------------------
-Date:    ( to be decided by planning team )
+Date:    ( to be decided by planning team in a follow up email)
 Checklist: https://shantanuguin.github.io/sidneyme/outlist.html
 Location: Line ${selectedLine} - Production Floor
 Purpose:  Pre-production layout review and resource allocation
@@ -5268,13 +5267,11 @@ REQUIRED ATTENDEES
 - Line Incharge: ${lineData.lineIncharge}
 - Maintenance: ${lineData.mechIncharge}
 - Technical: ${lineData.technical}
-- Planning: ${lineEmails.planning || 'TBD'}
-- Production: ${lineEmails.production || 'TBD'}
-- Fabric: ${lineEmails.fabric || ''}
-- Cutting: ${lineEmails.cutting || ''}
-- Maintenance Department
-- Production Manager
-- IE Manager
+- Planning: Yash Mhetre/ Rawan Mazen
+- Production: Ramesh Perumal
+- Fabric/Cutting: Shanoop V, Majeed
+- Maintenance: Abdul Nasar
+- IE Manager : Sathvik Bhat
 
 ACTION ITEMS
 ------------------------------------------------
