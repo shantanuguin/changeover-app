@@ -1897,36 +1897,36 @@
 
             const attendeesHtml = `
                 <ul style="margin: 0 0 20px 0; padding-left: 20px;">
-                    <li><strong>Supervisor:</strong> ${personnel.supervisor} ${emails.supervisor ? `(${emails.supervisor})` : ''}</li>
-                    <li><strong>RQC:</strong> ${personnel.rqc} ${emails.rqc ? `(${emails.rqc})` : ''}</li>
-                    <li><strong>IE:</strong> ${personnel.ie} ${emails.ie ? `(${emails.ie})` : ''}</li>
-                    <li><strong>Line Incharge:</strong> ${personnel.lineIncharge} ${emails.lineIncharge ? `(${emails.lineIncharge})` : ''}</li>
-                    <li><strong>QAM:</strong> ${personnel.qam} ${emails.qam ? `(${emails.qam})` : ''}</li>
-                    <li><strong>Maintenance:</strong> ${personnel.mechIncharge} ${emails.maintenance ? `(${emails.maintenance})` : ''}</li>
-                    <li><strong>Technical:</strong> ${personnel.technical} ${emails.technical ? `(${emails.technical})` : ''}</li>
+                    <li><strong>Supervisor:</strong> ${personnel.supervisor}</li>
+                    <li><strong>RQC:</strong> ${personnel.rqc}</li>
+                    <li><strong>IE:</strong> ${personnel.ie}</li>
+                    <li><strong>Line Incharge:</strong> ${personnel.lineIncharge}</li>
+                    <li><strong>QAM:</strong> ${personnel.qam}</li>
+                    <li><strong>Maintenance:</strong> ${personnel.mechIncharge}</li>
+                    <li><strong>Technical:</strong> ${personnel.technical}</li>
                     <li><strong>Planning:</strong> ${emails.planning || 'TBD'}</li>
                     <li><strong>Production:</strong> ${emails.production || 'TBD'}</li>
                     <li><strong>Fabric/Cutting:</strong> ${emails.fabric || ''} ${emails.cutting ? `/ ${emails.cutting}` : ''}</li>
                     <li style="margin-top: 10px; font-weight: bold; color: #4b5563;">Maintenance Department</li>
                     <li style="font-weight: bold; color: #4b5563;">Production Manager</li>
-                    <li style="font-weight: bold; color: #4b5563;">IE Manager</li>
+                    <li><strong>IE Manager:</strong> Sathvik Bhat</li>
                 </ul>
              `;
 
             const attendeesText = `
-    - Supervisor: ${personnel.supervisor} ${emails.supervisor ? `(${emails.supervisor})` : ''}
-    - RQC: ${personnel.rqc} ${emails.rqc ? `(${emails.rqc})` : ''}
-    - IE: ${personnel.ie} ${emails.ie ? `(${emails.ie})` : ''}
-    - Line Incharge: ${personnel.lineIncharge} ${emails.lineIncharge ? `(${emails.lineIncharge})` : ''}
-    - QAM: ${personnel.qam} ${emails.qam ? `(${emails.qam})` : ''}
-    - Maintenance: ${personnel.mechIncharge} ${emails.maintenance ? `(${emails.maintenance})` : ''}
-    - Technical: ${personnel.technical} ${emails.technical ? `(${emails.technical})` : ''}
+    - Supervisor: ${personnel.supervisor}
+    - RQC: ${personnel.rqc}
+    - IE: ${personnel.ie}
+    - Line Incharge: ${personnel.lineIncharge}
+    - QAM: ${personnel.qam}
+    - Maintenance: ${personnel.mechIncharge}
+    - Technical: ${personnel.technical}
     - Planning: ${emails.planning || 'TBD'}
     - Production: ${emails.production || 'TBD'}
     - Fabric/Cutting: ${emails.fabric || ''} ${emails.cutting ? `/ ${emails.cutting}` : ''}
     - Maintenance Department
     - Production Manager
-    - IE Manager
+    - IE Manager : Sathvik Bhat
              `;
 
             const html = `

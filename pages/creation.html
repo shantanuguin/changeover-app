@@ -5180,18 +5180,18 @@
                         REQUIRED ATTENDEES
                     </h3>
                     <ul style="margin: 0 0 20px 0; padding-left: 20px;">
-                        <li><strong>Supervisor:</strong> ${lineData.supervisor} ${lineEmails.supervisor ? `(${lineEmails.supervisor})` : ''}</li>
-                        <li><strong>RQC:</strong> ${lineData.rqc} ${lineEmails.rqc ? `(${lineEmails.rqc})` : ''}</li>
-                        <li><strong>IE:</strong> ${lineData.ie} ${lineEmails.ie ? `(${lineEmails.ie})` : ''}</li>
-                        <li><strong>Line Incharge:</strong> ${lineData.lineIncharge} ${lineEmails.lineIncharge ? `(${lineEmails.lineIncharge})` : ''}</li>
-                        ${lineData.qam && lineData.qam !== 'TBD' ? `<li><strong>QAM:</strong> ${lineData.qam} ${lineEmails.qam ? `(${lineEmails.qam})` : ''}</li>` : (lineEmails.qam ? `<li><strong>QAM:</strong> ${lineEmails.qam}</li>` : '')}
+                        <li><strong>Supervisor:</strong> ${lineData.supervisor}</li>
+                        <li><strong>RQC:</strong> ${lineData.rqc}</li>
+                        <li><strong>IE:</strong> ${lineData.ie}</li>
+                        <li><strong>Line Incharge:</strong> ${lineData.lineIncharge}</li>
+                        ${lineData.qam && lineData.qam !== 'TBD' ? `<li><strong>QAM:</strong> ${lineData.qam}</li>` : ''}
                         <li><strong>Planning:</strong> Yash Mhetre/ Rawan Mazen</li>
                         <li><strong>Production:</strong> Ramesh Perumal</li>
                         <li><strong>Fabric/Cutting:</strong> Shanoop V, Majeed</li>
                         <li><strong>Maintenance:</strong> Abdul Nasar</li>
-                        <li><strong>Maintenance:</strong> ${lineData.mechIncharge} ${lineEmails.maintenance ? `(${lineEmails.maintenance})` : ''}</li>
-                        <li><strong>Technical:</strong> ${lineData.technical} ${lineEmails.technical ? `(${lineEmails.technical})` : ''}</li>
-                        <li style="font-weight: bold; color: #4b5563;">IE Manager : Sathvik Bhat</li>
+                        <li><strong>Maintenance:</strong> ${lineData.mechIncharge}</li>
+                        <li><strong>Technical:</strong> ${lineData.technical}</li>
+                        <li><strong>IE Manager:</strong> Sathvik Bhat</li>
                     </ul>
              `;
         }
