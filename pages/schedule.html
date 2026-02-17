@@ -1905,14 +1905,13 @@
                     <li><strong>RQC:</strong> ${personnel.rqc}</li>
                     <li><strong>IE:</strong> ${personnel.ie}</li>
                     <li><strong>Line Incharge:</strong> ${personnel.lineIncharge}</li>
-                    <li><strong>QAM:</strong> ${personnel.qam}</li>
+                    ${personnel.qam && personnel.qam !== 'TBD' ? `<li><strong>QAM:</strong> ${personnel.qam}</li>` : ''}
+                    <li><strong>Planning:</strong> Yash Mhetre/ Rawan Mazen</li>
+                    <li><strong>Production:</strong> Ramesh Perumal</li>
+                    <li><strong>Fabric/Cutting:</strong> Shanoop V, Majeed</li>
+                    <li><strong>Maintenance:</strong> Abdul Nasar</li>
                     <li><strong>Maintenance:</strong> ${personnel.mechIncharge}</li>
                     <li><strong>Technical:</strong> ${personnel.technical}</li>
-                    <li><strong>Planning:</strong> ${emails.planning || 'TBD'}</li>
-                    <li><strong>Production:</strong> ${emails.production || 'TBD'}</li>
-                    <li><strong>Fabric/Cutting:</strong> ${emails.fabric || ''} ${emails.cutting ? `/ ${emails.cutting}` : ''}</li>
-                    <li style="margin-top: 10px; font-weight: bold; color: #4b5563;">Maintenance Department</li>
-                    <li style="font-weight: bold; color: #4b5563;">Production Manager</li>
                     <li><strong>IE Manager:</strong> Sathvik Bhat</li>
                 </ul>
              `;
@@ -1922,14 +1921,13 @@
     - RQC: ${personnel.rqc}
     - IE: ${personnel.ie}
     - Line Incharge: ${personnel.lineIncharge}
-    - QAM: ${personnel.qam}
+    ${personnel.qam && personnel.qam !== 'TBD' ? `- QAM: ${personnel.qam}` : ''}
+    - Planning: Yash Mhetre/ Rawan Mazen
+    - Production: Ramesh Perumal
+    - Fabric/Cutting: Shanoop V, Majeed
+    - Maintenance: Abdul Nasar
     - Maintenance: ${personnel.mechIncharge}
     - Technical: ${personnel.technical}
-    - Planning: ${emails.planning || 'TBD'}
-    - Production: ${emails.production || 'TBD'}
-    - Fabric/Cutting: ${emails.fabric || ''} ${emails.cutting ? `/ ${emails.cutting}` : ''}
-    - Maintenance Department
-    - Production Manager
     - IE Manager : Sathvik Bhat
              `;
 
