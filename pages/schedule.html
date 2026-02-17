@@ -1798,6 +1798,10 @@
                     if (lineEmails[role]) addRecip(lineEmails[role]);
                 });
 
+                // Add Default CCs (Synced with creation.html)
+                const defaultCC = "tharun.raj@sidneyapparels.com, Mubashir.Ali@SIDNEYAPPARELS.COM, shantanu.guin281203@gmail.com, sampreeti6404@gmail.com, IE.SA@SIDNEYAPPARELS.COM, IEexecutive.SA@SIDNEYAPPARELS.COM, Yash.Mhetre@SIDNEYAPPARELS.COM, Rawan.mazen@SIDNEYAPPARELS.COM, Sam.Nishith@SIDNEYAPPARELS.COM, Planner.SA@SIDNEYAPPARELS.COM, Srinivasan.Perumal@SIDNEYAPPARELS.COM, Sherin.Samuel@SIDNEYAPPARELS.COM";
+                defaultCC.split(',').forEach(email => addRecip(email));
+
                 // 4. Generate Content
                 const templateData = {
                     qcoNumber: qco.qcoNumber || 'QCO-???',
