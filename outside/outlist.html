@@ -485,10 +485,19 @@
                                 class="text-xl font-heading font-bold text-slate-900 leading-tight">Not scheduled</p>
                         </div>
                     </div>
-                    <div class="md:text-right pl-16 md:pl-0">
-                        <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Time Remaining</p>
-                        <p id="remainingTimeText" class="text-2xl md:text-3xl font-bold text-amber-600 tabular-nums">--
-                        </p>
+                    <div class="flex items-center gap-6">
+                        <!-- PO Number -->
+                        <div id="poNumberContainer" class="hidden md:text-right pl-16 md:pl-0">
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">PO Number</p>
+                            <p id="poNumberText" class="text-lg font-bold text-blue-600">--</p>
+                        </div>
+                        <!-- Time Remaining -->
+                        <div class="md:text-right pl-16 md:pl-0">
+                            <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">Time Remaining</p>
+                            <p id="remainingTimeText"
+                                class="text-2xl md:text-3xl font-bold text-amber-600 tabular-nums">--
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1022,9 +1031,21 @@
             const dateText = document.getElementById('scheduledDateText');
             const remainingText = document.getElementById('remainingTimeText');
 
-
-
-
+            // PO Number display
+            const poContainer = document.getElementById('poNumberContainer');
+            const poText = document.getElementById('poNumberText');
+            if (qcoData && qcoData.poNumber && qcoData.poNumber.trim()) {
+                if (poText) poText.textContent = qcoData.poNumber;
+                if (poContainer) {
+                    poContainer.classList.remove('hidden');
+                    poContainer.classList.add('block');
+                }
+            } else {
+                if (poContainer) {
+                    poContainer.classList.add('hidden');
+                    poContainer.classList.remove('block');
+                }
+            }
 
             if (!scheduledDate) {
                 if (dateCard) dateCard.classList.add('hidden');

@@ -755,6 +755,13 @@
                                 <span id="scheduledDateText">Not Scheduled</span>
                             </div>
 
+                            <!-- PO Number Display -->
+                            <div id="poNumberContainer"
+                                class="hidden items-center gap-2 px-4 py-3 bg-white/60 rounded-2xl border border-white/60 text-slate-600 font-semibold shadow-sm transition-all whitespace-nowrap">
+                                <i data-lucide="package" class="w-4 h-4 text-blue-500"></i>
+                                <span id="poNumberText">--</span>
+                            </div>
+
                             <!-- Countdown Display -->
                             <div id="countdownContainer"
                                 class="hidden items-center gap-2 px-4 py-3 bg-amber-50/80 rounded-2xl border border-amber-100 text-amber-700 font-semibold shadow-sm transition-all whitespace-nowrap">
@@ -1707,6 +1714,18 @@
                         dateEl.classList.remove('flex');
                         dateEl.classList.add('hidden');
                         startCountdown(null, null);
+                    }
+
+                    // Update PO Number Display
+                    const poEl = document.getElementById('poNumberContainer');
+                    const poText = document.getElementById('poNumberText');
+                    if (data.poNumber && data.poNumber.trim()) {
+                        poText.textContent = `PO: ${data.poNumber}`;
+                        poEl.classList.remove('hidden');
+                        poEl.classList.add('flex');
+                    } else {
+                        poEl.classList.remove('flex');
+                        poEl.classList.add('hidden');
                     }
 
                     // Always merge with template, even if we have saved data

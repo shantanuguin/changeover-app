@@ -778,6 +778,20 @@
                                             </p>
                                         </div>
 
+                                        <!-- PO Number Field -->
+                                        <div>
+                                            <label class="block text-sm font-bold text-slate-700 mb-2">PO Number</label>
+                                            <div class="relative">
+                                                <input type="text" id="poNumber"
+                                                    placeholder="Enter PO number (e.g. PO-12345)"
+                                                    class="w-full bg-white border border-slate-200 text-slate-900 font-semibold rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent shadow-sm transition-all text-lg">
+                                            </div>
+                                            <p class="text-xs text-slate-400 mt-2 ml-1 flex items-center gap-1">
+                                                <i data-lucide="info" class="w-3 h-3"></i>
+                                                Optional alphanumeric PO reference
+                                            </p>
+                                        </div>
+
                                         <div class="bg-amber-50/80 border border-amber-100 rounded-xl p-4 flex gap-3">
                                             <i data-lucide="lightbulb" class="w-5 h-5 text-amber-500 mt-0.5"></i>
                                             <div>
@@ -1296,6 +1310,9 @@
                     const categoryInput = document.getElementById('changeoverCategory');
                     categoryInput.value = currentQCOData.changeoverCategory || 'C';
 
+                    // Set PO number if exists
+                    document.getElementById('poNumber').value = currentQCOData.poNumber || '';
+
                     // Update last updated
                     if (currentQCOData.updatedAt) {
                         const date = currentQCOData.updatedAt.toDate ? currentQCOData.updatedAt.toDate() : new Date(currentQCOData.updatedAt);
@@ -1307,6 +1324,7 @@
                     // New document
                     document.getElementById('scheduleDate').value = '';
                     document.getElementById('changeoverCategory').value = 'C'; // Default to Category C
+                    document.getElementById('poNumber').value = ''; // Clear PO number
                     updateStatusText('New');
                     document.getElementById('lastUpdatedText').textContent = 'Never';
                 }
@@ -1386,10 +1404,12 @@
 
             try {
                 const categoryVal = document.getElementById('changeoverCategory').value;
+                const poNumber = document.getElementById('poNumber').value.trim();
 
                 await db.collection('changeovers').doc(currentQCOId).set({
                     scheduledDate: dateVal, // Save as ISO string
                     changeoverCategory: categoryVal, // Save category (A, B, or C)
+                    poNumber: poNumber, // Save PO number
                     hasSchedule: true,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
                     updatedBy: 'schedule_system'
