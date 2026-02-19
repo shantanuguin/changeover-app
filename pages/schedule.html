@@ -1780,7 +1780,7 @@
 
                 const lineEmails = emailData[lookupLine] || {};
 
-                // 2. Determine Dates (Meeting = 3 Days Prior to Changeover)
+                // 2. Determine Dates (Meeting = 1 Day Prior to Changeover)
                 let meetDateStr = "TBD";
                 let changeoverDateStr = "TBD";
 
@@ -1795,9 +1795,9 @@
                         // Changeover Date
                         changeoverDateStr = `${execDate.getDate().toString().padStart(2, '0')}-${months[execDate.getMonth()]}-${execDate.getFullYear()}`;
 
-                        // Meeting Date (3 days prior)
+                        // Meeting Date (1 day prior)
                         const meetDate = new Date(execDate);
-                        meetDate.setDate(execDate.getDate() - 3);
+                        meetDate.setDate(execDate.getDate() - 1);
                         meetDateStr = `${meetDate.getDate().toString().padStart(2, '0')}-${months[meetDate.getMonth()]}-${meetDate.getFullYear()}`;
 
                     } catch (e) {
