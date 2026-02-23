@@ -127,8 +127,8 @@
         .timeline-line-bg {
             position: absolute;
             top: 2.75rem;
-            left: 1.5rem;
-            right: 1.5rem;
+            left: 0;
+            right: 0;
             height: 6px;
             background: #e2e8f0;
             border-radius: 3px;
@@ -138,22 +138,22 @@
         .timeline-line-fill {
             position: absolute;
             top: 2.75rem;
-            left: 1.5rem;
+            left: 0;
             height: 6px;
             background: linear-gradient(90deg, #10b981, #06b6d4);
             border-radius: 3px;
             z-index: 1;
-            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .timeline-stop {
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-width: 90px;
+            flex: 1;
             position: relative;
             z-index: 2;
-            flex-shrink: 0;
+            min-width: 0;
         }
 
         .timeline-dot {
@@ -1033,20 +1033,59 @@
 
             // Sort by recording order (same helper as operations log)
             const sorted = getSortedOperations(operations, timings);
-
             section.classList.remove('hidden');
-            let completedCount = 0;
-            let lastActiveOrDoneIdx = -1;
 
-            const stops = sorted.map((entry, i) => {
+            // --- Sliding Window Logic ---
+            const totalItems = sorted.length;
+            const isMobile = window.innerWidth <= 640;
+            const windowSize = isMobile ? 5 : 11;
+            const halfWindow = Math.floor(windowSize / 2);
+
+            // Determine "Current" item index
+            let currentIndex = sorted.findIndex(e => e.timing && e.timing.start && !e.timing.end); // Active
+            if (currentIndex === -1) {
+                currentIndex = sorted.findIndex(e => !e.timing || !e.timing.start); // First pending
+            }
+            if (currentIndex === -1) {
+                currentIndex = totalItems - 1; // All done
+            }
+
+            // Calculate Slice Bounds
+            let startIdx = currentIndex - halfWindow;
+            let endIdx = currentIndex + halfWindow;
+
+            if (totalItems <= windowSize) {
+                startIdx = 0;
+                endIdx = totalItems - 1;
+            } else {
+                if (startIdx < 0) {
+                    startIdx = 0;
+                    endIdx = windowSize - 1;
+                } else if (endIdx >= totalItems) {
+                    endIdx = totalItems - 1;
+                    startIdx = totalItems - windowSize;
+                }
+            }
+
+            const visibleSorted = sorted.slice(startIdx, endIdx + 1);
+            // --- End Sliding Window Logic ---
+
+            let lastActiveOrDoneIdxInWindow = -1;
+
+            const stops = visibleSorted.map((entry, i) => {
                 const opName = entry.opName;
                 const timing = entry.timing;
                 const hasEnd = timing && timing.end;
                 const hasStart = timing && timing.start;
 
                 let dotClass = 'pending';
-                if (hasEnd) { dotClass = 'done'; completedCount++; lastActiveOrDoneIdx = i; }
-                else if (hasStart) { dotClass = 'active'; lastActiveOrDoneIdx = i; }
+                if (hasEnd) {
+                    dotClass = 'done';
+                    lastActiveOrDoneIdxInWindow = i;
+                } else if (hasStart) {
+                    dotClass = 'active';
+                    lastActiveOrDoneIdxInWindow = i;
+                }
 
                 const shortName = opName.length > 12 ? opName.substring(0, 12) + '…' : opName;
 
@@ -1058,30 +1097,40 @@
                     timeLabel = 'Running';
                 }
 
-                return `<div class="timeline-stop">
-                    <div class="timeline-dot ${dotClass}"></div>
-                    <div class="timeline-label">${shortName}</div>
+                // If this is the "current" index, maybe highlight it? (User didn't explicitly ask but it's the center)
+                const isCenter = (startIdx + i) === currentIndex;
+
+                return `<div class="timeline-stop ${isCenter ? 'scale-110' : ''}">
+                    <div class="timeline-dot ${dotClass} ${isCenter ? 'ring-4 ring-offset-2 ring-brand-500/20' : ''}"></div>
+                    <div class="timeline-label ${isCenter ? 'text-brand-600 font-extrabold' : ''}">${shortName}</div>
                     ${timeLabel ? `<div class="timeline-time">${timeLabel}</div>` : ''}
                 </div>`;
             });
 
             track.innerHTML = stops.join('');
 
-            // Fill line up to the last completed/active stop (continuous, no gaps)
-            const total = sorted.length;
-            const fillPct = total > 1 && lastActiveOrDoneIdx >= 0
-                ? (lastActiveOrDoneIdx / (total - 1)) * 100
-                : (lastActiveOrDoneIdx === 0 && total === 1 ? 100 : 0);
+            // Fill line logic for partial view
+            const visibleTotal = visibleSorted.length;
+            const fillPct = visibleTotal > 1 && lastActiveOrDoneIdxInWindow >= 0
+                ? (lastActiveOrDoneIdxInWindow / (visibleTotal - 1)) * 100
+                : (lastActiveOrDoneIdxInWindow === 0 && visibleTotal === 1 ? 100 : 0);
 
             // Adjust line positions based on track
             requestAnimationFrame(() => {
                 const trackEl = document.getElementById('timelineTrack');
                 const bgEl = document.getElementById('timelineBg');
                 const fillEl = document.getElementById('timelineFill');
-                if (trackEl && bgEl) {
-                    const scrollW = trackEl.scrollWidth;
-                    bgEl.style.width = `calc(${scrollW}px - 3rem)`;
-                    fillEl.style.width = `calc((${scrollW}px - 3rem) * ${fillPct / 100})`;
+                if (trackEl && bgEl && fillEl) {
+                    const trackWidth = trackEl.clientWidth;
+                    const itemWidth = trackWidth / visibleTotal;
+                    const lineStart = itemWidth / 2;
+                    const lineWidth = trackWidth - itemWidth;
+
+                    bgEl.style.width = `${lineWidth}px`;
+                    bgEl.style.left = `${lineStart}px`;
+
+                    fillEl.style.width = `${lineWidth * (fillPct / 100)}px`;
+                    fillEl.style.left = `${lineStart}px`;
                 }
             });
         }
