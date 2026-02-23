@@ -1,0 +1,5 @@
+{
+  "name": "QCO Master",
+  "description": "An automated Operation Breakdown (OB) parser and Quick Changeover (QCO) planning tool for garment manufacturing. compares machine requirements between styles.",
+  "requestFramePermissions": []
+}
