@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Planning Input | QCO Portal</title>
+
+    <!-- Frameworks & Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+    <!-- SheetJS for Excel Processing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <!-- Animation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.1.2/dist/lenis.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Sidebar Width Variable */
+        :root {
+            --sidebar-width: 280px;
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --sidebar-width: 85vw;
+            }
+        }
+
+        /* Hamburger Button - Squircle Glassmorphism Sync with Dashboard */
+        .hamburger-btn {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.375rem;
+            width: 3rem;
+            height: 3rem;
+            padding: 0.875rem;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(240, 249, 255, 0.9));
+            border-radius: 1rem;
+            border: 0.09375rem solid rgba(255, 255, 255, 1);
+            box-shadow:
+                0 0.5rem 1.5rem -0.25rem rgba(14, 165, 233, 0.25),
+                0 0.25rem 0.5rem -0.125rem rgba(14, 165, 233, 0.15),
+                inset 0 0.0625rem 0 rgba(255, 255, 255, 1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .hamburger-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(6, 182, 212, 0.05));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .hamburger-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow:
+                0 12px 40px -8px rgba(14, 165, 233, 0.25),
+                0 6px 20px -4px rgba(0, 0, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 1);
+            border-color: rgba(14, 165, 233, 0.3);
+        }
+
+        .hamburger-btn:hover::before {
+            opacity: 1;
+        }
+
+        .hamburger-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .hamburger-line {
+            width: 100%;
+            height: 0.15625rem;
+            background: linear-gradient(90deg, #0ea5e9, #06b6d4);
+            border-radius: 0.125rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center;
+            box-shadow: 0 0.0625rem 0.125rem rgba(14, 165, 233, 0.3);
+        }
+
+        .hamburger-btn.open {
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.15), rgba(6, 182, 212, 0.1));
+            border-color: rgba(14, 165, 233, 0.4);
+        }
+
+        .hamburger-btn.open .hamburger-line:first-child {
+            transform: translateY(0.25rem) rotate(45deg);
+            background: linear-gradient(90deg, #0284c7, #0891b2);
+        }
+
+        .hamburger-btn.open .hamburger-line:last-child {
+            transform: translateY(-0.25rem) rotate(-45deg);
+            background: linear-gradient(90deg, #0284c7, #0891b2);
+        }
+
+        /* Touch target for mobile */
+        .touch-target {
+            min-width: 44px;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Section headers - Premium Divider Style */
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            padding: 0 1rem;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #475569;
+            /* Slate 600 */
+            position: relative;
+        }
+
+        .section-header::before {
+            content: '';
+            width: 4px;
+            height: 4px;
+            background: #0ea5e9;
+            border-radius: 50%;
+            margin-right: 0.75rem;
+            box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+        }
+
+        .section-header::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, rgba(226, 232, 240, 0.8), transparent);
+            margin-left: 1rem;
+        }
+
+        /* --- Navigation & Backdrop --- */
+        .nav-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.3);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 40;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-backdrop.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .retractable-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 280px;
+            max-width: 85vw;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-right: 1px solid rgba(255, 255, 255, 0.6);
+            z-index: 50;
+            transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
+            will-change: transform;
+        }
+
+        .retractable-sidebar.open {
+            transform: translateX(0);
+        }
+
+        /* Custom scrollbar for sidebar */
+        #appSidebar nav::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #appSidebar nav::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.3);
+            border-radius: 2px;
+        }
+
+        /* Base & Typography */
+        body {
+            background-color: #f8fafc;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            color: #1e293b;
+        }
+
+        /* Premium Glassmorphism & Shadows */
+        .glass {
+            background: linear-gradient(135deg,
+                    rgba(255, 255, 255, 0.9),
+                    rgba(240, 249, 255, 0.9));
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 1);
+            box-shadow:
+                0 40px 100px -12px rgba(0, 0, 0, 0.08),
+                0 20px 50px -12px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 1.5rem;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow:
+                0 40px 100px -12px rgba(0, 0, 0, 0.08),
+                0 20px 50px -12px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.6);
+            border-color: rgba(14, 165, 233, 0.2);
+            box-shadow:
+                0 40px 100px -12px rgba(14, 165, 233, 0.15),
+                0 20px 50px -12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Hide Default Cursor when Custom is Active */
+        body.custom-cursor-active,
+        body.custom-cursor-active a,
+        body.custom-cursor-active button,
+        body.custom-cursor-active input {
+            cursor: none;
+        }
+
+        /* Glassmorphism Utilities */
+        /* --- PERFORMANCE OPTIMIZATION --- */
+        #appContent {
+            transform: translateZ(0);
+            will-change: transform;
+            backface-visibility: hidden;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
+        }
+
+        body.is-scrolling .glass,
+        body.is-scrolling .glass-card {
+            backdrop-filter: none;
+            transition: backdrop-filter 0.3s ease;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+
+            .glass,
+            .glass-card {
+                backdrop-filter: none !important;
+                background: rgba(255, 255, 255, 0.95) !important;
+            }
+
+            .animate-blob {
+                animation: none !important;
+                opacity: 0.05 !important;
+            }
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            /* Reduced blur slightly for performance */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 2rem;
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.05);
+
+            /* PERFORMANCE FIXES */
+            transform-style: preserve-3d;
+            will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            /* END FIXES */
+
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .glass-card:hover {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+            border-color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Custom Cursor */
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #0ea5e9;
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+            mix-blend-mode: multiply;
+        }
+
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            position: fixed;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            z-index: 9998;
+            pointer-events: none;
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: white;
+            border-radius: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            z-index: 1001;
+            max-width: 900px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.active+.modal,
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Timeline specific styles */
+        .timeline-grid {
+            display: grid;
+            grid-template-columns: 200px repeat(30, auto);
+            overflow-x: auto;
+        }
+
+        /* Toast Container Helpers */
+        .toast {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        /* Mobile Optimization */
+        @media (max-width: 768px) {
+            #mainApp {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+        }
+
+        /* Nav Item Styles */
+        .nav-item {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item.active {
+            background: white;
+            color: #0ea5e9;
+            box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+        }
+
+        .nav-item.active i {
+            color: #0ea5e9;
+        }
+
+        /* Hide Scrollbar for specific elements */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+    <!-- Mobile Logic -->
+    <script>
+        window.initMobileBehavior = () => {
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) {
+                // Disable heavy animations/effects if needed
+            }
+        };
+    </script>
+</head>
+
+<body class="relative min-h-screen selection:bg-blue-100 selection:text-blue-900">
+
+    <!-- Auth Check -->
+    <script>
+        const currentUser = JSON.parse(localStorage.getItem('qcoCurrentUser') || 'null');
+        if (!currentUser) {
+            window.location.href = '../index.html';
+        } else if (currentUser.role !== 'admin' && currentUser.role !== 'planning') {
+            alert("Access Restricted");
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+
+    <!-- Custom Cursor -->
+    <div class="cursor-dot hidden md:block"></div>
+    <div class="cursor-outline hidden md:block"></div>
+
+    <!-- Animated Background Blobs -->
+    <div class="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
+        <div
+            class="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-[radial-gradient(circle,rgba(191,219,254,0.4)_0%,rgba(255,255,255,0)_70%)] animate-blob mix-blend-multiply">
+        </div>
+        <div
+            class="absolute top-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-[radial-gradient(circle,rgba(199,210,254,0.4)_0%,rgba(255,255,255,0)_70%)] animate-blob animation-delay-2000 mix-blend-multiply">
+        </div>
+        <div
+            class="absolute bottom-[-20%] left-[20%] w-[60vw] h-[60vw] bg-[radial-gradient(circle,rgba(251,207,232,0.4)_0%,rgba(255,255,255,0)_70%)] animate-blob animation-delay-4000 mix-blend-multiply">
+        </div>
+    </div>
+
+    <!-- Sidebar Backdrop -->
+    <!-- Navigation Backdrop -->
+    <div id="navBackdrop" class="nav-backdrop" aria-hidden="true"></div>
+
+    <!-- Retractable Sidebar -->
+    <aside id="appSidebar" class="retractable-sidebar">
+        <!-- Sidebar Header -->
+        <div class="h-20 flex items-center px-6 border-b border-slate-100/50 sidebar-header flex-shrink-0">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                    <i data-lucide="layers" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-slate-900 tracking-tight">QCO Portal</h1>
+                    <p class="text-[10px] text-slate-500 font-medium tracking-wide">Manufacturing Excellence</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation - SCROLLABLE -->
+        <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-6">
+            <div>
+                <div class="section-header">General</div>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="../index.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="home" class="w-4 h-4 text-slate-500"></i>
+                            <span>Home</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="dashboard.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="line-chart" class="w-4 h-4 text-slate-500"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-header">Workflow</div>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="creation.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="pen-tool" class="w-4 h-4 text-slate-500"></i>
+                            <span>QCO Creation</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="operations.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="list-ordered" class="w-4 h-4 text-slate-500"></i>
+                            <span>Operations</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-header">Planning</div>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="planning.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors active">
+                            <i data-lucide="layout-grid" class="w-4 h-4 text-slate-500"></i>
+                            <span>Planning</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="schedule.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="calendar" class="w-4 h-4 text-slate-500"></i>
+                            <span>Schedule</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-header">Utilities</div>
+                <ul class="space-y-1">
+                    <li>
+                        <a href="checklist.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="clipboard-list" class="w-4 h-4 text-slate-500"></i>
+                            <span>Checklist</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="recorder.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="mic" class="w-4 h-4 text-slate-500"></i>
+                            <span>Recorder</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="summary.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors">
+                            <i data-lucide="file-text" class="w-4 h-4 text-slate-500"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Sidebar Footer -->
+        <div class="p-4 border-t border-slate-100/50 sidebar-footer flex-shrink-0">
+            <div
+                class="flex items-center justify-center gap-2 text-[10px] font-bold text-slate-400 tracking-widest uppercase">
+                <i data-lucide="lock" class="w-3 h-3 text-slate-300"></i> Secure Access
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main App Container Structure -->
+    <div id="appShell" class="flex flex-col h-screen overflow-hidden">
+        <!-- Header with Hamburger Menu -->
+        <header id="appHeader"
+            class="glass h-20 flex items-center justify-between px-4 md:px-8 z-20 flex-shrink-0 sticky top-0 border-b border-white/20">
+            <!-- Hamburger Menu Button -->
+            <!-- Hamburger Menu Button -->
+            <button id="navToggle" class="hamburger-btn touch-target" aria-label="Toggle navigation">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+
+            <!-- Right Actions (User, etc.) -->
+            <div class="flex items-center gap-4">
+                <!-- System Status -->
+                <div
+                    class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold text-emerald-700 tracking-wider uppercase">System Online</span>
+                </div>
+
+                <!-- User Profile -->
+                <div class="relative group">
+                    <button
+                        class="flex items-center gap-3 focus:outline-none group p-1.5 pr-3 rounded-full hover:bg-white/60 transition-all border border-transparent hover:border-slate-200">
+                        <div
+                            class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 border border-white shadow-sm flex items-center justify-center overflow-hidden">
+                            <span class="text-xs font-bold text-white user-initials-display">??</span>
+                        </div>
+                        <div class="text-left hidden md:block">
+                            <p class="text-xs font-bold text-slate-900 user-name-display leading-tight">User</p>
+                            <p
+                                class="text-[10px] text-slate-500 user-role-display leading-tight uppercase font-semibold">
+                                Member</p>
+                        </div>
+                        <i data-lucide="chevron-down"
+                            class="w-3 h-3 text-slate-400 ml-1 group-hover:text-slate-600 transition-colors"></i>
+                    </button>
+                    <!-- Profile Dropdown -->
+                    <div
+                        class="absolute right-0 mt-2 w-56 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 ring-1 ring-slate-900/5 transform opacity-0 scale-95 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 origin-top-right z-50">
+                        <div class="p-2">
+                            <button onclick="handleLogout()"
+                                class="w-full group flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left">
+                                <i data-lucide="log-out"
+                                    class="w-4 h-4 text-red-400 group-hover:text-red-600 transition-colors mr-3"></i>
+                                Sign Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Scrollable Content Area -->
+        <div id="appContent" class="flex-1 relative overflow-y-auto flex flex-col">
+            <div id="mainApp" class="flex-1 pt-8 pb-32 px-6 opacity-0">
+                <div class="max-w-[1600px] mx-auto w-full">
+
+                    <!-- Page Header -->
+                    <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+                        <div>
+                            <h1
+                                class="split-header text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 tracking-tight mb-4">
+                                Planning <span
+                                    class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Input</span>
+                            </h1>
+                            <p class="text-slate-500 text-lg max-w-2xl leading-relaxed">
+                                Visualize and analyze production schedules efficiently.
+                            </p>
+                        </div>
+
+                        <div class="flex flex-col items-end gap-4">
+                            <!-- Search Bar (Initially Hidden) -->
+                            <div id="searchContainer" class="hidden relative group animate-[fadeIn_0.5s_ease-out]">
+                                <i data-lucide="search"
+                                    class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5 group-focus-within:text-blue-500 transition-colors"></i>
+                                <input type="text" id="planSearch"
+                                    onkeyup="window.PlanningLogic.handleSearch(this.value)"
+                                    placeholder="Search Name, Line, Supervisor..."
+                                    class="pl-12 pr-4 py-3 rounded-2xl bg-white border border-slate-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 w-72 transition-all">
+                            </div>
+
+                            <!-- View Controls (Normally Hidden) -->
+                            <div class="flex gap-3 opacity-0 transition-all duration-300 transform translate-y-4"
+                                id="viewControls" style="display: none;">
+                                <button onclick="window.PlanningLogic.switchView('dashboard')" id="btn-dashboard"
+                                    class="px-6 py-3 rounded-2xl bg-slate-900 text-white font-semibold shadow-xl shadow-blue-900/20 hover:scale-105 transition-all">Dashboard</button>
+                                <button onclick="window.PlanningLogic.switchView('timeline')" id="btn-timeline"
+                                    class="px-6 py-3 rounded-2xl bg-white/60 text-slate-600 font-semibold hover:bg-white hover:text-blue-600 transition-all">Timeline</button>
+                                <button onclick="window.PlanningLogic.switchView('grid')" id="btn-grid"
+                                    class="px-6 py-3 rounded-2xl bg-white/60 text-slate-600 font-semibold hover:bg-white hover:text-blue-600 transition-all">Grid</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- File Upload State -->
+                    <div id="uploadState"
+                        class="glass-card p-12 text-center border-dashed border-2 border-slate-300 hover:border-blue-400 transition-colors">
+                        <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner text-slate-600"
+                            style="background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(226, 232, 240, 0.8);">
+                            <i data-lucide="upload-cloud" class="w-10 h-10"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-slate-900 mb-3">Import Production Schedule</h3>
+                        <p class="text-slate-500 mb-8 max-w-md mx-auto">Upload your Excel planning sheet (.xlsx). The
+                            system will automatically parse Supervisor, Target, and Manpower data.</p>
+
+                        <label
+                            class="relative inline-flex cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl font-bold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-1 transition-all group">
+                            <i data-lucide="file-spreadsheet" class="w-5 h-5 mr-2 group-hover:animate-bounce"></i>
+                            <span>Select Excel File</span>
+                            <!-- FIXED: Removed onchange attribute to prevent ReferenceError -->
+                            <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden">
+                        </label>
+
+                        <p id="loadingText"
+                            class="hidden mt-6 text-blue-600 font-bold animate-pulse flex items-center justify-center gap-2">
+                            <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processing workbook...
+                        </p>
+                    </div>
+
+                    <!-- Content Area -->
+                    <div id="contentArea" class="hidden space-y-8">
+
+                        <!-- Dashboard View -->
+                        <div id="view-dashboard" class="view-section space-y-8">
+                            <!-- Stats Grid -->
+                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                <!-- Stat 1 -->
+                                <div class="glass-card p-6 flex flex-col justify-between">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm text-slate-600"
+                                            style="background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(226, 232, 240, 0.8);">
+                                            <i data-lucide="package" class="w-5 h-5"></i>
+                                        </div>
+                                        <span
+                                            class="px-2 py-1 rounded-lg text-slate-500 text-[10px] font-bold uppercase tracking-wider"
+                                            style="background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(226, 232, 240, 0.6);">Styles</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">
+                                            Active Styles</h3>
+                                        <p class="text-3xl font-bold text-slate-900" id="stat-styles">0</p>
+                                    </div>
+                                </div>
+
+                                <!-- Stat 2 -->
+                                <div class="glass-card p-6 flex flex-col justify-between">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm text-slate-600"
+                                            style="background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(226, 232, 240, 0.8);">
+                                            <i data-lucide="target" class="w-5 h-5"></i>
+                                        </div>
+                                        <span
+                                            class="px-2 py-1 rounded-lg text-slate-500 text-[10px] font-bold uppercase tracking-wider"
+                                            style="background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(226, 232, 240, 0.6);">Output</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">
+                                            Total Pieces</h3>
+                                        <p class="text-3xl font-bold text-slate-900" id="stat-target">0</p>
+                                    </div>
+                                </div>
+
+                                <!-- Stat 3 -->
+                                <div class="glass-card p-6 flex flex-col justify-between">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm text-slate-600"
+                                            style="background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(226, 232, 240, 0.8);">
+                                            <i data-lucide="users" class="w-5 h-5"></i>
+                                        </div>
+                                        <span
+                                            class="px-2 py-1 rounded-lg text-slate-500 text-[10px] font-bold uppercase tracking-wider"
+                                            style="background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(226, 232, 240, 0.6);">Labor</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1"
+                                            id="stat-manpower-label">Avg Manpower</h3>
+                                        <p class="text-3xl font-bold text-slate-900" id="stat-manpower">0
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Stat 4 (Issues) -->
+                                <div class="glass-card p-6 flex flex-col justify-between">
+                                    <div class="flex justify-between items-start mb-4">
+                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm text-slate-600"
+                                            style="background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(226, 232, 240, 0.8);">
+                                            <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                                        </div>
+                                        <span
+                                            class="px-2 py-1 rounded-lg text-slate-500 text-[10px] font-bold uppercase tracking-wider"
+                                            style="background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(226, 232, 240, 0.6);">Alerts</span>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">
+                                            Total Issues</h3>
+                                        <p class="text-3xl font-bold text-slate-900" id="anomaly-count">0
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Main Dashboard Content -->
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                <!-- Style Matrix (Full Width) -->
+                                <div class="lg:col-span-3">
+                                    <div id="dashboard-matrix" class="glass-card overflow-hidden">
+                                        <!-- Injected by PlanningLogic.renderDashboard -->
+                                    </div>
+                                </div>
+
+                                <!-- Factory Goals -->
+                                <div class="lg:col-span-1">
+                                    <div id="dashboard-goals"
+                                        class="glass-card h-[500px] flex flex-col overflow-hidden">
+                                        <!-- Injected by PlanningLogic.renderDashboard -->
+                                    </div>
+                                </div>
+
+                                <!-- Critical Items -->
+                                <div class="lg:col-span-2">
+                                    <div class="glass-card h-[500px] flex flex-col overflow-hidden">
+                                        <div
+                                            class="p-6 border-b border-slate-100 flex justify-between items-center bg-white/50">
+                                            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                                <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500"></i>
+                                                System Anomalies & Remarks
+                                            </h3>
+                                        </div>
+                                        <div class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar"
+                                            id="anomaly-list">
+                                            <div class="text-slate-400 text-center py-12 italic">
+                                                Upload a file to see anomalies
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Timeline View -->
+                        <div id="view-timeline" class="view-section hidden">
+                            <div class="glass-card p-8 overflow-hidden">
+                                <h3 class="text-xl font-bold text-slate-900 mb-6">Production Timeline</h3>
+                                <div class="overflow-x-auto pb-4 custom-scrollbar">
+                                    <div id="timeline-container" class="min-w-max"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grid View -->
+                        <div id="view-grid" class="view-section hidden">
+                            <div class="glass-card p-8 overflow-hidden">
+                                <h3 class="text-xl font-bold text-slate-900 mb-6">Detailed Grid</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Line / Supervisor</th>
+                                                <th>Style</th>
+                                                <th>Current Running</th>
+                                                <th class="text-right">Target</th>
+                                                <th class="text-right">Manpower</th>
+                                                <th>Dates</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="grid-body">
+                                            <!-- Injected -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Footer -->
+            <footer
+                class="mt-auto py-8 px-6 border-t border-slate-200/30 relative z-10 bg-white/30 backdrop-blur-md -mx-6 -mb-32">
+                <div class="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                    <p class="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase">© 2026 MANUFACTURING
+                        EXCELLENCE SYSTEM</p>
+                    <div class="flex gap-6">
+                        <a href="#" class="text-slate-400 hover:text-blue-500 transition-colors"><i data-lucide="github"
+                                class="w-4 h-4"></i></a>
+                        <a href="#" class="text-slate-400 hover:text-blue-500 transition-colors"><i
+                                data-lucide="twitter" class="w-4 h-4"></i></a>
+                        <a href="#" class="text-slate-400 hover:text-blue-500 transition-colors"><i data-lucide="mail"
+                                class="w-4 h-4"></i></a>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+
+
+    <!-- Modal Overlay -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+
+    <!-- Detail Modal -->
+    <div class="modal" id="styleModal">
+        <div class="p-8">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-900" id="modal-title">Style Details</h2>
+                    <p class="text-sm text-slate-500 mt-1" id="modal-subtitle">View production info</p>
+                </div>
+                <button onclick="closeModal()"
+                    class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
+                    <i data-lucide="x" class="w-5 h-5 text-slate-600"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                <!-- Info Grid -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <span class="block text-slate-400 text-xs font-bold uppercase mb-1">Supervisor</span>
+                        <span class="font-bold text-slate-900" id="modal-supervisor">-</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <span class="block text-slate-400 text-xs font-bold uppercase mb-1">Unit</span>
+                        <span class="font-bold text-slate-900" id="modal-unit">-</span>
+                    </div>
+                </div>
+
+                <!-- Metrics -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                        <span class="block text-emerald-600 text-xs font-bold uppercase mb-1">Total Target</span>
+                        <span class="font-mono text-2xl font-bold text-emerald-900" id="modal-target">0</span>
+                    </div>
+                    <div class="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                        <span class="block text-orange-600 text-xs font-bold uppercase mb-1">Manpower</span>
+                        <span class="font-mono text-2xl font-bold text-orange-900" id="modal-manpower">0</span>
+                    </div>
+                </div>
+
+                <!-- Daily Table -->
+                <div>
+                    <h4 class="text-xs font-bold uppercase text-slate-400 mb-3">Daily Breakdown</h4>
+                    <div class="border border-slate-200 rounded-xl overflow-hidden">
+                        <table class="w-full text-sm">
+                            <thead class="bg-slate-50 text-slate-500">
+                                <tr>
+                                    <th class="px-4 py-3 text-left font-semibold">Date</th>
+                                    <th class="px-4 py-3 text-right font-semibold">Target</th>
+                                    <th class="px-4 py-3 text-right font-semibold">MP</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modal-daily-table" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-24 right-6 z-50 flex flex-col gap-2"></div>
+
+    <!-- Logic Script -->
+    <script type="module" src="../js/planning-logic.js"></script>
+
+    <!-- Page Scripts -->
+    <script>
+        // --- Navigation System ---
+        // Standardized Navigation System
+        class NavigationSystem {
+            constructor() {
+                this.isOpen = false;
+                this.init();
+            }
+
+            init() {
+                this.toggleBtn = document.getElementById('navToggle');
+                this.sidebar = document.getElementById('appSidebar');
+                this.backdrop = document.getElementById('navBackdrop');
+                this.body = document.body;
+
+                this.setupEventListeners();
+                this.resolveActiveState();
+                this.setupScrollableNav();
+            }
+
+            setupEventListeners() {
+                if (this.toggleBtn) {
+                    this.toggleBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.toggleSidebar();
+                    });
+                }
+
+                if (this.backdrop) {
+                    this.backdrop.addEventListener('click', (e) => {
+                        if (e.target === this.backdrop) this.closeSidebar();
+                    });
+
+                    this.backdrop.addEventListener('touchstart', (e) => {
+                        if (e.target === this.backdrop) this.closeSidebar();
+                    }, { passive: true });
+                }
+
+                if (this.sidebar) {
+                    this.sidebar.querySelectorAll('a').forEach(link => {
+                        link.addEventListener('click', () => this.closeSidebar());
+                    });
+                }
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.isOpen) this.closeSidebar();
+                });
+            }
+
+            toggleSidebar() {
+                this.isOpen ? this.closeSidebar() : this.openSidebar();
+            }
+
+            openSidebar() {
+                this.isOpen = true;
+                this.sidebar?.classList.add('open');
+                this.toggleBtn?.classList.add('open');
+                this.backdrop?.classList.add('active');
+                this.body.style.overflow = 'hidden';
+            }
+
+            closeSidebar() {
+                this.isOpen = false;
+                this.sidebar?.classList.remove('open');
+                this.toggleBtn?.classList.remove('open');
+                this.backdrop?.classList.remove('active');
+                this.body.style.overflow = '';
+            }
+
+            resolveActiveState() {
+                const currentPath = window.location.pathname;
+                const filename = currentPath.split('/').pop() || 'index.html';
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('active');
+                    const href = item.getAttribute('href');
+                    if (href && (filename === href.split('/').pop())) {
+                        item.classList.add('active');
+                    }
+                });
+            }
+
+            setupScrollableNav() {
+                const nav = this.sidebar?.querySelector('nav');
+                if (nav) {
+                    this.sidebar.addEventListener('touchmove', (e) => {
+                        if (this.isOpen) e.stopPropagation();
+                    }, { passive: false });
+                }
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('qcoCurrentUser');
+            window.location.href = '../index.html';
+        }
+
+        // Animations & Init
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Instant Reveal
+            gsap.to("#mainApp", { opacity: 1, y: 0, duration: 0.8, ease: "power3.out", delay: 0.2 });
+
+            // 2. Initialize Navigation
+            if (!window.navSystem) {
+                window.navSystem = new NavigationSystem();
+            }
+
+            // 3. Mobile Init
+            if (window.initMobileBehavior) window.initMobileBehavior();
+
+            // 4. Lenis Init
+            const lenis = new Lenis({
+                wrapper: document.getElementById('appContent'),
+                content: document.getElementById('mainApp'),
+                duration: 1.2,
+                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                smoothWheel: true,
+                smoothTouch: false,
+                touchMultiplier: 1.5,
+                topOffset: 0
+            });
+            function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+            requestAnimationFrame(raf);
+
+            // Scroll State
+            let isScrolling;
+            document.getElementById('appContent').addEventListener('scroll', () => {
+                document.body.classList.add('is-scrolling');
+                clearTimeout(isScrolling);
+                isScrolling = setTimeout(() => {
+                    document.body.classList.remove('is-scrolling');
+                }, 150);
+            }, { passive: true });
+
+            // Check Auth
+            if (currentUser) {
+                const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+                document.querySelectorAll('.user-initials-display').forEach(el => el.textContent = initials);
+                document.querySelectorAll('.user-name-display').forEach(el => el.textContent = currentUser.name);
+                document.querySelectorAll('.user-role-display').forEach(el => el.textContent = (currentUser.role || 'Member').toUpperCase());
+            }
+        });
+
+        // Modal Logic
+        window.closeModal = () => {
+            const modal = document.getElementById('styleModal');
+            const overlay = document.getElementById('modalOverlay');
+            modal.classList.remove('active');
+            overlay.classList.remove('active');
+        };
+
+        // Setup Cursor
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorOutline = document.querySelector('.cursor-outline');
+
+        document.body.classList.add('custom-cursor-active');
+
+        window.addEventListener('mousemove', (e) => {
+            const posX = e.clientX;
+            const posY = e.clientY;
+
+            cursorDot.style.left = `${posX}px`;
+            cursorDot.style.top = `${posY}px`;
+
+            // Animate outline with delay
+            cursorOutline.animate({
+                left: `${posX}px`,
+                top: `${posY}px`
+            }, { duration: 500, fill: "forwards" });
+        });
+
+        if (window.lucide) lucide.createIcons();
+    </script>
+</body>
+
+</html>

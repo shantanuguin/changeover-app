@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Live Changeover Monitor | QCO System</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.1.2/dist/lenis.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], heading: ['Poppins', 'sans-serif'] },
+                    colors: { brand: { 50: '#f0f9ff', 500: '#0ea5e9', 900: '#0c4a6e' } },
+                    animation: { 'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
+            overflow-x: hidden;
+            transition: background-color 0.8s ease;
+        }
+
+        body.copt-exceeded {
+            background-color: #fff1f2 !important;
+        }
+
+        body.copt-exceeded .glass-card {
+            border-color: rgba(244, 63, 94, 0.15);
+        }
+
+        /* Performance */
+        #appContent {
+            transform: translateZ(0);
+            will-change: transform;
+            backface-visibility: hidden;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
+        }
+
+        @media (max-width: 768px) {
+
+            .glass,
+            .glass-card {
+                backdrop-filter: none !important;
+                background: rgba(255, 255, 255, 0.95) !important;
+            }
+        }
+
+        .glass {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(240, 249, 255, 0.9));
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 1);
+            box-shadow: 0 40px 100px -12px rgba(0, 0, 0, 0.08), 0 20px 50px -12px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 1.5rem;
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            box-shadow: 0 40px 100px -12px rgba(0, 0, 0, 0.08), 0 20px 50px -12px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+            will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #0ea5e9;
+            position: fixed;
+            border-radius: 50%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+
+        .cursor-outline {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(14, 165, 233, 0.3);
+            position: fixed;
+            border-radius: 50%;
+            z-index: 9998;
+            pointer-events: none;
+            transition: 0.2s;
+        }
+
+        /* --- Metro Timeline --- */
+        .timeline-track {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            padding: 2rem 0 1rem;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .timeline-track::-webkit-scrollbar {
+            display: none;
+        }
+
+        .timeline-line-bg {
+            position: absolute;
+            top: 2.75rem;
+            left: 1.5rem;
+            right: 1.5rem;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            z-index: 0;
+        }
+
+        .timeline-line-fill {
+            position: absolute;
+            top: 2.75rem;
+            left: 1.5rem;
+            height: 6px;
+            background: linear-gradient(90deg, #10b981, #06b6d4);
+            border-radius: 3px;
+            z-index: 1;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .timeline-stop {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 90px;
+            position: relative;
+            z-index: 2;
+            flex-shrink: 0;
+        }
+
+        .timeline-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 3px solid #e2e8f0;
+            background: #fff;
+            transition: all 0.4s ease;
+            flex-shrink: 0;
+        }
+
+        .timeline-dot.done {
+            background: #10b981;
+            border-color: #10b981;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+        }
+
+        .timeline-dot.active {
+            background: #f59e0b;
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .timeline-dot.pending {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+        }
+
+        .timeline-label {
+            margin-top: 0.75rem;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-align: center;
+            color: #475569;
+            max-width: 80px;
+            line-height: 1.3;
+            word-break: break-word;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .timeline-time {
+            font-size: 0.55rem;
+            font-weight: 600;
+            color: #94a3b8;
+            margin-top: 2px;
+            font-family: 'Inter', monospace;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.3);
+            }
+
+            50% {
+                box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.1);
+            }
+        }
+
+        /* Warning banner */
+        .copt-warning {
+            animation: warningPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes warningPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        /* Scrollbar */
+        #appContent::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #appContent::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #appContent::-webkit-scrollbar-thumb {
+            background-color: rgba(148, 163, 184, 0.3);
+            border-radius: 3px;
+        }
+
+        @media (max-width: 768px) {
+            #mainApp {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="relative min-h-screen">
+
+    <div class="cursor-dot hidden md:block"></div>
+    <div class="cursor-outline hidden md:block"></div>
+
+    <!-- Background Gradients -->
+    <div class="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
+        <div
+            class="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(252,211,77,0.3)_0%,rgba(255,255,255,0)_70%)] animate-pulse-slow">
+        </div>
+        <div
+            class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(251,207,232,0.3)_0%,rgba(255,255,255,0)_70%)] animate-pulse-slow">
+        </div>
+    </div>
+
+    <!-- Main Shell -->
+    <div id="appShell" class="flex flex-col h-screen overflow-hidden">
+
+        <!-- Header -->
+        <header id="appHeader"
+            class="glass h-20 flex items-center justify-between px-4 md:px-8 z-20 flex-shrink-0 sticky top-0 border-b border-white/20">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-10 h-10 bg-gradient-to-br from-slate-900 to-slate-700 rounded-xl flex items-center justify-center text-white shadow-lg">
+                    <i data-lucide="monitor" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="font-heading font-bold text-slate-800 text-sm tracking-wide">Live Monitor</h1>
+                    <div class="flex items-center gap-2">
+                        <span class="relative flex h-2 w-2">
+                            <span
+                                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        </span>
+                        <p class="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Live</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <!-- QCO Search -->
+                <div class="relative hidden sm:block">
+                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                    <input type="text" id="qcoSearch" onkeyup="handleSearch(event)" placeholder="Search QCO..."
+                        class="pl-10 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 w-40 transition-all hover:border-slate-300">
+                </div>
+                <!-- QCO Selector -->
+                <div class="relative">
+                    <select id="qcoSelector" onchange="handleQCOChange(this.value)"
+                        class="appearance-none bg-white border border-slate-200 text-slate-700 font-bold py-2.5 pl-4 pr-10 rounded-xl hover:border-sky-400 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-sky-500 cursor-pointer text-sm min-w-[180px]">
+                        <option value="">Select Changeover...</option>
+                    </select>
+                    <i data-lucide="chevron-down"
+                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
+                </div>
+                <!-- Clock -->
+                <div class="font-mono font-bold text-lg text-slate-700 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200 shadow-sm hidden md:block"
+                    id="clock">00:00:00</div>
+            </div>
+        </header>
+
+        <!-- Scrollable Content -->
+        <div id="appContent" class="flex-1 relative overflow-y-auto">
+            <div id="mainApp" class="min-h-full flex flex-col pt-6 pb-32 px-4 md:px-6 opacity-0">
+                <div class="max-w-[1400px] mx-auto w-full">
+
+                    <!-- COPT Exceeded Warning Banner (hidden by default) -->
+                    <div id="coptWarningBanner"
+                        class="hidden mb-6 p-4 rounded-2xl bg-gradient-to-r from-rose-500/10 to-red-500/10 border border-rose-200 copt-warning">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-500/30 flex-shrink-0">
+                                <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-rose-700">Target COPT Time Exceeded</p>
+                                <p class="text-xs text-rose-500 font-medium">The changeover has exceeded the target
+                                    completion time. Immediate attention required.</p>
+                            </div>
+                            <div class="ml-auto text-right flex-shrink-0">
+                                <p class="text-xs text-rose-400 font-bold uppercase tracking-wider">Overshoot</p>
+                                <p class="text-lg font-heading font-bold text-rose-600" id="overshootTime">+0 min</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Target COPT + Progress Row -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                        <!-- Target COPT Card -->
+                        <div id="targetCOPTSection"
+                            class="p-6 bg-gradient-to-br from-emerald-50/50 to-blue-50/50 backdrop-blur-sm rounded-3xl border border-emerald-100/50 shadow-sm relative overflow-hidden opacity-50">
+                            <div
+                                class="absolute top-0 right-0 w-32 h-32 bg-emerald-200/10 rounded-full -mr-16 -mt-16 blur-2xl">
+                            </div>
+                            <div class="flex items-center gap-4 relative z-10">
+                                <div
+                                    class="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 flex-shrink-0">
+                                    <i data-lucide="target" class="w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-emerald-700 uppercase tracking-widest mb-0.5">
+                                        Target COPT</p>
+                                    <p class="text-3xl font-heading font-bold text-slate-900">
+                                        <span id="recorderTargetCOPT">-</span>
+                                        <span class="text-sm text-slate-400 font-semibold ml-1">min</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-4 mt-3 relative z-10">
+                                <div class="text-left">
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Category
+                                    </p>
+                                    <p class="text-sm font-bold text-slate-800 bg-white/60 px-2 py-0.5 rounded-lg border border-white/50"
+                                        id="recorderCategory">-</p>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Line</p>
+                                    <p class="text-sm font-bold text-slate-800 bg-white/60 px-2 py-0.5 rounded-lg border border-white/50"
+                                        id="lineIdLabel">-</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Progress Card -->
+                        <div class="glass-card p-6 relative overflow-hidden">
+                            <div class="absolute top-0 right-0 w-24 h-24 bg-sky-500/5 rounded-bl-full -mr-6 -mt-6">
+                            </div>
+                            <div class="flex items-center gap-4 mb-4 relative z-10">
+                                <div
+                                    class="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 text-white flex items-center justify-center shadow-lg shadow-sky-500/20 flex-shrink-0">
+                                    <i data-lucide="list-checks" class="w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-0.5">
+                                        Operations</p>
+                                    <p class="text-2xl font-heading font-bold text-slate-900">
+                                        <span id="completedOpsCount">0</span>/<span id="totalOpsCount">0</span>
+                                        <span class="text-sm font-bold text-sky-600 ml-1" id="opsPercentage">(0%)</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="h-3 bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                                <div class="h-full bg-gradient-to-r from-sky-500 to-blue-500 rounded-full transition-all duration-1000 ease-out"
+                                    id="progressBar" style="width: 0%">
+                                    <div class="h-full w-full bg-white/20 animate-pulse"></div>
+                                </div>
+                            </div>
+                            <!-- Status -->
+                            <div class="flex items-center gap-2 mt-3" id="statusIndicator">
+                                <div class="w-2 h-2 rounded-full bg-slate-400"></div>
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider"
+                                    id="statusText">Waiting</span>
+                            </div>
+                        </div>
+
+                        <!-- Total Time Card -->
+                        <div class="glass-card p-6 border-l-4 border-l-blue-500 relative overflow-hidden">
+                            <div class="absolute right-0 top-0 p-4 opacity-10">
+                                <i data-lucide="clock" class="w-16 h-16 text-blue-600"></i>
+                            </div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Time Taken
+                            </p>
+                            <div class="flex items-baseline gap-2">
+                                <p class="text-3xl font-heading font-bold text-slate-900" id="totalTimeMin">0</p>
+                                <span class="text-sm font-bold text-slate-500">min</span>
+                            </div>
+                            <p class="text-sm text-blue-600 font-bold mt-1"><span id="totalTimeHours">0</span> Hours</p>
+                            <div class="mt-3 pt-3 border-t border-slate-100">
+                                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Elapsed
+                                    Since Start</p>
+                                <p class="text-sm font-mono font-bold text-slate-700" id="elapsedSinceStart">--:--:--
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Metro Timeline -->
+                    <div id="timelineSection" class="glass-card p-6 mb-6 hidden">
+                        <h3 class="text-lg font-heading font-bold text-slate-900 mb-2 flex items-center gap-2">
+                            <span
+                                class="w-8 h-8 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center text-sm">
+                                <i data-lucide="git-branch" class="w-4 h-4"></i>
+                            </span>
+                            Changeover Timeline
+                        </h3>
+                        <p class="text-xs text-slate-400 font-medium mb-2">Scroll horizontally to view all operations
+                        </p>
+                        <div class="relative">
+                            <div class="timeline-line-bg" id="timelineBg"></div>
+                            <div class="timeline-line-fill" id="timelineFill" style="width: 0"></div>
+                            <div class="timeline-track" id="timelineTrack">
+                                <!-- Stops injected here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Loss Time Breakdown (above Operations Log) -->
+                    <div id="lossBreakdownSection" class="glass-card p-6 lg:p-8 overflow-hidden hidden mb-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-heading font-bold text-slate-900 flex items-center gap-2">
+                                <span
+                                    class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center text-sm">
+                                    <i data-lucide="pie-chart" class="w-4 h-4"></i>
+                                </span>
+                                Loss Time Breakdown
+                            </h3>
+                            <span
+                                class="px-3 py-1 bg-slate-100 text-slate-500 text-xs font-bold rounded-full uppercase tracking-wider">By
+                                Department</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left">
+                                <thead>
+                                    <tr class="border-b-2 border-slate-100">
+                                        <th class="py-3 pl-4 font-bold text-slate-500 uppercase tracking-wider text-xs">
+                                            Department</th>
+                                        <th
+                                            class="py-3 font-bold text-slate-500 uppercase tracking-wider text-right text-xs">
+                                            Time (Min)</th>
+                                        <th
+                                            class="py-3 pr-4 font-bold text-slate-500 uppercase tracking-wider text-right text-xs whitespace-nowrap">
+                                            % Share</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lossTableBody" class="text-slate-700 font-medium">
+                                    <!-- Injected -->
+                                </tbody>
+                                <tfoot id="lossTableFoot"
+                                    class="bg-slate-50 font-bold text-slate-900 border-t-2 border-slate-200">
+                                    <!-- Total Row -->
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Operations List (Read-Only) -->
+                    <div id="operationsSection" class="hidden mb-6">
+                        <div class="glass-card p-6 lg:p-8 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-400 to-rose-500">
+                            </div>
+                            <h3 class="text-xl font-heading font-bold text-slate-900 mb-6 flex items-center gap-2">
+                                <span
+                                    class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm">
+                                    <i data-lucide="activity" class="w-4 h-4"></i>
+                                </span>
+                                Operations Log
+                                <span
+                                    class="ml-auto text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                    <i data-lucide="eye" class="w-3 h-3"></i> View Only
+                                </span>
+                            </h3>
+                            <div id="operationsList" class="space-y-3">
+                                <!-- Operations injected here -->
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Footer -->
+                <footer
+                    class="mt-auto py-8 px-6 border-t border-slate-200/30 relative z-10 bg-white/30 backdrop-blur-md -mx-4 md:-mx-6 -mb-32">
+                    <div class="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                        <p class="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase">© 2026 MANUFACTURING
+                            EXCELLENCE SYSTEM</p>
+                        <p class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">Live Monitoring — No
+                            Authentication Required</p>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Firebase Config ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCayfWGQP1t3oBU9eFj-3Ww0uu7nSl3Q4g",
+            authDomain: "sidneymailer.firebaseapp.com",
+            projectId: "sidneymailer",
+            storageBucket: "sidneymailer.firebasestorage.app",
+            messagingSenderId: "911316068119",
+            appId: "1:911316068119:web:ce23dbe663dc385a81f952",
+            measurementId: "G-NJ0QH6DEXG"
+        };
+
+        // --- State ---
+        let db;
+        let currentQCOId = null;
+        let currentQCOData = null;
+        let unsubscribeSnapshot = null;
+        const allChangeovers = [];
+        let clockInterval;
+        let elapsedInterval;
+
+        // --- Line Schedules (fallback) ---
+        const RAW_LINE_SCHEDULES = {
+            "S-01": { supervisor: "WASANA-1", breaks: [{ start: "09:30", end: "09:45" }, { start: "12:30", end: "13:00" }, { start: "16:45", end: "17:00" }] },
+            "S-02": { supervisor: "SOHRAB", breaks: [{ start: "09:10", end: "09:25" }, { start: "12:10", end: "12:40" }, { start: "16:20", end: "16:35" }] },
+            "S-03": { supervisor: "SOHEL", breaks: [{ start: "09:20", end: "09:35" }, { start: "12:20", end: "12:50" }, { start: "16:30", end: "16:45" }] },
+            "S-04": { supervisor: "AHMAD", breaks: [{ start: "09:20", end: "09:35" }, { start: "12:20", end: "12:50" }, { start: "16:30", end: "16:45" }] },
+            "S-05": { supervisor: "OMAR FARUK", breaks: [{ start: "09:00", end: "09:15" }, { start: "12:00", end: "12:30" }, { start: "16:15", end: "16:30" }] },
+            "S-06": { supervisor: "SUMI", breaks: [{ start: "09:40", end: "09:55" }, { start: "12:40", end: "13:10" }, { start: "16:50", end: "17:05" }] },
+            "S-07": { supervisor: "NAGENDRA", breaks: [{ start: "09:30", end: "09:45" }, { start: "12:30", end: "13:00" }, { start: "16:50", end: "17:05" }] },
+            "S-08": { supervisor: "BALISTER", breaks: [{ start: "09:10", end: "09:25" }, { start: "12:10", end: "12:40" }, { start: "16:20", end: "16:35" }] },
+            "S-09": { supervisor: "MONJURUL", breaks: [{ start: "09:40", end: "09:55" }, { start: "12:40", end: "13:10" }, { start: "16:50", end: "17:05" }] },
+            "S-10": { supervisor: "RAJKUMAR", breaks: [{ start: "09:45", end: "10:00" }, { start: "13:00", end: "13:30" }, { start: "17:00", end: "17:15" }] },
+        };
+
+        let currentLineSchedule = null;
+
+        // =====================================================
+        //  INITIALIZATION
+        // =====================================================
+        document.addEventListener('DOMContentLoaded', async () => {
+            gsap.to("#mainApp", { opacity: 1, duration: 0.4, ease: "power2.out" });
+
+            // Lenis
+            try {
+                const lenis = new Lenis({
+                    wrapper: document.getElementById('appContent'),
+                    content: document.getElementById('mainApp'),
+                    duration: 1.2,
+                    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                    smoothWheel: true,
+                    smoothTouch: false,
+                    touchMultiplier: 1.5
+                });
+                function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+                requestAnimationFrame(raf);
+            } catch (e) { }
+
+            // Cursor
+            const dot = document.querySelector('.cursor-dot');
+            const outline = document.querySelector('.cursor-outline');
+            window.addEventListener('mousemove', e => {
+                gsap.to(dot, { x: e.clientX, y: e.clientY, duration: 0.1 });
+                gsap.to(outline, { x: e.clientX, y: e.clientY, duration: 0.5 });
+            });
+
+            // Clock
+            clockInterval = setInterval(() => {
+                const el = document.getElementById('clock');
+                if (el) el.textContent = new Date().toLocaleTimeString('en-US', { hour12: false });
+            }, 1000);
+
+            // Firebase
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+
+            // Load QCOs
+            await loadChangeoverList();
+
+            lucide.createIcons();
+        });
+
+        // =====================================================
+        //  QCO LIST & SELECTION
+        // =====================================================
+        async function loadChangeoverList() {
+            try {
+                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(30).get();
+                const selector = document.getElementById('qcoSelector');
+                selector.innerHTML = '<option value="">Select Changeover...</option>';
+
+                const savedId = localStorage.getItem('monitorQCOId');
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const opt = document.createElement('option');
+                    opt.value = doc.id;
+                    const upStyle = data.upcomingStyle || 'Unknown';
+                    const last4 = upStyle.length >= 4 ? upStyle.slice(-4) : upStyle;
+                    const lineInfo = data.lineNumber ? `L${data.lineNumber} - ` : '';
+                    opt.textContent = `${lineInfo}${data.qcoNumber || 'QCO'} - ${last4}`;
+                    if (doc.id === savedId) opt.selected = true;
+                    selector.appendChild(opt);
+                    allChangeovers.push({ id: doc.id, ...data });
+                });
+
+                if (savedId) {
+                    currentQCOId = savedId;
+                    attachRealtimeListener(savedId);
+                }
+            } catch (e) {
+                console.error("Error loading changeover list:", e);
+            }
+        }
+
+        function handleQCOChange(qcoId) {
+            if (!qcoId) return;
+            localStorage.setItem('monitorQCOId', qcoId);
+            currentQCOId = qcoId;
+            attachRealtimeListener(qcoId);
+        }
+
+        let searchTimeout = null;
+        function handleSearch(event) {
+            const term = event.target.value.trim().toUpperCase();
+            if (searchTimeout) clearTimeout(searchTimeout);
+            if (!term) return;
+
+            searchTimeout = setTimeout(() => {
+                const matched = allChangeovers.find(q => {
+                    const qn = (q.qcoNumber || '').toUpperCase();
+                    const us = (q.upcomingStyle || '').toUpperCase();
+                    return qn.includes(term) || us.includes(term);
+                });
+                if (matched) {
+                    document.getElementById('qcoSelector').value = matched.id;
+                    handleQCOChange(matched.id);
+                }
+            }, 400);
+        }
+
+        // =====================================================
+        //  REALTIME LISTENER
+        // =====================================================
+        function attachRealtimeListener(qcoId) {
+            // Detach previous
+            if (unsubscribeSnapshot) {
+                unsubscribeSnapshot();
+                unsubscribeSnapshot = null;
+            }
+            if (elapsedInterval) {
+                clearInterval(elapsedInterval);
+                elapsedInterval = null;
+            }
+
+            unsubscribeSnapshot = db.collection('changeovers').doc(qcoId)
+                .onSnapshot(async (doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        currentQCOData = { id: doc.id, ...data };
+
+                        // Load line schedule if needed
+                        await loadLineSchedule(data);
+
+                        // Render everything
+                        renderAll(data);
+                    }
+                }, (error) => {
+                    console.error("Realtime listener error:", error);
+                });
+        }
+
+        async function loadLineSchedule(data) {
+            let lineKey = data.lineNumber || "Unknown";
+            if (lineKey === "Unknown" && data.qcoNumber) {
+                const parts = data.qcoNumber.split('-');
+                if (parts.length >= 2) {
+                    lineKey = parts[0].toUpperCase() === 'S' ? parts.slice(0, 2).join('-') : parts[0];
+                }
+            }
+            lineKey = lineKey.toString().trim().toUpperCase();
+            if (/^\d+[A-Z]?$/.test(lineKey) && !lineKey.startsWith('S-')) {
+                const numPart = lineKey.match(/\d+/)[0];
+                const letterPart = lineKey.match(/[A-Z]$/) ? lineKey.match(/[A-Z]$/)[0] : '';
+                lineKey = "S-" + numPart.padStart(2, '0') + letterPart;
+            } else if (lineKey.startsWith('S-')) {
+                const sub = lineKey.substring(2);
+                if (/^\d+[A-Z]?$/.test(sub)) {
+                    const numPart = sub.match(/\d+/)[0];
+                    const letterPart = sub.match(/[A-Z]$/) ? sub.match(/[A-Z]$/)[0] : '';
+                    lineKey = "S-" + numPart.padStart(2, '0') + letterPart;
+                }
+            }
+
+            document.getElementById('lineIdLabel').textContent = lineKey !== 'Unknown' ? lineKey : '-';
+
+            if (!currentLineSchedule || currentLineSchedule.lineKey !== lineKey) {
+                try {
+                    const schedDoc = await db.collection('line_schedules').doc(lineKey).get();
+                    if (schedDoc.exists) {
+                        currentLineSchedule = { lineKey, ...schedDoc.data() };
+                    } else if (RAW_LINE_SCHEDULES[lineKey]) {
+                        currentLineSchedule = { lineKey, ...RAW_LINE_SCHEDULES[lineKey] };
+                    } else {
+                        currentLineSchedule = null;
+                    }
+                } catch (err) {
+                    console.error("Error loading schedule:", err);
+                }
+            }
+        }
+
+        // =====================================================
+        //  RENDER ALL
+        // =====================================================
+        function renderAll(data) {
+            updateTargetCOPTDisplay(data);
+            renderOperations(data);
+            renderTimeline(data);
+            renderProgress(data);
+            renderTotalTime(data);
+            renderLossBreakdown(data);
+            checkCOPTExceeded(data);
+            startElapsedTimer(data);
+            lucide.createIcons();
+        }
+
+        // =====================================================
+        //  TARGET COPT
+        // =====================================================
+        function updateTargetCOPTDisplay(data) {
+            const smv = data.upcomingSMV || data.newStyleSMV || data.upcomingStyleSMV || 0;
+            const category = data.changeoverCategory || 'C';
+            const multipliers = { 'A': 7, 'B': 5, 'C': 3 };
+            const multiplier = multipliers[category] || 3;
+            const targetCOPT = smv > 0 ? Math.round(smv * multiplier) : 0;
+
+            document.getElementById('recorderTargetCOPT').textContent = targetCOPT > 0 ? targetCOPT : '-';
+            document.getElementById('recorderCategory').textContent = `Category ${category}`;
+
+            const section = document.getElementById('targetCOPTSection');
+            section.classList.toggle('opacity-50', targetCOPT <= 0);
+        }
+
+        function getTargetCOPT(data) {
+            const smv = data.upcomingSMV || data.newStyleSMV || data.upcomingStyleSMV || 0;
+            const category = data.changeoverCategory || 'C';
+            const multipliers = { 'A': 7, 'B': 5, 'C': 3 };
+            return smv > 0 ? Math.round(smv * (multipliers[category] || 3)) : 0;
+        }
+
+        // =====================================================
+        //  OPERATIONS LIST (Read-Only)
+        // =====================================================
+        /**
+         * Sorts operations by recording order: completed (by start time) first,
+         * then in-progress, then pending (in original OB order).
+         */
+        function getSortedOperations(operations, timings) {
+            const enriched = operations.map((op, origIdx) => {
+                const opName = typeof op === 'string' ? op : op.name;
+                const timing = timings[opName];
+                return { op, opName, timing, origIdx };
+            });
+
+            const completed = enriched.filter(e => e.timing && e.timing.end)
+                .sort((a, b) => new Date(a.timing.start) - new Date(b.timing.start));
+            const inProgress = enriched.filter(e => e.timing && e.timing.start && !e.timing.end)
+                .sort((a, b) => new Date(a.timing.start) - new Date(b.timing.start));
+            const pending = enriched.filter(e => !e.timing || !e.timing.start);
+
+            return [...completed, ...inProgress, ...pending];
+        }
+
+        function renderOperations(data) {
+            const section = document.getElementById('operationsSection');
+            const list = document.getElementById('operationsList');
+            const operations = data.operationsList || [];
+            const timings = data.operationTimings || {};
+
+            if (!operations.length) {
+                section.classList.add('hidden');
+                return;
+            }
+
+            const sorted = getSortedOperations(operations, timings);
+
+            section.classList.remove('hidden');
+            list.innerHTML = sorted.map((entry, index) => {
+                const opName = entry.opName;
+                const op = entry.op;
+                const opSMV = typeof op === 'object' ? op.smv : null;
+                const timing = entry.timing;
+                const startTime = timing ? timing.start : null;
+                const endTime = timing ? timing.end : null;
+                const department = timing ? timing.department || '' : '';
+                const remarks = timing ? timing.remarks || '' : '';
+
+                let standardTime = null;
+                if (opSMV !== null && opSMV !== undefined) {
+                    standardTime = (opSMV * 10).toFixed(2);
+                } else if (timing && timing.standardTime !== null && timing.standardTime !== undefined) {
+                    standardTime = parseFloat(timing.standardTime).toFixed(2);
+                }
+
+                const actualTime = (startTime && endTime)
+                    ? ((new Date(endTime) - new Date(startTime)) / 60000).toFixed(2)
+                    : null;
+
+                const formatTS = (iso) => {
+                    if (!iso) return '--:--';
+                    const d = new Date(iso);
+                    return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+                };
+
+                // Build remarks + department pill row
+                const metaRow = (department || remarks) ? `
+                    <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                        ${department ? `<span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded uppercase tracking-wider">${department}</span>` : ''}
+                        ${remarks ? `<span class="text-[10px] text-slate-400 italic"><i data-lucide="message-square" class="w-3 h-3 inline mr-0.5"></i>${remarks}</span>` : ''}
+                    </div>` : '';
+
+                if (endTime && actualTime !== null) {
+                    const isOnTime = standardTime ? parseFloat(actualTime) <= parseFloat(standardTime) : true;
+                    const colorClass = isOnTime ? 'text-emerald-600' : 'text-rose-600';
+                    const bgClass = isOnTime ? 'bg-emerald-50' : 'bg-rose-50';
+                    const variance = standardTime ? (parseFloat(actualTime) - parseFloat(standardTime)).toFixed(2) : 0;
+
+                    return `
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                        <div class="flex items-center gap-3 w-full sm:w-auto">
+                            <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex-shrink-0">
+                                <i data-lucide="check" class="w-4 h-4"></i>
+                            </div>
+                            <div class="flex-1 min-w-[140px]">
+                                <p class="text-sm font-bold text-slate-900">${opName}</p>
+                                <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                    <span class="text-[10px] font-bold ${colorClass} ${bgClass} px-2 py-0.5 rounded">${actualTime}m taken</span>
+                                    ${standardTime ? `<span class="text-[10px] font-medium text-slate-400">vs ${standardTime}m allowed</span>` : ''}
+                                    ${standardTime ? `<span class="text-[10px] font-bold ${colorClass}">${variance > 0 ? '+' : ''}${variance}m</span>` : ''}
+                                </div>
+                                ${metaRow}
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 text-xs text-slate-400 font-mono sm:ml-auto flex-shrink-0">
+                            <span class="bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">${formatTS(startTime)}</span>
+                            <i data-lucide="arrow-right" class="w-3 h-3 text-slate-300"></i>
+                            <span class="bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">${formatTS(endTime)}</span>
+                        </div>
+                    </div>`;
+                } else if (startTime) {
+                    return `
+                    <div class="flex items-center gap-3 p-4 bg-white rounded-xl border border-amber-200 shadow-sm">
+                        <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex-shrink-0">
+                            <span class="w-2 h-2 bg-amber-600 rounded-full animate-ping"></span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-slate-900">${opName}</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <p class="text-[10px] font-bold text-amber-600">Running...</p>
+                                ${standardTime ? `<span class="text-[10px] font-medium text-slate-500">Allowed: ${standardTime}m</span>` : ''}
+                            </div>
+                            ${metaRow}
+                        </div>
+                        <span class="text-xs font-mono text-amber-500 bg-amber-50 px-2 py-1 rounded-lg border border-amber-100 ml-auto">Started ${formatTS(startTime)}</span>
+                    </div>`;
+                } else {
+                    return `
+                    <div class="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 shadow-sm opacity-60">
+                        <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 text-slate-400 flex-shrink-0">
+                            <i data-lucide="circle" class="w-4 h-4"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-slate-900">${opName}</p>
+                            <div class="flex items-center gap-2 mt-1">
+                                <p class="text-[10px] font-medium text-slate-400">Not started</p>
+                                ${standardTime ? `<span class="text-[10px] font-medium text-slate-500">Allowed: ${standardTime}m</span>` : ''}
+                            </div>
+                        </div>
+                    </div>`;
+                }
+            }).join('');
+        }
+
+        // =====================================================
+        //  METRO TIMELINE
+        // =====================================================
+        function renderTimeline(data) {
+            const section = document.getElementById('timelineSection');
+            const track = document.getElementById('timelineTrack');
+            const operations = data.operationsList || [];
+            const timings = data.operationTimings || {};
+
+            if (!operations.length) {
+                section.classList.add('hidden');
+                return;
+            }
+
+            // Sort by recording order (same helper as operations log)
+            const sorted = getSortedOperations(operations, timings);
+
+            section.classList.remove('hidden');
+            let completedCount = 0;
+            let lastActiveOrDoneIdx = -1;
+
+            const stops = sorted.map((entry, i) => {
+                const opName = entry.opName;
+                const timing = entry.timing;
+                const hasEnd = timing && timing.end;
+                const hasStart = timing && timing.start;
+
+                let dotClass = 'pending';
+                if (hasEnd) { dotClass = 'done'; completedCount++; lastActiveOrDoneIdx = i; }
+                else if (hasStart) { dotClass = 'active'; lastActiveOrDoneIdx = i; }
+
+                const shortName = opName.length > 12 ? opName.substring(0, 12) + '…' : opName;
+
+                let timeLabel = '';
+                if (hasEnd) {
+                    const actualMin = ((new Date(timing.end) - new Date(timing.start)) / 60000).toFixed(1);
+                    timeLabel = `${actualMin}m`;
+                } else if (hasStart) {
+                    timeLabel = 'Running';
+                }
+
+                return `<div class="timeline-stop">
+                    <div class="timeline-dot ${dotClass}"></div>
+                    <div class="timeline-label">${shortName}</div>
+                    ${timeLabel ? `<div class="timeline-time">${timeLabel}</div>` : ''}
+                </div>`;
+            });
+
+            track.innerHTML = stops.join('');
+
+            // Fill line up to the last completed/active stop (continuous, no gaps)
+            const total = sorted.length;
+            const fillPct = total > 1 && lastActiveOrDoneIdx >= 0
+                ? (lastActiveOrDoneIdx / (total - 1)) * 100
+                : (lastActiveOrDoneIdx === 0 && total === 1 ? 100 : 0);
+
+            // Adjust line positions based on track
+            requestAnimationFrame(() => {
+                const trackEl = document.getElementById('timelineTrack');
+                const bgEl = document.getElementById('timelineBg');
+                const fillEl = document.getElementById('timelineFill');
+                if (trackEl && bgEl) {
+                    const scrollW = trackEl.scrollWidth;
+                    bgEl.style.width = `calc(${scrollW}px - 3rem)`;
+                    fillEl.style.width = `calc((${scrollW}px - 3rem) * ${fillPct / 100})`;
+                }
+            });
+        }
+
+        // =====================================================
+        //  PROGRESS
+        // =====================================================
+        function renderProgress(data) {
+            const ops = data.operationsList || [];
+            const timings = data.operationTimings || {};
+
+            const completed = ops.filter(op => {
+                const opName = typeof op === 'string' ? op : op.name;
+                const timing = timings[opName];
+                return timing && timing.end;
+            }).length;
+            const total = ops.length;
+            const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            document.getElementById('completedOpsCount').textContent = completed;
+            document.getElementById('totalOpsCount').textContent = total;
+            document.getElementById('opsPercentage').textContent = `(${pct}%)`;
+            document.getElementById('progressBar').style.width = `${pct}%`;
+
+            // Status
+            const status = data.status || 'pending';
+            const statusIndicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+
+            if (status === 'completed') {
+                statusIndicator.querySelector('div').className = 'w-2 h-2 rounded-full bg-emerald-500';
+                statusText.textContent = 'Completed';
+                statusText.className = 'text-xs font-bold text-emerald-700 uppercase tracking-wider';
+            } else if (status === 'in-progress' || completed > 0) {
+                statusIndicator.querySelector('div').className = 'w-2 h-2 rounded-full bg-amber-500 animate-pulse';
+                statusText.textContent = 'In Progress';
+                statusText.className = 'text-xs font-bold text-amber-700 uppercase tracking-wider';
+            } else {
+                statusIndicator.querySelector('div').className = 'w-2 h-2 rounded-full bg-slate-400';
+                statusText.textContent = 'Pending';
+                statusText.className = 'text-xs font-bold text-slate-500 uppercase tracking-wider';
+            }
+        }
+
+        // =====================================================
+        //  TOTAL TIME
+        // =====================================================
+        function calculateWorkingHoursOnly(startTimestamp, endTimestamp) {
+            const SHIFT_START_HOUR = 7, SHIFT_START_MINUTE = 0;
+            const SHIFT_END_HOUR = 18, SHIFT_END_MINUTE = 0;
+
+            let start = new Date(startTimestamp);
+            let end = new Date(endTimestamp);
+
+            if (isNaN(start.getTime()) || isNaN(end.getTime()) || start >= end) return 0;
+
+            let totalMinutes = 0;
+            let currentDay = new Date(start);
+            currentDay.setHours(0, 0, 0, 0);
+
+            while (currentDay <= end) {
+                const shiftStart = new Date(currentDay);
+                shiftStart.setHours(SHIFT_START_HOUR, SHIFT_START_MINUTE, 0, 0);
+                const shiftEnd = new Date(currentDay);
+                shiftEnd.setHours(SHIFT_END_HOUR, SHIFT_END_MINUTE, 0, 0);
+
+                const overlapStart = start > shiftStart ? start : shiftStart;
+                const overlapEnd = end < shiftEnd ? end : shiftEnd;
+
+                if (overlapStart < overlapEnd) {
+                    totalMinutes += (overlapEnd - overlapStart) / (1000 * 60);
+                }
+
+                currentDay.setDate(currentDay.getDate() + 1);
+            }
+
+            return totalMinutes;
+        }
+
+        function renderTotalTime(data) {
+            const timings = data.operationTimings || {};
+            const ops = Object.values(timings).filter(t => t.start && t.end);
+
+            if (ops.length === 0) {
+                document.getElementById('totalTimeMin').textContent = '0';
+                document.getElementById('totalTimeHours').textContent = '0';
+                return;
+            }
+
+            const starts = ops.map(o => new Date(o.start).getTime()).filter(t => !isNaN(t));
+            const ends = ops.map(o => new Date(o.end).getTime()).filter(t => !isNaN(t));
+
+            if (starts.length > 0 && ends.length > 0) {
+                const overallStart = Math.min(...starts);
+                const overallEnd = Math.max(...ends);
+                const totalTime = calculateWorkingHoursOnly(overallStart, overallEnd);
+
+                document.getElementById('totalTimeMin').textContent = totalTime.toFixed(0);
+                document.getElementById('totalTimeHours').textContent = (totalTime / 60).toFixed(1);
+            }
+        }
+
+        function startElapsedTimer(data) {
+            if (elapsedInterval) clearInterval(elapsedInterval);
+
+            const timings = data.operationTimings || {};
+            const allStarts = Object.values(timings).filter(t => t.start).map(t => new Date(t.start).getTime()).filter(t => !isNaN(t));
+
+            if (allStarts.length === 0) {
+                document.getElementById('elapsedSinceStart').textContent = '--:--:--';
+                return;
+            }
+
+            const overallStart = Math.min(...allStarts);
+
+            function updateElapsed() {
+                const now = Date.now();
+                const diff = now - overallStart;
+                const hours = Math.floor(diff / 3600000);
+                const minutes = Math.floor((diff % 3600000) / 60000);
+                const seconds = Math.floor((diff % 60000) / 1000);
+                document.getElementById('elapsedSinceStart').textContent =
+                    `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+
+            updateElapsed();
+            elapsedInterval = setInterval(updateElapsed, 1000);
+        }
+
+        // =====================================================
+        //  LOSS TIME BREAKDOWN
+        // =====================================================
+        function renderLossBreakdown(data) {
+            const section = document.getElementById('lossBreakdownSection');
+            const timings = data.operationTimings || {};
+            const ops = Object.entries(timings).filter(([, t]) => t.actualTime);
+
+            if (ops.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+
+            section.classList.remove('hidden');
+
+            // Department aggregation
+            const depts = {};
+            ['TRIMS', 'CUTTING', 'PRODUCTION', 'MERCHANDISER', 'IE', 'TECHNICAL', 'MAINTENANCE'].forEach(d => depts[d] = 0);
+
+            ops.forEach(([name, details]) => {
+                const d = (details.department || 'MAINTENANCE').toUpperCase();
+                depts[d] = (depts[d] || 0) + parseFloat(details.actualTime);
+            });
+
+            const totalTime = Object.values(depts).reduce((s, v) => s + v, 0);
+
+            const gridData = Object.entries(depts).map(([dept, time]) => {
+                const share = totalTime > 0 ? (time / totalTime) * 100 : 0;
+                return { dept, time, share };
+            });
+
+            const tbody = document.getElementById('lossTableBody');
+            if (totalTime === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="py-8 text-center text-slate-400 font-medium">No recorded operations</td></tr>`;
+            } else {
+                tbody.innerHTML = gridData.map(row => `
+                    <tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
+                        <td class="py-3 pl-4 font-bold text-slate-700">${row.dept}</td>
+                        <td class="py-3 font-mono text-slate-600 text-right">${row.time.toFixed(2)}</td>
+                        <td class="py-3 pr-4 text-right">
+                            <div class="flex items-center justify-end gap-2">
+                                <span class="text-xs font-bold text-slate-500">${row.share.toFixed(0)}%</span>
+                                <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                    <div class="h-full ${getDeptColor(row.dept)}" style="width: ${row.share}%"></div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            document.getElementById('lossTableFoot').innerHTML = `
+                <tr>
+                    <td class="py-3 pl-4 uppercase tracking-wider">Total</td>
+                    <td class="py-3 text-right font-mono text-lg">${totalTime.toFixed(0)}</td>
+                    <td class="py-3 pr-4 text-right">100%</td>
+                </tr>`;
+        }
+
+        function getDeptColor(dept) {
+            const map = {
+                'MAINTENANCE': 'bg-rose-500', 'PRODUCTION': 'bg-emerald-500', 'CUTTING': 'bg-blue-500',
+                'TRIMS': 'bg-violet-500', 'QUALITY': 'bg-amber-500', 'IE': 'bg-indigo-500',
+                'TECHNICAL': 'bg-purple-500', 'MERCHANDISER': 'bg-pink-500'
+            };
+            return map[dept] || 'bg-slate-400';
+        }
+
+        // =====================================================
+        //  COPT EXCEEDED CHECK
+        // =====================================================
+        function checkCOPTExceeded(data) {
+            const targetCOPT = getTargetCOPT(data);
+            if (targetCOPT <= 0) {
+                document.body.classList.remove('copt-exceeded');
+                document.getElementById('coptWarningBanner').classList.add('hidden');
+                return;
+            }
+
+            // Calculate actual elapsed working time
+            const timings = data.operationTimings || {};
+            const allOps = Object.values(timings).filter(t => t.start);
+            if (allOps.length === 0) {
+                document.body.classList.remove('copt-exceeded');
+                document.getElementById('coptWarningBanner').classList.add('hidden');
+                return;
+            }
+
+            const starts = allOps.map(t => new Date(t.start).getTime()).filter(t => !isNaN(t));
+            const ends = allOps.filter(t => t.end).map(t => new Date(t.end).getTime()).filter(t => !isNaN(t));
+
+            const overallStart = Math.min(...starts);
+            // Use current time if changeover is still in progress, otherwise use latest end
+            const isCompleted = data.status === 'completed';
+            const overallEnd = isCompleted && ends.length > 0 ? Math.max(...ends) : Date.now();
+
+            const elapsedMinutes = calculateWorkingHoursOnly(overallStart, overallEnd);
+
+            if (elapsedMinutes > targetCOPT) {
+                document.body.classList.add('copt-exceeded');
+                const banner = document.getElementById('coptWarningBanner');
+                banner.classList.remove('hidden');
+                const overshoot = Math.round(elapsedMinutes - targetCOPT);
+                document.getElementById('overshootTime').textContent = `+${overshoot} min`;
+            } else {
+                document.body.classList.remove('copt-exceeded');
+                document.getElementById('coptWarningBanner').classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+
+</html>

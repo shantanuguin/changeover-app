@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Operations Recorder</title>
+
+    <!-- Frameworks & Icons -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- Animation Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.1.2/dist/lenis.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Poppins', 'sans-serif']
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            900: '#0c4a6e',
+                        }
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out',
+                        'slide-up': 'slideUp 0.5s ease-out',
+                        'shimmer': 'shimmer 2s infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        shimmer: {
+                            '0%': { transform: 'translateX(-100%)' },
+                            '100%': { transform: 'translateX(100%)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #f8fafc;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            color: #1e293b;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        input,
+        select,
+        textarea {
+            font-size: 16px;
+        }
+
+        @media (max-width: 640px) {
+
+            input,
+            select,
+            textarea {
+                font-size: 16px;
+            }
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 20px 0 rgba(31, 38, 135, 0.07);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.75);
+            /* Reduced blur slightly for performance */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
+
+            /* PERFORMANCE FIXES */
+            transform-style: preserve-3d;
+            will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            /* END FIXES */
+
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            border-radius: 1.5rem;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid #0ea5e9;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .live-dot {
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+
+            70% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            }
+        }
+
+        .login-bg {
+            background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%);
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+
+        /* Offline Banner */
+        #offlineBanner {
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        #offlineBanner.show {
+            transform: translateY(0);
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .glass {
+                background: rgba(255, 255, 255, 0.95);
+            }
+
+            .glass-card {
+                border-radius: 1rem;
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="relative min-h-screen">
+
+    <!-- Offline Banner -->
+    <div id="offlineBanner"
+        class="fixed top-0 left-0 right-0 z-[60] bg-red-600 text-white px-4 py-3 text-center font-semibold shadow-lg text-sm md:text-base">
+        <i data-lucide="wifi-off" class="w-4 h-4 inline-block mr-2"></i>
+        No internet connection. Changes will be saved locally and synced when back online.
+    </div>
+
+    <!-- Background Blobs -->
+    <div class="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
+        <div
+            class="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-[radial-gradient(circle,rgba(167,243,208,0.4)_0%,rgba(255,255,255,0)_70%)] animate-blob mix-blend-multiply">
+        </div>
+        <div
+            class="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-[radial-gradient(circle,rgba(191,219,254,0.4)_0%,rgba(255,255,255,0)_70%)] animate-blob animation-delay-4000 mix-blend-multiply">
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="mainApp" class="min-h-screen flex flex-col pb-safe opacity-0">
+
+        <!-- Navigation -->
+        <nav class="fixed top-0 w-full z-40 glass transition-all duration-300 border-b border-white/50 shadow-sm">
+            <div class="max-w-[1600px] mx-auto px-4 md:px-6">
+                <!-- Desktop & Tablet Header -->
+                <div class="flex flex-col md:flex-row justify-between items-center py-2 md:py-2.5 gap-2 md:gap-0">
+
+                    <!-- Left: Brand & User Info -->
+                    <div class="flex items-center justify-between w-full md:w-auto gap-4">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                                <i data-lucide="stop-circle" class="w-5 h-5"></i>
+                            </div>
+                            <div class="min-w-0 flex flex-col justify-center">
+                                <h1
+                                    class="font-heading font-bold text-slate-900 text-lg md:text-xl leading-tight truncate">
+                                    Operations Recorder</h1>
+                                <div class="flex items-center gap-2 mt-0.5">
+                                    <span id="connectionStatus"
+                                        class="hidden w-2 h-2 rounded-full bg-red-500 animate-pulse"
+                                        title="Offline"></span>
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+                    <!-- Right: Controls -->
+                    <div
+                        class="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto mt-1 md:mt-0">
+                        <div class="flex items-center gap-2 w-full md:w-auto">
+                            <!-- QCO Selector -->
+                            <div class="relative flex-1 md:w-auto group">
+                                <select id="qcoSelector" onchange="handleQCOChange(this.value)"
+                                    class="w-full appearance-none bg-white/80 border border-slate-200/60 text-slate-700 font-bold py-2.5 pl-4 pr-10 rounded-xl hover:bg-white hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-sm shadow-sm md:min-w-[240px]">
+                                    <option value="">Select QCO...</option>
+                                </select>
+                                <i data-lucide="chevron-down"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
+                            </div>
+
+                            <!-- Search -->
+                            <div
+                                class="flex items-center gap-2 bg-white/80 rounded-xl border border-slate-200/60 px-3 py-2.5 shadow-sm max-w-[140px] md:max-w-[200px]">
+                                <i data-lucide="search" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+                                <input type="text" id="qcoSearchInput" placeholder="Find #"
+                                    class="bg-transparent border-none outline-none text-sm font-semibold text-slate-700 w-full placeholder:text-slate-400 min-w-0"
+                                    onkeypress="handleSearchKeypress(event)">
+                            </div>
+                            <!-- Shift Mode Toggle -->
+                            <div class="relative flex-1 md:w-auto group">
+                                <select id="shiftMode" onchange="handleShiftChange(this.value)"
+                                    class="w-full appearance-none bg-blue-50 border border-blue-200 text-blue-700 font-bold py-2.5 pl-4 pr-10 rounded-xl hover:bg-white hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-sm shadow-sm md:min-w-[150px]">
+                                    <option value="day">Day Only (07-18)</option>
+                                    <option value="day-night">Day-Night (24h)</option>
+                                </select>
+                                <i data-lucide="sun-moon"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400 w-4 h-4 pointer-events-none"></i>
+                            </div>
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="pt-[140px] md:pt-20 pb-32 px-4 md:px-8 flex-1 w-full max-w-[1200px] mx-auto">
+
+            <!-- Operations Tracker Card -->
+            <div class="glass-card p-6 md:p-10 relative overflow-hidden animate-slide-up">
+                <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-400 to-rose-500"></div>
+
+                <h2
+                    class="text-2xl md:text-3xl font-heading font-bold text-slate-900 mb-6 md:mb-8 flex items-center gap-3">
+                    <span class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center text-lg">
+                        <i data-lucide="clipboard-check" class="w-5 h-5"></i>
+                    </span>
+                    Operations Tracker
+                </h2>
+
+                <!-- Target COPT Info -->
+                <div id="targetCOPTSection"
+                    class="mb-8 p-6 bg-gradient-to-br from-emerald-50 to-blue-50 rounded-2xl border border-emerald-200">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center">
+                                <i data-lucide="target" class="w-5 h-5"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-emerald-700 uppercase tracking-wider">Target COPT</p>
+                                <p class="text-2xl font-heading font-bold text-slate-900">
+                                    <span id="recorderTargetCOPT">-</span> <span
+                                        class="text-sm text-slate-500 font-normal">min</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-slate-500 font-medium">Category</p>
+                            <p class="text-sm font-bold text-slate-900" id="recorderCategory">-</p>
+                            <div class="mt-2 text-right">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tight"
+                                    id="lineIdLabel">Line -</p>
+                                <button onclick="openBreakModal()"
+                                    class="text-xs font-semibold text-blue-600 hover:text-blue-800 underline transition-colors">
+                                    break timings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-3 flex items-center gap-1">
+                        <i data-lucide="info" class="w-3 h-3"></i>
+                        Based on SMV and changeover complexity
+                    </p>
+                </div>
+
+                <!-- Operations Tracking Section -->
+                <div id="operationsSection" class="hidden">
+                    <div id="operationsList" class="space-y-3">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="h-safe-area-bottom bg-transparent"></div>
+    </div>
+
+    <script>
+        // --- Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCayfWGQP1t3oBU9eFj-3Ww0uu7nSl3Q4g",
+            authDomain: "sidneymailer.firebaseapp.com",
+            projectId: "sidneymailer",
+            storageBucket: "sidneymailer.firebasestorage.app",
+            messagingSenderId: "911316068119",
+            appId: "1:911316068119:web:ce23dbe663dc385a81f952"
+        };
+
+        // --- Global State ---
+        let db;
+        let currentQCOId = null;
+        let isOnline = navigator.onLine;
+        let currentLineSchedule = null;
+        let shiftMode = localStorage.getItem('shiftMode') || 'day';
+
+        const RAW_LINE_SCHEDULES = {
+            "S-01": { supervisor: "WASANA-1", breaks: [{ start: "09:30", end: "09:45" }, { start: "12:30", end: "13:00" }, { start: "16:45", end: "17:00" }] },
+            "S-01A": { supervisor: "WASANA-2", breaks: [{ start: "09:30", end: "09:45" }, { start: "12:30", end: "13:00" }, { start: "16:50", end: "17:05" }] },
+            "S-02": { supervisor: "SOHRAB", breaks: [{ start: "09:10", end: "09:25" }, { start: "12:10", end: "12:40" }, { start: "16:20", end: "16:35" }] },
+            "S-03": { supervisor: "SOHEL", breaks: [{ start: "09:20", end: "09:35" }, { start: "12:20", end: "12:50" }, { start: "16:30", end: "16:45" }] },
+            "S-04": { supervisor: "AHMAD", breaks: [{ start: "09:20", end: "09:35" }, { start: "12:20", end: "12:50" }, { start: "16:30", end: "16:45" }] },
+            "S-05": { supervisor: "OMAR FARUK", breaks: [{ start: "09:00", end: "09:15" }, { start: "12:00", end: "12:30" }, { start: "16:15", end: "16:30" }] },
+            "S-06": { supervisor: "SUMI", breaks: [{ start: "09:40", end: "09:55" }, { start: "12:40", end: "13:10" }, { start: "16:50", end: "17:05" }] },
+            "S-07": { supervisor: "NAGENDRA", breaks: [{ start: "09:30", end: "09:45" }, { start: "12:30", end: "13:00" }, { start: "16:50", end: "17:05" }] },
+            "S-07A": { supervisor: "KAMAL-2", breaks: [{ start: "09:40", end: "09:55" }, { start: "12:40", end: "13:10" }, { start: "16:50", end: "17:05" }] },
+            "S-08": { supervisor: "BALISTER", breaks: [{ start: "09:10", end: "09:25" }, { start: "12:10", end: "12:40" }, { start: "16:20", end: "16:35" }] },
+            "S-09": { supervisor: "MONJURUL", breaks: [{ start: "09:40", end: "09:55" }, { start: "12:40", end: "13:10" }, { start: "16:50", end: "17:05" }] },
+            "S-10": { supervisor: "RAJKUMAR", breaks: [{ start: "09:45", end: "10:00" }, { start: "13:00", end: "13:30" }, { start: "17:00", end: "17:15" }] },
+            "S-11": { supervisor: "KAMAL-1", breaks: [{ start: "09:40", end: "09:55" }, { start: "12:40", end: "13:10" }, { start: "16:50", end: "17:05" }] },
+            "S-12": { supervisor: "DARMENDRA", breaks: [{ start: "09:00", end: "09:15" }, { start: "12:00", end: "12:30" }, { start: "16:15", end: "16:30" }] },
+            "S-13": { supervisor: "SUMON", breaks: [{ start: "09:40", end: "09:55" }, { start: "12:50", end: "13:20" }, { start: "16:50", end: "17:05" }] },
+            "S-14": { supervisor: "SHARIF", breaks: [{ start: "09:00", end: "09:15" }, { start: "12:00", end: "12:30" }, { start: "16:15", end: "16:30" }] },
+            "S-15": { supervisor: "MUNSEF", breaks: [{ start: "09:30", end: "09:45" }, { start: "12:30", end: "13:00" }, { start: "16:45", end: "17:00" }] },
+            "S-16": { supervisor: "RAHAMAN", breaks: [{ start: "09:50", end: "10:05" }, { start: "13:20", end: "13:50" }, { start: "17:00", end: "17:15" }] },
+            "S-17": { supervisor: "MASUM", breaks: [{ start: "09:50", end: "10:05" }, { start: "13:20", end: "13:50" }, { start: "17:00", end: "17:15" }] },
+            "S-18": { supervisor: "DIANA", breaks: [{ start: "09:50", end: "10:05" }, { start: "13:20", end: "13:50" }, { start: "17:00", end: "17:15" }] },
+            "S-19": { supervisor: "ALAMGIR", breaks: [{ start: "09:20", end: "09:35" }, { start: "12:20", end: "12:50" }, { start: "16:30", end: "16:45" }] },
+            "S-20": { supervisor: "KAZAL", breaks: [{ start: "09:00", end: "09:15" }, { start: "11:50", end: "12:20" }, { start: "16:15", end: "16:30" }] },
+            "S-21": { supervisor: "DEVRAJ", breaks: [{ start: "09:45", end: "10:00" }, { start: "12:50", end: "13:20" }, { start: "16:50", end: "17:05" }] },
+            "S-22": { supervisor: "ASHRAFUL", breaks: [{ start: "09:20", end: "09:35" }, { start: "12:20", end: "12:50" }, { start: "16:30", end: "16:45" }] },
+            "S-23": { supervisor: "RUMA", breaks: [{ start: "09:40", end: "09:55" }, { start: "12:50", end: "13:20" }, { start: "16:50", end: "17:05" }] },
+            "S-24": { supervisor: "NASIR", breaks: [{ start: "09:10", end: "09:25" }, { start: "12:10", end: "12:40" }, { start: "16:20", end: "16:35" }] },
+            "S-25": { supervisor: "AKBAR", breaks: [{ start: "09:50", end: "10:05" }, { start: "13:00", end: "13:30" }, { start: "17:00", end: "17:15" }] },
+            "S-26": { supervisor: "HIMAYAT", breaks: [{ start: "09:45", end: "10:00" }, { start: "13:00", end: "13:30" }, { start: "17:00", end: "17:15" }] },
+            "S-28": { supervisor: "ROOP NARAYAN", breaks: [{ start: "09:40", end: "09:55" }, { start: "12:40", end: "13:10" }, { start: "16:50", end: "17:05" }] },
+            "S-29": { supervisor: "SUBA", breaks: [{ start: "09:00", end: "09:15" }, { start: "11:50", end: "12:20" }, { start: "16:15", end: "16:30" }] },
+            "S-30": { supervisor: "RAJIB", breaks: [{ start: "09:20", end: "09:35" }, { start: "12:10", end: "12:40" }, { start: "16:20", end: "16:35" }] },
+            "S-31": { supervisor: "AKASH", breaks: [{ start: "09:00", end: "09:15" }, { start: "11:50", end: "12:20" }, { start: "16:15", end: "16:30" }] },
+            "S-32": { supervisor: "KALU CHARAN", breaks: [{ start: "09:45", end: "10:00" }, { start: "12:50", end: "13:20" }, { start: "16:50", end: "17:05" }] }
+        };
+
+        function handleShiftChange(val) {
+            shiftMode = val;
+            localStorage.setItem('shiftMode', val);
+            if (currentQCOId) loadData();
+        }
+
+        function openBreakModal() {
+            console.log("Opening Break Modal. Current schedule state:", currentLineSchedule);
+            const modal = document.getElementById('breakModal');
+            const container = document.getElementById('breakListContainer');
+            const title = document.getElementById('breakModalTitle');
+
+            modal.classList.remove('hidden');
+            title.textContent = currentLineSchedule ? `Schedule: ${currentLineSchedule.lineKey}` : 'Line Schedule';
+
+            if (!currentLineSchedule || !currentLineSchedule.breaks) {
+                container.innerHTML = `<p class="text-sm text-slate-500 italic text-center py-4">No schedule data available.</p>`;
+                return;
+            }
+
+            container.innerHTML = currentLineSchedule.breaks.map(b => `
+                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="clock" class="w-4 h-4 text-slate-400"></i>
+                        <span class="text-sm font-semibold text-slate-700">Production Break</span>
+                    </div>
+                    <span class="text-sm font-mono font-bold text-slate-900">${b.start} - ${b.end}</span>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function closeBreakModal() {
+            document.getElementById('breakModal').classList.add('hidden');
+        }
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            initFirebase();
+            initLenis();
+            initConnectivityMonitor();
+            initApp();
+        });
+
+        function initFirebase() {
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                db = firebase.firestore();
+            } catch (error) {
+                console.error("Firebase init error:", error);
+                showOfflineAlert();
+            }
+        }
+
+        function initLenis() {
+            try {
+                const lenis = new Lenis({ duration: 1.2, smooth: true });
+                function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+                requestAnimationFrame(raf);
+            } catch (e) {
+                console.log("Lenis not available");
+            }
+        }
+
+        function initConnectivityMonitor() {
+            updateConnectionStatus();
+            window.addEventListener('online', () => {
+                isOnline = true;
+                updateConnectionStatus();
+                hideOfflineAlert();
+            });
+            window.addEventListener('offline', () => {
+                isOnline = false;
+                updateConnectionStatus();
+                showOfflineAlert();
+            });
+        }
+
+        function updateConnectionStatus() {
+            const indicator = document.getElementById('connectionStatus');
+            if (!isOnline) {
+                indicator.classList.remove('hidden');
+                showOfflineAlert();
+            } else {
+                indicator.classList.add('hidden');
+            }
+        }
+
+        function showOfflineAlert() {
+            const banner = document.getElementById('offlineBanner');
+            if (banner) banner.classList.add('show');
+        }
+
+        function hideOfflineAlert() {
+            const banner = document.getElementById('offlineBanner');
+            if (banner) banner.classList.remove('show');
+        }
+
+
+        function initApp() {
+            const app = document.getElementById('mainApp');
+            app.classList.remove('hidden');
+
+            gsap.to(app, { opacity: 1, duration: 0.5 });
+
+            loadChangeoverList();
+
+            const savedQCO = sessionStorage.getItem('currentQCOId');
+            if (savedQCO) {
+                handleQCOChange(savedQCO);
+            }
+        }
+
+        // --- QCO & Data Management ---
+
+        async function loadChangeoverList() {
+            if (!db) return;
+            try {
+                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(50).get();
+                const selector = document.getElementById('qcoSelector');
+                selector.innerHTML = '<option value="">Select QCO...</option>';
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    const qcoNum = data.qcoNumber || doc.id.substring(0, 8);
+                    const style = data.upcomingStyle || 'Unknown';
+                    option.textContent = `${qcoNum} - ${style}`;
+                    option.dataset.qcoNumber = qcoNum;
+                    selector.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Error loading QCO list:", error);
+            }
+        }
+
+        function handleSearchKeypress(e) {
+            if (e.key === 'Enter') searchQCO();
+        }
+
+        async function searchQCO() {
+            const searchVal = document.getElementById('qcoSearchInput').value.trim().toUpperCase();
+            if (!searchVal || !db) return;
+
+            try {
+                let snapshot = await db.collection('changeovers').where('qcoNumber', '==', searchVal).limit(1).get();
+                if (snapshot.empty) {
+                    snapshot = await db.collection('changeovers')
+                        .orderBy('qcoNumber').startAt(searchVal).endAt(searchVal + '\uf8ff').limit(1).get();
+                }
+
+                if (!snapshot.empty) {
+                    const doc = snapshot.docs[0];
+                    const selector = document.getElementById('qcoSelector');
+                    selector.value = doc.id;
+                    handleQCOChange(doc.id);
+                    Swal.fire({ icon: 'success', title: 'Found', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Not Found', text: 'No matching QCO found' });
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function handleQCOChange(qcoId) {
+            if (!qcoId) return;
+            currentQCOId = qcoId;
+            sessionStorage.setItem('currentQCOId', qcoId);
+
+            // Show loading state and clear stale data
+            document.getElementById('operationsList').innerHTML = `
+                <div class="flex items-center justify-center py-10">
+                    <div class="spinner w-6 h-6 border-slate-300 border-t-blue-500"></div>
+                </div>
+            `;
+            // Ensure section is visible but content is loading
+            document.getElementById('operationsSection').classList.remove('hidden');
+
+            await loadData();
+        }
+
+        async function loadData() {
+            if (!currentQCOId) return;
+            try {
+                const doc = await db.collection('changeovers').doc(currentQCOId).get();
+                if (doc.exists) {
+                    const data = doc.data();
+
+                    // --- Extract Line ID and Load Schedule ---
+                    // Fix: Prioritize 'lineNumber' field from data, fallback to QCO number parsing
+                    let lineKey = data.lineNumber || "Unknown";
+
+                    if (lineKey === "Unknown" && data.qcoNumber) {
+                        const parts = data.qcoNumber.split('-');
+                        // Handle formats like "S-01-..." or "01-..."
+                        if (parts.length >= 2) {
+                            if (parts[0].toUpperCase() === 'S') {
+                                lineKey = parts.slice(0, 2).join('-');
+                            } else {
+                                lineKey = parts[0];
+                            }
+                        }
+                    }
+
+                    // Display Line ID in UI
+                    const lineIdLabel = document.getElementById('lineIdLabel');
+                    if (lineIdLabel) lineIdLabel.textContent = `Line: ${lineKey}`;
+
+                    // --- Robustness: Normalization ---
+                    lineKey = lineKey.toString().trim().toUpperCase();
+                    if (/^\d+[A-Z]?$/.test(lineKey) && !lineKey.startsWith('S-')) {
+                        const numPart = lineKey.match(/\d+/)[0];
+                        const letterPart = lineKey.match(/[A-Z]$/) ? lineKey.match(/[A-Z]$/)[0] : '';
+                        lineKey = "S-" + numPart.padStart(2, '0') + letterPart;
+                    } else if (lineKey.startsWith('S-')) {
+                        const sub = lineKey.substring(2);
+                        if (/^\d+[A-Z]?$/.test(sub)) {
+                            const numPart = sub.match(/\d+/)[0];
+                            const letterPart = sub.match(/[A-Z]$/) ? sub.match(/[A-Z]$/)[0] : '';
+                            lineKey = "S-" + numPart.padStart(2, '0') + letterPart;
+                        }
+                    }
+                    console.log("Final LineKey used for schedule lookup:", lineKey);
+
+                    if (!currentLineSchedule || currentLineSchedule.lineKey !== lineKey) {
+                        try {
+                            const schedDoc = await db.collection('line_schedules').doc(lineKey).get();
+                            if (schedDoc.exists) {
+                                currentLineSchedule = { lineKey, ...schedDoc.data() };
+                                console.log("Loaded schedule from Firebase for", lineKey, currentLineSchedule);
+                            } else if (RAW_LINE_SCHEDULES[lineKey]) {
+                                // Fallback: Use hardcoded schedule
+                                currentLineSchedule = { lineKey, ...RAW_LINE_SCHEDULES[lineKey] };
+                                console.log("Using hardcoded fallback schedule for", lineKey, currentLineSchedule);
+                            } else {
+                                console.warn("No schedule found (Firebase or Fallback) for", lineKey);
+                                currentLineSchedule = null;
+                            }
+                        } catch (err) {
+                            console.error("Error loading schedule:", err);
+                        }
+                    }
+
+                    updateTargetCOPTDisplay(data);
+
+                    if (data.operationsList && Array.isArray(data.operationsList)) {
+                        renderOperationsList(data.operationsList, data.operationTimings || {}, currentQCOId);
+                    } else {
+                        document.getElementById('operationsList').innerHTML = '<p class="text-center text-slate-400 py-8">No operations found for this QCO.</p>';
+                    }
+                }
+            } catch (e) {
+                console.error("Error loading data:", e);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load QCO data' });
+            }
+        }
+
+        /**
+         * Calculates net duration in minutes, excluding break times.
+         * Day Mode: Deducts any time outside 07:00-18:00.
+         */
+        function getNetDuration(startISO, endISO, schedule) {
+            const start = new Date(startISO);
+            const end = new Date(endISO);
+            const mode = shiftMode;
+
+            if (mode === 'day') {
+                let totalMins = 0;
+                let iter = new Date(start);
+                while (iter < end) {
+                    const h = iter.getHours();
+                    const isWithinShift = h >= 7 && h < 18;
+                    if (isWithinShift) {
+                        let inBreak = false;
+                        if (schedule && schedule.breaks) {
+                            const timeStr = `${h.toString().padStart(2, '0')}:${iter.getMinutes().toString().padStart(2, '0')}`;
+                            inBreak = schedule.breaks.some(b => timeStr >= b.start && timeStr < b.end);
+                        }
+                        if (!inBreak) totalMins++;
+                    }
+                    iter = new Date(iter.getTime() + 60000);
+                }
+                return totalMins;
+            } else {
+                let totalMinutes = (end - start) / 60000;
+                if (!schedule || !schedule.breaks || !Array.isArray(schedule.breaks)) return totalMinutes;
+                const getBreakOverlay = (breakStartStr, breakEndStr) => {
+                    const bStart = new Date(start);
+                    const [sh, sm] = breakStartStr.split(':').map(Number);
+                    bStart.setHours(sh, sm, 0, 0);
+                    const bEnd = new Date(start);
+                    const [eh, em] = breakEndStr.split(':').map(Number);
+                    bEnd.setHours(eh, em, 0, 0);
+                    const overlapStart = new Date(Math.max(start, bStart));
+                    const overlapEnd = new Date(Math.min(end, bEnd));
+                    return (overlapStart < overlapEnd) ? (overlapEnd - overlapStart) / 60000 : 0;
+                };
+                let deduction = 0;
+                schedule.breaks.forEach(b => deduction += getBreakOverlay(b.start, b.end));
+                return Math.max(0, totalMinutes - deduction);
+            }
+        }
+
+        function updateTargetCOPTDisplay(qcoData) {
+            const smv = qcoData.upcomingSMV || 0;
+            const category = qcoData.changeoverCategory || 'C';
+            const multipliers = { 'A': 7, 'B': 5, 'C': 3 };
+            const multiplier = multipliers[category] || 3;
+            const targetCOPT = smv > 0 ? Math.round(smv * multiplier) : 0;
+
+            document.getElementById('recorderTargetCOPT').textContent = targetCOPT > 0 ? targetCOPT : '-';
+            document.getElementById('recorderCategory').textContent = `Category ${category}`;
+
+            const section = document.getElementById('targetCOPTSection');
+            if (targetCOPT > 0) section.classList.remove('opacity-50');
+            else section.classList.add('opacity-50');
+        }
+
+        function renderOperationsList(operations, timings, qcoId) {
+            const list = document.getElementById('operationsList');
+            if (!operations || operations.length === 0) {
+                list.innerHTML = '<p>No operations.</p>';
+                return;
+            }
+
+            list.innerHTML = operations.map((op, index) => {
+                const opName = typeof op === 'string' ? op : op.name;
+                const opSMV = typeof op === 'object' ? op.smv : null;
+                const safeOpName = opName.replace(/"/g, '&quot;');
+
+                const timing = timings && timings[opName];
+                const startTime = timing ? timing.start : null;
+                const endTime = timing ? timing.end : null;
+                const department = timing ? timing.department || '' : '';
+                const remarks = timing ? timing.remarks || '' : '';
+
+                let standardTime = null;
+                if (opSMV !== null && opSMV !== undefined) {
+                    standardTime = (opSMV * 10).toFixed(2);
+                } else if (timing && timing.standardTime) {
+                    standardTime = parseFloat(timing.standardTime).toFixed(2);
+                }
+
+                const actualTime = (startTime && endTime)
+                    ? ((new Date(endTime) - new Date(startTime)) / 60000).toFixed(2)
+                    : null;
+
+                let rowHtml = '';
+
+                // Common button logic - always pass qcoId!
+                if (endTime && actualTime !== null) {
+                    // Completed
+                    const isOnTime = standardTime ? parseFloat(actualTime) <= parseFloat(standardTime) : true;
+                    const comparisonColor = isOnTime ? 'text-emerald-600' : 'text-rose-600';
+                    const variance = standardTime ? (parseFloat(actualTime) - parseFloat(standardTime)).toFixed(2) : 0;
+
+                    rowHtml = `
+                    <div class="flex flex-col md:flex-row items-start md:items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all">
+                        <div class="flex items-center gap-3 w-full md:w-auto flex-1">
+                            <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex-shrink-0">
+                                <i data-lucide="check" class="w-4 h-4"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-bold text-slate-900 leading-tight">${opName}</p>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-[10px] font-bold ${comparisonColor} bg-${isOnTime ? 'emerald' : 'rose'}-50 px-2 py-0.5 rounded">
+                                        ${actualTime}m
+                                    </span>
+                                    ${standardTime ? `<span class="text-[10px] font-medium text-slate-400">vs ${standardTime}m</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
+                            <select id="dept_${index}" class="px-3 py-2 text-xs rounded-lg border border-slate-200 focus:border-emerald-500 bg-slate-50 w-28">
+                                <option value="">Dept...</option>
+                                <option value="Trims" ${department === 'Trims' ? 'selected' : ''}>Trims</option>
+                                <option value="Cutting" ${department === 'Cutting' ? 'selected' : ''}>Cutting</option>
+                                <option value="Production" ${department === 'Production' ? 'selected' : ''}>Production</option>
+                                <option value="Merchandiser" ${department === 'Merchandiser' ? 'selected' : ''}>Merchandiser</option>
+                                <option value="IE" ${department === 'IE' ? 'selected' : ''}>IE</option>
+                                <option value="Technical" ${department === 'Technical' ? 'selected' : ''}>Technical</option>
+                                <option value="Maintenance" ${department === 'Maintenance' ? 'selected' : ''}>Maintenance</option>
+                            </select>
+                            <input type="text" id="remarks_${index}" placeholder="Remarks..." value="${remarks}"
+                                class="flex-1 md:flex-none md:w-40 px-3 py-2 text-xs rounded-lg border border-slate-200 focus:border-emerald-500 bg-slate-50">
+                            <button onclick="saveOperationDetails('${qcoId}', '${index}', '${safeOpName}')" 
+                                class="p-2 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-all flex-shrink-0">
+                                <i data-lucide="save" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>`;
+                } else if (startTime) {
+                    // Running
+                    rowHtml = `
+                    <div class="flex items-center gap-3 p-4 bg-white rounded-xl border border-amber-200 shadow-sm">
+                        <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex-shrink-0">
+                            <span class="w-2 h-2 bg-amber-600 rounded-full animate-ping"></span>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-slate-900">${opName}</p>
+                            <p class="text-[10px] font-bold text-amber-600 mt-1">Running...</p>
+                        </div>
+                        <button onclick="endOperation('${qcoId}', '${index}', '${safeOpName}', ${opSMV})" 
+                            class="px-4 py-2 rounded-lg bg-rose-500 text-white text-xs font-bold hover:bg-rose-600 transition-all shadow-sm">
+                            End
+                        </button>
+                    </div>`;
+                } else {
+                    // Not Started
+                    rowHtml = `
+                    <div class="flex items-center gap-3 p-4 bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all hover:border-emerald-300">
+                        <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-slate-100 text-slate-400 flex-shrink-0">
+                            <i data-lucide="circle" class="w-4 h-4"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-slate-900">${opName}</p>
+                            <p class="text-[10px] font-medium text-slate-400 mt-1">Not started</p>
+                        </div>
+                         <button onclick="startOperation('${qcoId}', '${index}', '${safeOpName}')" 
+                            class="px-4 py-2 rounded-lg bg-emerald-500 text-white text-xs font-bold hover:bg-emerald-600 transition-all shadow-sm">
+                            Start
+                        </button>
+                    </div>`;
+                }
+                return rowHtml;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        async function startOperation(qcoId, index, opName) {
+            if (!qcoId) return;
+            try {
+                // Fetch current data to find the last operation's end time
+                const doc = await db.collection('changeovers').doc(qcoId).get();
+                const data = doc.data();
+                const timings = data.operationTimings || {};
+
+                let lastEndTime = null;
+                let maxEndTimeMs = 0;
+
+                // Iterate through all timings to find the latest end time
+                Object.values(timings).forEach(timing => {
+                    if (timing.end) {
+                        const endTimeMs = new Date(timing.end).getTime();
+                        if (!isNaN(endTimeMs) && endTimeMs > maxEndTimeMs) {
+                            maxEndTimeMs = endTimeMs;
+                            lastEndTime = timing.end;
+                        }
+                    }
+                });
+
+                // Use last end time if available, otherwise use current time
+                const timestamp = lastEndTime ? lastEndTime : new Date().toISOString();
+
+                console.log(`Starting operation: ${opName}`);
+                console.log(`Using start time: ${timestamp} (derived from ${lastEndTime ? 'previous operation end' : 'current time'})`);
+
+                const fieldPath = new firebase.firestore.FieldPath('operationTimings', opName);
+                await db.collection('changeovers').doc(qcoId).update(fieldPath, { start: timestamp });
+                loadData();
+            } catch (e) { console.error(e); alert("Failed to start"); }
+        }
+
+        async function endOperation(qcoId, index, opName, opSMV) {
+            if (!qcoId) return;
+            try {
+                const endTimestamp = new Date().toISOString();
+                const doc = await db.collection('changeovers').doc(qcoId).get();
+                const data = doc.data();
+                const timing = data.operationTimings && data.operationTimings[opName];
+                const startTimestamp = timing ? timing.start : null;
+
+                if (!startTimestamp) { alert("No start time found!"); return; }
+
+                const netMinutes = getNetDuration(startTimestamp, endTimestamp, currentLineSchedule);
+                const actualTimeMinutes = netMinutes.toFixed(2);
+                const standardTimeMinutes = opSMV ? (parseFloat(opSMV) * 10).toFixed(2) : null;
+
+                const fieldPath = new firebase.firestore.FieldPath('operationTimings', opName);
+                await db.collection('changeovers').doc(qcoId).update(fieldPath, {
+                    start: startTimestamp,
+                    end: endTimestamp,
+                    actualTime: parseFloat(actualTimeMinutes),
+                    standardTime: standardTimeMinutes ? parseFloat(standardTimeMinutes) : null
+                });
+                loadData();
+            } catch (e) { console.error(e); alert("Failed to end timer"); }
+        }
+
+        async function saveOperationDetails(qcoId, index, opName) {
+            if (!qcoId) return;
+
+            // Get button immediately to avoid losing reference
+            const btn = event ? event.target.closest('button') : null;
+
+            const department = document.getElementById(`dept_${index}`).value;
+            const remarks = document.getElementById(`remarks_${index}`).value;
+
+            try {
+                // Optimistic UI update or simple wait
+                if (btn) {
+                    const originalContent = btn.innerHTML;
+                    btn.innerHTML = '<div class="spinner w-4 h-4 border-white/30 border-t-white"></div>';
+                    btn.disabled = true;
+                }
+
+                const docRef = db.collection('changeovers').doc(qcoId);
+                const doc = await docRef.get();
+
+                if (!doc.exists) throw new Error("Document not found");
+
+                const data = doc.data();
+                const timings = data.operationTimings || {};
+                const existingTiming = timings[opName] || {};
+
+                // Use FieldPath for keys with special characters
+                const fieldPath = new firebase.firestore.FieldPath('operationTimings', opName);
+
+                await docRef.update(fieldPath, {
+                    ...existingTiming,
+                    department: department,
+                    remarks: remarks
+                });
+
+                // Success Feedback
+                if (btn) {
+                    btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>';
+                    btn.classList.remove('bg-slate-900', 'hover:bg-slate-800');
+                    btn.classList.add('bg-emerald-600', 'hover:bg-emerald-700');
+
+                    setTimeout(() => {
+                        btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i>';
+                        btn.classList.add('bg-slate-900', 'hover:bg-slate-800');
+                        btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-700');
+                        btn.disabled = false;
+                        lucide.createIcons();
+                    }, 2000);
+                    lucide.createIcons();
+                }
+
+            } catch (e) {
+                console.error("Save failed:", e);
+                alert("Failed to save details: " + e.message);
+
+                if (btn) {
+                    btn.innerHTML = '<i data-lucide="x" class="w-4 h-4"></i>';
+                    btn.classList.add('bg-red-600');
+                    setTimeout(() => {
+                        btn.innerHTML = '<i data-lucide="save" class="w-4 h-4"></i>';
+                        btn.classList.remove('bg-red-600');
+                        btn.disabled = false;
+                        lucide.createIcons();
+                    }, 2000);
+                }
+            }
+        }
+
+    </script>
+    <!-- Break Timings Modal -->
+    <div id="breakModal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeBreakModal()"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md p-6">
+            <div class="bg-white rounded-3xl shadow-2xl border border-slate-100 overflow-hidden">
+                <div class="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                    <h3 class="font-heading font-bold text-slate-800" id="breakModalTitle">Line Schedule</h3>
+                    <button onclick="closeBreakModal()" class="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                        <i data-lucide="x" class="w-4 h-4 text-slate-500"></i>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4" id="breakListContainer">
+                        <!-- Breaks injected here -->
+                    </div>
+                    <div
+                        class="mt-6 p-4 rounded-xl bg-amber-50 border border-amber-100 text-[10px] text-amber-700 leading-relaxed">
+                        <i data-lucide="info" class="w-3 h-3 inline-block mr-1"></i>
+                        Note: Active durations are auto-deducted during these windows. Night shift breaks can be
+                        recorded once defined.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
