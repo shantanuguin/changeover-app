@@ -29,6 +29,14 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- Chart.js (Feature 2: Suggestions Timeline) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+    <!-- Driver.js (Feature 4: Guided Tour) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.css">
+    <script src="https://cdn.jsdelivr.net/npm/driver.js@1.0.1/dist/driver.js.iife.js"></script>
+
     <!-- Tailwind Config -->
     <script>
         tailwind.config = {
@@ -499,6 +507,37 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
+
+        /* Changeover Matrix Styles */
+        .strike-through {
+            text-decoration: line-through;
+            opacity: 0.6;
+            font-size: 0.8em;
+        }
+
+        #timeline-container .matrix-cell {
+            transition: all 0.2s ease;
+        }
+
+        #timeline-container .matrix-cell:hover {
+            background-color: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        /* Spacing Improvements */
+        .glass-card {
+            margin-bottom: 2rem;
+        }
+
+        .section-gap {
+            gap: 2.5rem;
+        }
+
+        @media (min-width: 1024px) {
+            .dashboard-grid {
+                gap: 2rem;
+            }
+        }
     </style>
     <!-- Mobile Logic -->
     <script>
@@ -562,7 +601,7 @@
         </div>
 
         <!-- Navigation - SCROLLABLE -->
-        <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-6">
+        <nav class="flex-1 overflow-y-auto py-8 px-6 space-y-8" data-lenis-prevent>
             <div>
                 <div class="section-header">General</div>
                 <ul class="space-y-1">
@@ -671,6 +710,39 @@
 
             <!-- Right Actions (User, etc.) -->
             <div class="flex items-center gap-4">
+                <!-- Tour Button (Feature 4) -->
+                <button id="tourBtn" title="Start guided tour"
+                    class="w-9 h-9 rounded-full bg-violet-100 hover:bg-violet-200 flex items-center justify-center text-violet-600 transition-all hover:scale-110 shadow-sm">
+                    <span class="text-sm font-bold">?</span>
+                </button>
+
+                <!-- Save Session (Feature 7) -->
+                <button id="saveSessionBtn" title="Save current session"
+                    class="hidden w-9 h-9 rounded-full bg-blue-100 hover:bg-blue-200 flex items-center justify-center text-blue-600 transition-all hover:scale-110 shadow-sm">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                </button>
+
+                <!-- Export Dropdown (Feature 8) -->
+                <div class="relative group">
+                    <button
+                        class="hidden px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold hover:bg-emerald-100 transition-all"
+                        id="exportDropdownBtn">
+                        <i data-lucide="download" class="w-3 h-3 inline mr-1"></i>Export
+                    </button>
+                    <div
+                        class="absolute right-0 mt-2 w-40 bg-white/95 backdrop-blur-xl rounded-xl shadow-xl border border-white/50 ring-1 ring-slate-900/5 transform opacity-0 scale-95 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 origin-top-right z-50 p-1">
+                        <button data-export="csv"
+                            class="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors">📄
+                            CSV</button>
+                        <button data-export="excel"
+                            class="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors">📊
+                            Excel</button>
+                        <button data-export="pdf"
+                            class="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 rounded-lg transition-colors">🖨️
+                            PDF</button>
+                    </div>
+                </div>
+
                 <!-- System Status -->
                 <div
                     class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
@@ -712,9 +784,9 @@
         </header>
 
         <!-- Scrollable Content Area -->
-        <div id="appContent" class="flex-1 relative overflow-y-auto flex flex-col">
-            <div id="mainApp" class="flex-1 pt-8 pb-32 px-6 opacity-0">
-                <div class="max-w-[1600px] mx-auto w-full">
+        <div id="appContent" class="flex-1 relative overflow-y-auto flex flex-col" data-lenis-prevent>
+            <div id="mainApp" class="flex-1 pt-8 pb-32 px-8 lg:px-12 opacity-0">
+                <div class="max-w-[1800px] mx-auto w-full">
 
                     <!-- Page Header -->
                     <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
@@ -753,453 +825,622 @@
                         </div>
                     </div>
 
-                    <!-- File Upload State -->
-                    <div id="uploadState"
-                        class="glass-card p-12 text-center border-dashed border-2 border-slate-300 hover:border-blue-400 transition-colors">
-                        <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner text-slate-600"
-                            style="background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(226, 232, 240, 0.8);">
-                            <i data-lucide="upload-cloud" class="w-10 h-10"></i>
-                        </div>
-                        <h3 class="text-2xl font-bold text-slate-900 mb-3">Import Production Schedule</h3>
-                        <p class="text-slate-500 mb-8 max-w-md mx-auto">Upload your Excel planning sheet (.xlsx). The
-                            system will automatically parse Supervisor, Target, and Manpower data.</p>
-
-                        <label
-                            class="relative inline-flex cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl font-bold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-1 transition-all group">
-                            <i data-lucide="file-spreadsheet" class="w-5 h-5 mr-2 group-hover:animate-bounce"></i>
-                            <span>Select Excel File</span>
-                            <!-- FIXED: Removed onchange attribute to prevent ReferenceError -->
-                            <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden">
-                        </label>
-
-                        <p id="loadingText"
-                            class="hidden mt-6 text-blue-600 font-bold animate-pulse flex items-center justify-center gap-2">
-                            <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processing workbook...
-                        </p>
-                    </div>
-
-                    <!-- Content Area -->
-                    <div id="contentArea" class="hidden space-y-8">
-
-                        <!-- Dashboard View -->
-                        <div id="view-dashboard" class="view-section space-y-8">
-                            <!-- Stats Grid -->
-                            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                <!-- Stat 1 -->
-                                <div class="glass-card p-6 flex flex-col justify-between">
-                                    <div class="flex justify-between items-start mb-4">
-                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm text-slate-600"
-                                            style="background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(226, 232, 240, 0.8);">
-                                            <i data-lucide="package" class="w-5 h-5"></i>
-                                        </div>
-                                        <span
-                                            class="px-2 py-1 rounded-lg text-slate-500 text-[10px] font-bold uppercase tracking-wider"
-                                            style="background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(226, 232, 240, 0.6);">Styles</span>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">
-                                            Active Styles</h3>
-                                        <p class="text-3xl font-bold text-slate-900" id="stat-styles">0</p>
-                                    </div>
+                    <div class="space-y-12">
+                        <!-- Session Restore Bar (Feature 7) -->
+                        <div id="restoreSessionBar"
+                            class="hidden glass-card p-4 flex items-center justify-between mb-6 border-l-4 border-blue-500 animate-[fadeIn_0.5s_ease-out]">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <i data-lucide="history" class="w-4 h-4 text-blue-600"></i>
                                 </div>
-
-                                <!-- Stat 2 -->
-                                <div class="glass-card p-6 flex flex-col justify-between">
-                                    <div class="flex justify-between items-start mb-4">
-                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm text-slate-600"
-                                            style="background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(226, 232, 240, 0.8);">
-                                            <i data-lucide="target" class="w-5 h-5"></i>
-                                        </div>
-                                        <span
-                                            class="px-2 py-1 rounded-lg text-slate-500 text-[10px] font-bold uppercase tracking-wider"
-                                            style="background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(226, 232, 240, 0.6);">Output</span>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">
-                                            Total Pieces</h3>
-                                        <p class="text-3xl font-bold text-slate-900" id="stat-target">0</p>
-                                    </div>
-                                </div>
-
-                                <!-- Stat 3 -->
-                                <div class="glass-card p-6 flex flex-col justify-between">
-                                    <div class="flex justify-between items-start mb-4">
-                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm text-slate-600"
-                                            style="background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(226, 232, 240, 0.8);">
-                                            <i data-lucide="users" class="w-5 h-5"></i>
-                                        </div>
-                                        <span
-                                            class="px-2 py-1 rounded-lg text-slate-500 text-[10px] font-bold uppercase tracking-wider"
-                                            style="background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(226, 232, 240, 0.6);">Labor</span>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1"
-                                            id="stat-manpower-label">Avg Manpower</h3>
-                                        <p class="text-3xl font-bold text-slate-900" id="stat-manpower">0
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <!-- Stat 4 (Issues) -->
-                                <div class="glass-card p-6 flex flex-col justify-between">
-                                    <div class="flex justify-between items-start mb-4">
-                                        <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm text-slate-600"
-                                            style="background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(226, 232, 240, 0.8);">
-                                            <i data-lucide="alert-circle" class="w-5 h-5"></i>
-                                        </div>
-                                        <span
-                                            class="px-2 py-1 rounded-lg text-slate-500 text-[10px] font-bold uppercase tracking-wider"
-                                            style="background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(226, 232, 240, 0.6);">Alerts</span>
-                                    </div>
-                                    <div>
-                                        <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">
-                                            Total Issues</h3>
-                                        <p class="text-3xl font-bold text-slate-900" id="anomaly-count">0
-                                        </p>
-                                    </div>
+                                <div>
+                                    <p class="text-sm font-bold text-slate-900">Previous session found</p>
+                                    <p class="text-xs text-slate-500">Would you like to restore your last working
+                                        session?
+                                    </p>
                                 </div>
                             </div>
+                            <div class="flex gap-2">
+                                <button id="restoreSessionBtn"
+                                    class="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition-colors shadow-sm">Restore</button>
+                                <button id="dismissSessionBtn"
+                                    class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold hover:bg-slate-200 transition-colors">Dismiss</button>
+                            </div>
+                        </div>
 
-                            <!-- Main Dashboard Content -->
-                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                <!-- Style Matrix (Full Width) -->
-                                <div class="lg:col-span-3">
-                                    <div id="dashboard-matrix" class="glass-card overflow-hidden">
-                                        <!-- Injected by PlanningLogic.renderDashboard -->
-                                    </div>
+                        <!-- File Upload State -->
+                        <div id="uploadState"
+                            class="glass-card p-12 text-center border-dashed border-2 border-slate-300 hover:border-blue-400 transition-colors">
+                            <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner text-slate-600"
+                                style="background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(226, 232, 240, 0.8);">
+                                <i data-lucide="upload-cloud" class="w-10 h-10"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-slate-900 mb-3">Import Production Schedule</h3>
+                            <p class="text-slate-500 mb-8 max-w-md mx-auto">Upload your Excel planning sheet (.xlsx).
+                                The
+                                system will automatically parse Supervisor, Target, and Manpower data.</p>
+
+                            <label
+                                class="relative inline-flex cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl font-bold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-1 transition-all group">
+                                <i data-lucide="file-spreadsheet" class="w-5 h-5 mr-2 group-hover:animate-bounce"></i>
+                                <span>Select Excel File</span>
+                                <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden">
+                            </label>
+
+                            <p id="loadingText"
+                                class="hidden mt-6 text-blue-600 font-bold animate-pulse flex items-center justify-center gap-2">
+                                <i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processing workbook...
+                            </p>
+                        </div>
+
+                        <!-- Suggest Changeover Action Bar (Feature 1) -->
+                        <div id="suggestBar"
+                            class="hidden glass-card p-4 flex flex-col md:flex-row items-center justify-between gap-4 mt-6 border-l-4 border-violet-500 bg-gradient-to-r from-violet-50/80 to-indigo-50/80">
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                                    <i data-lucide="sparkles" class="w-5 h-5 text-white"></i>
                                 </div>
-
-                                <!-- Factory Goals -->
-                                <div class="lg:col-span-1">
-                                    <div id="dashboard-goals"
-                                        class="glass-card h-[500px] flex flex-col overflow-hidden">
-                                        <!-- Injected by PlanningLogic.renderDashboard -->
-                                    </div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-slate-900">Changeover Analysis</h4>
+                                    <p class="text-xs text-slate-500">Status: <span id="suggestStatus"
+                                            class="font-mono text-violet-600">Waiting for data...</span></p>
                                 </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button id="suggestBtn" disabled
+                                    class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-bold shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0">
+                                    <i data-lucide="wand-2" class="w-4 h-4 inline mr-1"></i>
+                                    Analyze & Suggest
+                                </button>
+                            </div>
+                        </div>
 
-                                <!-- Critical Items -->
-                                <div class="lg:col-span-2">
-                                    <div class="glass-card h-[500px] flex flex-col overflow-hidden">
-                                        <div
-                                            class="p-6 border-b border-slate-100 flex justify-between items-center bg-white/50">
-                                            <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                                <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500"></i>
-                                                System Anomalies & Remarks
-                                            </h3>
+
+
+                        <!-- Content Area -->
+                        <div id="contentArea" class="hidden space-y-8">
+
+                            <!-- Dashboard View -->
+                            <div id="view-dashboard" class="view-section space-y-8">
+                                <!-- Stats Grid -->
+                                <div
+                                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 dashboard-grid gap-8 mb-12 animate-[fadeIn_0.5s_ease-out_delay_0.2s]">
+                                    <!-- Stat 1 -->
+                                    <div class="glass-card p-8 flex flex-col justify-between group">
+                                        <div class="flex justify-between items-start mb-4">
+                                            <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm text-slate-600"
+                                                style="background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(226, 232, 240, 0.8);">
+                                                <i data-lucide="package" class="w-5 h-5"></i>
+                                            </div>
+                                            <span
+                                                class="px-2 py-1 rounded-lg text-slate-500 text-[10px] font-bold uppercase tracking-wider"
+                                                style="background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(226, 232, 240, 0.6);">Styles</span>
                                         </div>
-                                        <div class="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar"
-                                            id="anomaly-list">
-                                            <div class="text-slate-400 text-center py-12 italic">
-                                                Upload a file to see anomalies
+                                        <div>
+                                            <h3
+                                                class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">
+                                                Active Styles</h3>
+                                            <p class="text-3xl font-bold text-slate-900" id="stat-styles">0</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Stat 2 -->
+                                    <div class="glass-card p-6 flex flex-col justify-between">
+                                        <div class="flex justify-between items-start mb-4">
+                                            <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm text-slate-600"
+                                                style="background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(226, 232, 240, 0.8);">
+                                                <i data-lucide="target" class="w-5 h-5"></i>
+                                            </div>
+                                            <span
+                                                class="px-2 py-1 rounded-lg text-slate-500 text-[10px] font-bold uppercase tracking-wider"
+                                                style="background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(226, 232, 240, 0.6);">Output</span>
+                                        </div>
+                                        <div>
+                                            <h3
+                                                class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">
+                                                Total Pieces</h3>
+                                            <p class="text-3xl font-bold text-slate-900" id="stat-target">0</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Stat 3 -->
+                                    <div class="glass-card p-6 flex flex-col justify-between">
+                                        <div class="flex justify-between items-start mb-4">
+                                            <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm text-slate-600"
+                                                style="background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(226, 232, 240, 0.8);">
+                                                <i data-lucide="users" class="w-5 h-5"></i>
+                                            </div>
+                                            <span
+                                                class="px-2 py-1 rounded-lg text-slate-500 text-[10px] font-bold uppercase tracking-wider"
+                                                style="background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(226, 232, 240, 0.6);">Labor</span>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1"
+                                                id="stat-manpower-label">Avg Manpower</h3>
+                                            <p class="text-3xl font-bold text-slate-900" id="stat-manpower">0
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Stat 4 (Issues) -->
+                                    <div class="glass-card p-6 flex flex-col justify-between">
+                                        <div class="flex justify-between items-start mb-4">
+                                            <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm text-slate-600"
+                                                style="background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(226, 232, 240, 0.8);">
+                                                <i data-lucide="alert-circle" class="w-5 h-5"></i>
+                                            </div>
+                                            <span
+                                                class="px-2 py-1 rounded-lg text-slate-500 text-[10px] font-bold uppercase tracking-wider"
+                                                style="background: rgba(255, 255, 255, 0.4); border: 1px solid rgba(226, 232, 240, 0.6);">Alerts</span>
+                                        </div>
+                                        <div>
+                                            <h3
+                                                class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">
+                                                Total Issues</h3>
+                                            <p class="text-3xl font-bold text-slate-900" id="anomaly-count">0
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Main Dashboard Content -->
+                                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                    <!-- Style Matrix (Full Width) -->
+                                    <div class="lg:col-span-3">
+                                        <div id="dashboard-matrix" class="glass-card overflow-hidden">
+                                            <!-- Injected by PlanningLogic.renderDashboard -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Factory Goals -->
+                                    <div class="lg:col-span-1">
+                                        <div id="dashboard-goals"
+                                            class="glass-card h-[500px] flex flex-col overflow-hidden">
+                                            <!-- Injected by PlanningLogic.renderDashboard -->
+                                        </div>
+                                    </div>
+
+                                    <!-- Critical Items -->
+                                    <div class="lg:col-span-2">
+                                        <div class="glass-card h-[500px] flex flex-col overflow-hidden">
+                                            <div
+                                                class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 bg-white/50">
+                                                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                                                    <i data-lucide="alert-triangle" class="w-5 h-5 text-amber-500"></i>
+                                                    System Anomalies & Remarks
+                                                </h3>
+                                                <!-- Anomaly Filter Buttons (Feature 3) -->
+                                                <div id="anomalyFilters" class="flex gap-1.5 flex-wrap">
+                                                    <button data-filter="all"
+                                                        class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-900 text-white shadow-lg transition-all">All</button>
+                                                    <button data-filter="critical"
+                                                        class="px-3 py-1 rounded-lg text-xs font-bold bg-white/60 text-slate-600 hover:bg-red-50 hover:text-red-600 transition-all">🔴
+                                                        Critical</button>
+                                                    <button data-filter="warning"
+                                                        class="px-3 py-1 rounded-lg text-xs font-bold bg-white/60 text-slate-600 hover:bg-amber-50 hover:text-amber-600 transition-all">🟠
+                                                        Warnings</button>
+                                                    <button data-filter="info"
+                                                        class="px-3 py-1 rounded-lg text-xs font-bold bg-white/60 text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-all">🔵
+                                                        Info</button>
+                                                </div>
+                                            </div>
+                                            <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar"
+                                                data-lenis-prevent id="anomaly-list">
+                                                <div class="text-slate-400 text-center py-12 italic">
+                                                    Upload a file to see anomalies
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Timeline View -->
-                        <div id="view-timeline" class="view-section hidden">
-                            <div class="glass-card p-8 overflow-hidden">
-                                <h3 class="text-xl font-bold text-slate-900 mb-6">Production Timeline</h3>
-                                <div class="overflow-x-auto pb-4 custom-scrollbar">
-                                    <div id="timeline-container" class="min-w-max"></div>
+                            <!-- Timeline View -->
+                            <div id="view-timeline" class="view-section hidden">
+                                <div class="glass-card p-8 overflow-hidden">
+                                    <h3 class="text-xl font-bold text-slate-900 mb-6">Production Timeline</h3>
+                                    <div class="overflow-x-auto pb-4 custom-scrollbar">
+                                        <div id="timeline-container" class="min-w-max"></div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <!-- Grid View -->
-                        <div id="view-grid" class="view-section hidden">
-                            <div class="glass-card p-8 overflow-hidden">
-                                <h3 class="text-xl font-bold text-slate-900 mb-6">Detailed Grid</h3>
-                                <div class="overflow-x-auto">
-                                    <table class="data-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Line / Supervisor</th>
-                                                <th>Style</th>
-                                                <th>Current Running</th>
-                                                <th class="text-right">Target</th>
-                                                <th class="text-right">Manpower</th>
-                                                <th>Dates</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="grid-body">
-                                            <!-- Injected -->
-                                        </tbody>
-                                    </table>
+                            <!-- Grid View -->
+                            <div id="view-grid" class="view-section hidden">
+                                <div class="glass-card p-8 overflow-hidden">
+                                    <h3 class="text-xl font-bold text-slate-900 mb-6">Detailed Grid</h3>
+                                    <div class="overflow-x-auto">
+                                        <table class="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Line / Supervisor</th>
+                                                    <th>Style</th>
+                                                    <th>Current Running</th>
+                                                    <th class="text-right">Target</th>
+                                                    <th class="text-right">Manpower</th>
+                                                    <th>Dates</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="grid-body">
+                                                <!-- Injected -->
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
+
                         </div>
-
-                    </div>
-                </div>
-            </div>
-
-
-            <!-- Footer -->
-            <footer
-                class="mt-auto py-8 px-6 border-t border-slate-200/30 relative z-10 bg-white/30 backdrop-blur-md -mx-6 -mb-32">
-                <div class="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-                    <p class="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase">© 2026 MANUFACTURING
-                        EXCELLENCE SYSTEM</p>
-                    <div class="flex gap-6">
-                        <a href="#" class="text-slate-400 hover:text-blue-500 transition-colors"><i data-lucide="github"
-                                class="w-4 h-4"></i></a>
-                        <a href="#" class="text-slate-400 hover:text-blue-500 transition-colors"><i
-                                data-lucide="twitter" class="w-4 h-4"></i></a>
-                        <a href="#" class="text-slate-400 hover:text-blue-500 transition-colors"><i data-lucide="mail"
-                                class="w-4 h-4"></i></a>
-                    </div>
-                </div>
-            </footer>
-        </div>
-    </div>
-
-
-
-    <!-- Modal Overlay -->
-    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
-
-    <!-- Detail Modal -->
-    <div class="modal" id="styleModal">
-        <div class="p-8">
-            <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h2 class="text-2xl font-bold text-slate-900" id="modal-title">Style Details</h2>
-                    <p class="text-sm text-slate-500 mt-1" id="modal-subtitle">View production info</p>
-                </div>
-                <button onclick="closeModal()"
-                    class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
-                    <i data-lucide="x" class="w-5 h-5 text-slate-600"></i>
-                </button>
-            </div>
-
-            <div class="space-y-6">
-                <!-- Info Grid -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                        <span class="block text-slate-400 text-xs font-bold uppercase mb-1">Supervisor</span>
-                        <span class="font-bold text-slate-900" id="modal-supervisor">-</span>
-                    </div>
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                        <span class="block text-slate-400 text-xs font-bold uppercase mb-1">Unit</span>
-                        <span class="font-bold text-slate-900" id="modal-unit">-</span>
                     </div>
                 </div>
 
-                <!-- Metrics -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
-                        <span class="block text-emerald-600 text-xs font-bold uppercase mb-1">Total Target</span>
-                        <span class="font-mono text-2xl font-bold text-emerald-900" id="modal-target">0</span>
-                    </div>
-                    <div class="bg-orange-50 p-4 rounded-xl border border-orange-100">
-                        <span class="block text-orange-600 text-xs font-bold uppercase mb-1">Manpower</span>
-                        <span class="font-mono text-2xl font-bold text-orange-900" id="modal-manpower">0</span>
-                    </div>
-                </div>
 
-                <!-- Daily Table -->
-                <div>
-                    <h4 class="text-xs font-bold uppercase text-slate-400 mb-3">Daily Breakdown</h4>
-                    <div class="border border-slate-200 rounded-xl overflow-hidden">
-                        <table class="w-full text-sm">
-                            <thead class="bg-slate-50 text-slate-500">
-                                <tr>
-                                    <th class="px-4 py-3 text-left font-semibold">Date</th>
-                                    <th class="px-4 py-3 text-right font-semibold">Target</th>
-                                    <th class="px-4 py-3 text-right font-semibold">MP</th>
-                                </tr>
-                            </thead>
-                            <tbody id="modal-daily-table" class="divide-y divide-slate-100"></tbody>
-                        </table>
+                <!-- Footer -->
+                <footer
+                    class="mt-auto py-8 px-6 border-t border-slate-200/30 relative z-10 bg-white/30 backdrop-blur-md -mx-6 -mb-32">
+                    <div class="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                        <p class="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase">© 2026 MANUFACTURING
+                            EXCELLENCE SYSTEM</p>
+                        <div class="flex gap-6">
+                            <a href="#" class="text-slate-400 hover:text-blue-500 transition-colors"><i
+                                    data-lucide="github" class="w-4 h-4"></i></a>
+                            <a href="#" class="text-slate-400 hover:text-blue-500 transition-colors"><i
+                                    data-lucide="twitter" class="w-4 h-4"></i></a>
+                            <a href="#" class="text-slate-400 hover:text-blue-500 transition-colors"><i
+                                    data-lucide="mail" class="w-4 h-4"></i></a>
+                        </div>
                     </div>
-                </div>
+                </footer>
             </div>
         </div>
-    </div>
 
-    <!-- Toast Container -->
-    <div id="toastContainer" class="fixed top-24 right-6 z-50 flex flex-col gap-2"></div>
 
-    <!-- Logic Script -->
-    <script type="module" src="../js/planning-logic.js"></script>
 
-    <!-- Page Scripts -->
-    <script>
-        // --- Navigation System ---
-        // Standardized Navigation System
-        class NavigationSystem {
-            constructor() {
-                this.isOpen = false;
-                this.init();
-            }
+        <!-- Modal Overlay -->
+        <div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
 
-            init() {
-                this.toggleBtn = document.getElementById('navToggle');
-                this.sidebar = document.getElementById('appSidebar');
-                this.backdrop = document.getElementById('navBackdrop');
-                this.body = document.body;
+        <!-- Detail Modal -->
+        <div class="modal" id="styleModal">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900" id="modal-title">Style Details</h2>
+                        <p class="text-sm text-slate-500 mt-1" id="modal-subtitle">View production info</p>
+                    </div>
+                    <button onclick="closeModal()"
+                        class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
+                        <i data-lucide="x" class="w-5 h-5 text-slate-600"></i>
+                    </button>
+                </div>
 
-                this.setupEventListeners();
-                this.resolveActiveState();
-                this.setupScrollableNav();
-            }
+                <div class="space-y-6">
+                    <!-- Info Grid -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <span class="block text-slate-400 text-xs font-bold uppercase mb-1">Supervisor</span>
+                            <span class="font-bold text-slate-900" id="modal-supervisor">-</span>
+                        </div>
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <span class="block text-slate-400 text-xs font-bold uppercase mb-1">Unit</span>
+                            <span class="font-bold text-slate-900" id="modal-unit">-</span>
+                        </div>
+                    </div>
 
-            setupEventListeners() {
-                if (this.toggleBtn) {
-                    this.toggleBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        this.toggleSidebar();
-                    });
+                    <!-- Metrics -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-emerald-50 p-4 rounded-xl border border-emerald-100">
+                            <span class="block text-emerald-600 text-xs font-bold uppercase mb-1">Total Target</span>
+                            <span class="font-mono text-2xl font-bold text-emerald-900" id="modal-target">0</span>
+                        </div>
+                        <div class="bg-orange-50 p-4 rounded-xl border border-orange-100">
+                            <span class="block text-orange-600 text-xs font-bold uppercase mb-1">Manpower</span>
+                            <span class="font-mono text-2xl font-bold text-orange-900" id="modal-manpower">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Daily Table -->
+                    <div>
+                        <h4 class="text-xs font-bold uppercase text-slate-400 mb-3">Daily Breakdown</h4>
+                        <div class="border border-slate-200 rounded-xl overflow-hidden">
+                            <table class="w-full text-sm">
+                                <thead class="bg-slate-50 text-slate-500">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left font-semibold">Date</th>
+                                        <th class="px-4 py-3 text-right font-semibold">Target</th>
+                                        <th class="px-4 py-3 text-right font-semibold">MP</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modal-daily-table" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Container -->
+        <div id="toastContainer" class="fixed top-24 right-6 z-50 flex flex-col gap-2"></div>
+
+        <!-- Changeover Suggestions Modal (Feature 2) -->
+        <div class="modal-overlay" id="suggestionsOverlay" onclick="window.PlanningLogic.closeSuggestionsModal()"></div>
+        <div class="modal" id="suggestionsModal" style="max-width: 1100px;">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">Changeover Suggestions</h2>
+                        <p class="text-sm text-slate-500 mt-1">AI-powered changeover date recommendations</p>
+                    </div>
+                    <button onclick="window.PlanningLogic.closeSuggestionsModal()"
+                        class="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
+                        <i data-lucide="x" class="w-5 h-5 text-slate-600"></i>
+                    </button>
+                </div>
+
+                <!-- Suggestions Table -->
+                <!-- data-lenis-prevent stops Lenis smooth scrolling from hijacking internal scroll -->
+                <div class="overflow-y-auto max-h-[60vh] rounded-2xl border border-slate-200" data-lenis-prevent>
+                    <table class="w-full text-left text-sm whitespace-nowrap lg:whitespace-normal">
+                        <thead class="bg-slate-50 text-slate-500 sticky top-0 z-10 shadow-sm">
+                            <tr>
+                                <th class="p-3 font-bold text-[10px] uppercase tracking-widest">Line</th>
+                                <th class="p-3 font-bold text-[10px] uppercase tracking-widest">From → To</th>
+                                <th class="p-3 font-bold text-[10px] uppercase tracking-widest">Suggested Date</th>
+                                <th class="p-3 font-bold text-[10px] uppercase tracking-widest">Reason</th>
+                                <th class="p-3 font-bold text-[10px] uppercase tracking-widest">Confidence</th>
+                                <th class="p-3 font-bold text-[10px] uppercase tracking-widest">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="suggestionsTableBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Column Mapping Overlay (Feature 5) -->
+        <div id="columnMappingOverlay"
+            class="hidden fixed inset-0 z-[1005] bg-black/40 backdrop-blur-sm flex items-center justify-center">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 p-8 animate-[fadeIn_0.3s_ease-out]">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                        <i data-lucide="columns" class="w-5 h-5 text-amber-600"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Column Mapping Required</h3>
+                        <p class="text-xs text-slate-500">We couldn't auto-detect columns. Please map them manually.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4 mb-6">
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Supervisor Column
+                            (A=0)</label>
+                        <select id="mapSupervisor"
+                            class="w-full mt-1 p-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="0">Column A (0)</option>
+                            <option value="1">Column B (1)</option>
+                            <option value="2">Column C (2)</option>
+                            <option value="3">Column D (3)</option>
+                            <option value="4">Column E (4)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Style Column</label>
+                        <select id="mapStyle"
+                            class="w-full mt-1 p-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="1">Column B (1)</option>
+                            <option value="0">Column A (0)</option>
+                            <option value="2">Column C (2)</option>
+                            <option value="3">Column D (3)</option>
+                            <option value="4">Column E (4)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Plan Data Starts At
+                            Column</label>
+                        <select id="mapPlanStart"
+                            class="w-full mt-1 p-2.5 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="10">Column K (10)</option>
+                            <option value="5">Column F (5)</option>
+                            <option value="6">Column G (6)</option>
+                            <option value="7">Column H (7)</option>
+                            <option value="8">Column I (8)</option>
+                            <option value="9">Column J (9)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button id="applyMappingBtn"
+                        class="flex-1 px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 transition-colors shadow-sm">
+                        Apply & Re-parse
+                    </button>
+                    <button id="cancelMappingBtn"
+                        class="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-sm font-bold hover:bg-slate-200 transition-colors">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logic Script -->
+        <script type="module" src="../js/planning-logic.js"></script>
+
+        <!-- Page Scripts -->
+        <script>
+            // --- Navigation System ---
+            // Standardized Navigation System
+            class NavigationSystem {
+                constructor() {
+                    this.isOpen = false;
+                    this.init();
                 }
 
-                if (this.backdrop) {
-                    this.backdrop.addEventListener('click', (e) => {
-                        if (e.target === this.backdrop) this.closeSidebar();
-                    });
+                init() {
+                    this.toggleBtn = document.getElementById('navToggle');
+                    this.sidebar = document.getElementById('appSidebar');
+                    this.backdrop = document.getElementById('navBackdrop');
+                    this.body = document.body;
 
-                    this.backdrop.addEventListener('touchstart', (e) => {
-                        if (e.target === this.backdrop) this.closeSidebar();
-                    }, { passive: true });
+                    this.setupEventListeners();
+                    this.resolveActiveState();
+                    this.setupScrollableNav();
                 }
 
-                if (this.sidebar) {
-                    this.sidebar.querySelectorAll('a').forEach(link => {
-                        link.addEventListener('click', () => this.closeSidebar());
-                    });
-                }
-
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape' && this.isOpen) this.closeSidebar();
-                });
-            }
-
-            toggleSidebar() {
-                this.isOpen ? this.closeSidebar() : this.openSidebar();
-            }
-
-            openSidebar() {
-                this.isOpen = true;
-                this.sidebar?.classList.add('open');
-                this.toggleBtn?.classList.add('open');
-                this.backdrop?.classList.add('active');
-                this.body.style.overflow = 'hidden';
-            }
-
-            closeSidebar() {
-                this.isOpen = false;
-                this.sidebar?.classList.remove('open');
-                this.toggleBtn?.classList.remove('open');
-                this.backdrop?.classList.remove('active');
-                this.body.style.overflow = '';
-            }
-
-            resolveActiveState() {
-                const currentPath = window.location.pathname;
-                const filename = currentPath.split('/').pop() || 'index.html';
-                document.querySelectorAll('.nav-item').forEach(item => {
-                    item.classList.remove('active');
-                    const href = item.getAttribute('href');
-                    if (href && (filename === href.split('/').pop())) {
-                        item.classList.add('active');
+                setupEventListeners() {
+                    if (this.toggleBtn) {
+                        this.toggleBtn.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            this.toggleSidebar();
+                        });
                     }
-                });
-            }
 
-            setupScrollableNav() {
-                const nav = this.sidebar?.querySelector('nav');
-                if (nav) {
-                    this.sidebar.addEventListener('touchmove', (e) => {
-                        if (this.isOpen) e.stopPropagation();
-                    }, { passive: false });
+                    if (this.backdrop) {
+                        this.backdrop.addEventListener('click', (e) => {
+                            if (e.target === this.backdrop) this.closeSidebar();
+                        });
+
+                        this.backdrop.addEventListener('touchstart', (e) => {
+                            if (e.target === this.backdrop) this.closeSidebar();
+                        }, { passive: true });
+                    }
+
+                    if (this.sidebar) {
+                        this.sidebar.querySelectorAll('a').forEach(link => {
+                            link.addEventListener('click', () => this.closeSidebar());
+                        });
+                    }
+
+                    document.addEventListener('keydown', (e) => {
+                        if (e.key === 'Escape' && this.isOpen) this.closeSidebar();
+                    });
+                }
+
+                toggleSidebar() {
+                    this.isOpen ? this.closeSidebar() : this.openSidebar();
+                }
+
+                openSidebar() {
+                    this.isOpen = true;
+                    this.sidebar?.classList.add('open');
+                    this.toggleBtn?.classList.add('open');
+                    this.backdrop?.classList.add('active');
+                    this.body.style.overflow = 'hidden';
+                }
+
+                closeSidebar() {
+                    this.isOpen = false;
+                    this.sidebar?.classList.remove('open');
+                    this.toggleBtn?.classList.remove('open');
+                    this.backdrop?.classList.remove('active');
+                    this.body.style.overflow = '';
+                }
+
+                resolveActiveState() {
+                    const currentPath = window.location.pathname;
+                    const filename = currentPath.split('/').pop() || 'index.html';
+                    document.querySelectorAll('.nav-item').forEach(item => {
+                        item.classList.remove('active');
+                        const href = item.getAttribute('href');
+                        if (href && (filename === href.split('/').pop())) {
+                            item.classList.add('active');
+                        }
+                    });
+                }
+
+                setupScrollableNav() {
+                    const nav = this.sidebar?.querySelector('nav');
+                    if (nav) {
+                        this.sidebar.addEventListener('touchmove', (e) => {
+                            if (this.isOpen) e.stopPropagation();
+                        }, { passive: false });
+                    }
                 }
             }
-        }
 
-        function handleLogout() {
-            localStorage.removeItem('qcoCurrentUser');
-            window.location.href = '../index.html';
-        }
-
-        // Animations & Init
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. Instant Reveal
-            gsap.to("#mainApp", { opacity: 1, y: 0, duration: 0.8, ease: "power3.out", delay: 0.2 });
-
-            // 2. Initialize Navigation
-            if (!window.navSystem) {
-                window.navSystem = new NavigationSystem();
+            function handleLogout() {
+                localStorage.removeItem('qcoCurrentUser');
+                window.location.href = '../index.html';
             }
 
-            // 3. Mobile Init
-            if (window.initMobileBehavior) window.initMobileBehavior();
+            // Animations & Init
+            document.addEventListener('DOMContentLoaded', () => {
+                // 1. Instant Reveal
+                gsap.to("#mainApp", { opacity: 1, y: 0, duration: 0.8, ease: "power3.out", delay: 0.2 });
 
-            // 4. Lenis Init
-            const lenis = new Lenis({
-                wrapper: document.getElementById('appContent'),
-                content: document.getElementById('mainApp'),
-                duration: 1.2,
-                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-                smoothWheel: true,
-                smoothTouch: false,
-                touchMultiplier: 1.5,
-                topOffset: 0
+                // 2. Initialize Navigation
+                if (!window.navSystem) {
+                    window.navSystem = new NavigationSystem();
+                }
+
+                // 3. Mobile Init
+                if (window.initMobileBehavior) window.initMobileBehavior();
+
+                // 4. Lenis Init
+                const lenis = new Lenis({
+                    wrapper: document.getElementById('appContent'),
+                    content: document.getElementById('mainApp'),
+                    duration: 1.2,
+                    easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                    smoothWheel: true,
+                    smoothTouch: false,
+                    touchMultiplier: 1.5,
+                    topOffset: 0
+                });
+                function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+                requestAnimationFrame(raf);
+
+                // Scroll State
+                let isScrolling;
+                document.getElementById('appContent').addEventListener('scroll', () => {
+                    document.body.classList.add('is-scrolling');
+                    clearTimeout(isScrolling);
+                    isScrolling = setTimeout(() => {
+                        document.body.classList.remove('is-scrolling');
+                    }, 150);
+                }, { passive: true });
+
+                // Check Auth
+                if (currentUser) {
+                    const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+                    document.querySelectorAll('.user-initials-display').forEach(el => el.textContent = initials);
+                    document.querySelectorAll('.user-name-display').forEach(el => el.textContent = currentUser.name);
+                    document.querySelectorAll('.user-role-display').forEach(el => el.textContent = (currentUser.role || 'Member').toUpperCase());
+                }
             });
-            function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
-            requestAnimationFrame(raf);
 
-            // Scroll State
-            let isScrolling;
-            document.getElementById('appContent').addEventListener('scroll', () => {
-                document.body.classList.add('is-scrolling');
-                clearTimeout(isScrolling);
-                isScrolling = setTimeout(() => {
-                    document.body.classList.remove('is-scrolling');
-                }, 150);
-            }, { passive: true });
+            // Modal Logic
+            window.closeModal = () => {
+                const modal = document.getElementById('styleModal');
+                const overlay = document.getElementById('modalOverlay');
+                modal.classList.remove('active');
+                overlay.classList.remove('active');
+            };
 
-            // Check Auth
-            if (currentUser) {
-                const initials = currentUser.name.split(' ').map(n => n[0]).join('').substring(0, 2);
-                document.querySelectorAll('.user-initials-display').forEach(el => el.textContent = initials);
-                document.querySelectorAll('.user-name-display').forEach(el => el.textContent = currentUser.name);
-                document.querySelectorAll('.user-role-display').forEach(el => el.textContent = (currentUser.role || 'Member').toUpperCase());
-            }
-        });
+            // Setup Cursor
+            const cursorDot = document.querySelector('.cursor-dot');
+            const cursorOutline = document.querySelector('.cursor-outline');
 
-        // Modal Logic
-        window.closeModal = () => {
-            const modal = document.getElementById('styleModal');
-            const overlay = document.getElementById('modalOverlay');
-            modal.classList.remove('active');
-            overlay.classList.remove('active');
-        };
+            document.body.classList.add('custom-cursor-active');
 
-        // Setup Cursor
-        const cursorDot = document.querySelector('.cursor-dot');
-        const cursorOutline = document.querySelector('.cursor-outline');
+            window.addEventListener('mousemove', (e) => {
+                const posX = e.clientX;
+                const posY = e.clientY;
 
-        document.body.classList.add('custom-cursor-active');
+                cursorDot.style.left = `${posX}px`;
+                cursorDot.style.top = `${posY}px`;
 
-        window.addEventListener('mousemove', (e) => {
-            const posX = e.clientX;
-            const posY = e.clientY;
+                // Animate outline with delay
+                cursorOutline.animate({
+                    left: `${posX}px`,
+                    top: `${posY}px`
+                }, { duration: 500, fill: "forwards" });
+            });
 
-            cursorDot.style.left = `${posX}px`;
-            cursorDot.style.top = `${posY}px`;
-
-            // Animate outline with delay
-            cursorOutline.animate({
-                left: `${posX}px`,
-                top: `${posY}px`
-            }, { duration: 500, fill: "forwards" });
-        });
-
-        if (window.lucide) lucide.createIcons();
-    </script>
+            if (window.lucide) lucide.createIcons();
+        </script>
 </body>
 
 </html>

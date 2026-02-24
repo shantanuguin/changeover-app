@@ -1055,6 +1055,17 @@
 
                     // Specific schedule logic
                     setTimeout(initBackendControls, 1000);
+
+                    // Parse URL parameters for direct search integration
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const query = urlParams.get('q');
+                    if (query) {
+                        const searchInput = document.getElementById('qcoSearch');
+                        if (searchInput) {
+                            searchInput.value = query;
+                            handleSearch({ target: { value: query } });
+                        }
+                    }
                 } catch (e) {
                     console.error("Delayed data error:", e);
                 }
