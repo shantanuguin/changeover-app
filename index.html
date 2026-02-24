@@ -778,38 +778,79 @@
                     <div id="dashboardGrid"
                         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-40 relative z-10">
 
-                        <!-- Home -->
-                        <a href="#"
-                            class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
+                        <!-- Outside -->
+                        <div
+                            class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm overflow-hidden block h-full">
                             <div
                                 class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
                             </div>
                             <div
-                                class="absolute top-0 right-0 w-32 h-32 bg-slate-500/10 rounded-bl-[4rem] -mr-8 -mt-8 group-hover:scale-125 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                                class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-bl-[4rem] -mr-8 -mt-8">
                             </div>
 
                             <div class="relative z-10 h-full flex flex-col">
                                 <div
-                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-slate-600 mb-6 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
-                                    <i data-lucide="home" class="w-7 h-7"></i>
+                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-emerald-600 mb-4 shadow-sm border border-slate-100">
+                                    <i data-lucide="external-link" class="w-7 h-7"></i>
                                 </div>
-                                <h3
-                                    class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-slate-600 transition-colors">
-                                    Home</h3>
-                                <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">Central hub for
-                                    accessing
-                                    all
-                                    portal modules and resources.</p>
+                                <h3 class="text-2xl font-bold text-slate-900 mb-2">
+                                    Outside</h3>
+                                <p class="text-slate-500 text-xs leading-relaxed mb-5">External standalone modules for
+                                    field operations.</p>
 
-                                <div class="flex items-center justify-between mt-auto">
-                                    <span
-                                        class="flex items-center text-sm font-bold text-slate-900 group-hover:translate-x-2 transition-transform duration-300">
-                                        Return Home <i data-lucide="arrow-right"
-                                            class="ml-2 w-4 h-4 text-slate-500"></i>
-                                    </span>
+                                <div class="flex flex-col gap-3 mt-auto">
+                                    <!-- Changeover Checklist -->
+                                    <a href="outside/outlist.html"
+                                        class="flex items-center gap-3 p-3 rounded-xl bg-white/70 border border-slate-100 hover:border-blue-300 hover:shadow-md hover:bg-white transition-all duration-300 group/sub">
+                                        <div
+                                            class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0 group-hover/sub:scale-110 transition-transform">
+                                            <i data-lucide="clipboard-check" class="w-4 h-4"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-bold text-slate-800 leading-tight">Changeover
+                                                Checklist</p>
+                                            <p class="text-[11px] text-slate-400 leading-tight mt-0.5">Department task
+                                                tracking</p>
+                                        </div>
+                                        <i data-lucide="chevron-right"
+                                            class="w-4 h-4 text-slate-300 group-hover/sub:text-blue-500 group-hover/sub:translate-x-1 transition-all flex-shrink-0"></i>
+                                    </a>
+
+                                    <!-- Operations Recorder -->
+                                    <a href="outside/outorder.html"
+                                        class="flex items-center gap-3 p-3 rounded-xl bg-white/70 border border-slate-100 hover:border-amber-300 hover:shadow-md hover:bg-white transition-all duration-300 group/sub">
+                                        <div
+                                            class="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 flex-shrink-0 group-hover/sub:scale-110 transition-transform">
+                                            <i data-lucide="stop-circle" class="w-4 h-4"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-bold text-slate-800 leading-tight">Operations
+                                                Recorder</p>
+                                            <p class="text-[11px] text-slate-400 leading-tight mt-0.5">Track operation
+                                                timings</p>
+                                        </div>
+                                        <i data-lucide="chevron-right"
+                                            class="w-4 h-4 text-slate-300 group-hover/sub:text-amber-500 group-hover/sub:translate-x-1 transition-all flex-shrink-0"></i>
+                                    </a>
+
+                                    <!-- Live Monitor -->
+                                    <a href="outside/change.html"
+                                        class="flex items-center gap-3 p-3 rounded-xl bg-white/70 border border-slate-100 hover:border-emerald-300 hover:shadow-md hover:bg-white transition-all duration-300 group/sub">
+                                        <div
+                                            class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 flex-shrink-0 group-hover/sub:scale-110 transition-transform">
+                                            <i data-lucide="monitor" class="w-4 h-4"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-bold text-slate-800 leading-tight">Live Monitor</p>
+                                            <p class="text-[11px] text-slate-400 leading-tight mt-0.5">Real-time
+                                                changeover view</p>
+                                        </div>
+                                        <i data-lucide="chevron-right"
+                                            class="w-4 h-4 text-slate-300 group-hover/sub:text-emerald-500 group-hover/sub:translate-x-1 transition-all flex-shrink-0"></i>
+                                    </a>
                                 </div>
                             </div>
-                        </a>
+                        </div>
 
                         <!-- Dashboard -->
                         <a href="pages/dashboard.html"
