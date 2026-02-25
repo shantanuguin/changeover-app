@@ -3169,6 +3169,45 @@
                     return qco.status === 'in-progress' ? 'in-progress' : 'pending';
                 }
 
+                /**
+                 * Returns the most recent meaningful date for a changeover.
+                 * Checks: completedAt, latest operation timing, then falls back to createdAt.
+                 */
+                function getRelevantDate(qco) {
+                    const candidates = [];
+
+                    // 1. createdAt (always present)
+                    if (qco.createdAt) {
+                        const d = qco.createdAt?.toDate?.() || new Date(qco.createdAt);
+                        if (!isNaN(d)) candidates.push(d);
+                    }
+
+                    // 2. completedAt
+                    if (qco.completedAt) {
+                        const d = qco.completedAt?.toDate?.() || new Date(qco.completedAt);
+                        if (!isNaN(d)) candidates.push(d);
+                    }
+
+                    // 3. Latest operation timing (start or end)
+                    const timings = qco.operationTimings || {};
+                    for (const key of Object.keys(timings)) {
+                        const t = timings[key];
+                        if (t.end) {
+                            const d = new Date(t.end);
+                            if (!isNaN(d)) candidates.push(d);
+                        }
+                        if (t.start) {
+                            const d = new Date(t.start);
+                            if (!isNaN(d)) candidates.push(d);
+                        }
+                    }
+
+                    // Return the most recent date, or epoch as absolute fallback
+                    return candidates.length > 0
+                        ? new Date(Math.max(...candidates.map(d => d.getTime())))
+                        : new Date(0);
+                }
+
                 function getFilteredDashboardData(searchQuery = '') {
                     let data = allChangeovers;
 
@@ -3198,12 +3237,13 @@
                     const cutoffDate = getTimeRangeCutoff();
                     if (cutoffDate) {
                         data = data.filter(qco => {
-                            const qcoDate = qco.createdAt?.toDate?.() || new Date(qco.createdAt);
+                            // Use the most recent activity date instead of just createdAt
+                            const relevantDate = getRelevantDate(qco);
                             if (customDateEnd) {
                                 // Custom range: check both start and end
-                                return qcoDate >= cutoffDate && qcoDate <= customDateEnd;
+                                return relevantDate >= cutoffDate && relevantDate <= customDateEnd;
                             }
-                            return qcoDate >= cutoffDate;
+                            return relevantDate >= cutoffDate;
                         });
                     }
 
