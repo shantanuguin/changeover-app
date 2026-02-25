@@ -916,7 +916,17 @@
                 return;
             }
 
-            const sorted = getSortedOperations(operations, timings);
+            let sorted = getSortedOperations(operations, timings);
+
+            // If the changeover is fully completed, hide unrecorded operations
+            if (data.status === 'completed') {
+                sorted = sorted.filter(e => e.timing && e.timing.start);
+            }
+
+            if (!sorted.length) {
+                section.classList.add('hidden');
+                return;
+            }
 
             section.classList.remove('hidden');
             list.innerHTML = sorted.map((entry, index) => {
@@ -1032,7 +1042,18 @@
             }
 
             // Sort by recording order (same helper as operations log)
-            const sorted = getSortedOperations(operations, timings);
+            let sorted = getSortedOperations(operations, timings);
+
+            // If the changeover is fully completed, hide unrecorded operations from timeline
+            if (data.status === 'completed') {
+                sorted = sorted.filter(e => e.timing && e.timing.start);
+            }
+
+            if (!sorted.length) {
+                section.classList.add('hidden');
+                return;
+            }
+
             section.classList.remove('hidden');
 
             // --- Sliding Window Logic ---

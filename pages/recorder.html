@@ -862,11 +862,19 @@
         };
         // Initialize
         let db, auth;
+        let currentUser = null;
         let currentQCOId = null;
         let currentQCOData = null;
         let currentLineSchedule = null;
         let shiftMode = "day"; // Default
         const allChangeovers = []; // For dropdown population
+
+        // Immediate Auth Check & Init
+        try {
+            currentUser = JSON.parse(localStorage.getItem('qcoCurrentUser') || 'null');
+        } catch (e) {
+            console.error("Auth init error:", e);
+        }
 
         const RAW_LINE_SCHEDULES = {
             "S-01": { supervisor: "WASANA-1", breaks: [{ start: "09:30", end: "09:45" }, { start: "12:30", end: "13:00" }, { start: "16:45", end: "17:00" }] },
@@ -998,7 +1006,7 @@
                 const btn = document.getElementById('markCompletedBtn');
                 if (btn) {
                     btn.disabled = true;
-                    btn.innerHTML = '<i data-lucide="check-circle-2" class="w-6 h-6"></i> Changeover Completed';
+                    btn.innerHTML = `<i data-lucide="check-circle-2" class="w-6 h-6"></i> Changeover Completed (${completed}/${total} recorded)`;
                     lucide.createIcons();
                 }
             } else if (status === 'in-progress' || completed > 0) {
@@ -1191,8 +1199,7 @@
             }, { passive: true });
 
             // 5. Auth & Firebase Sequence
-            const user = JSON.parse(localStorage.getItem('qcoCurrentUser'));
-            if (!user) {
+            if (!currentUser) {
                 window.location.href = '../index.html';
                 return;
             }
@@ -1210,12 +1217,14 @@
             await new Promise(resolve => {
                 const unsubscribe = auth.onAuthStateChanged(u => {
                     if (u) {
-                        localStorage.setItem('qcoCurrentUser', JSON.stringify({
+                        const sessionUser = {
                             uid: u.uid,
                             name: u.displayName || 'User',
                             email: u.email,
-                            role: user.role || 'Member'
-                        }));
+                            role: currentUser?.role || 'Member'
+                        };
+                        currentUser = sessionUser;
+                        localStorage.setItem('qcoCurrentUser', JSON.stringify(sessionUser));
                     }
                     updateUserUI();
                     unsubscribe();
