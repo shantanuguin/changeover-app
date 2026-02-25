@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Style Repository | Smart QCO System</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://unpkg.com/lenis@1.1.2/dist/lenis.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], heading: ['Poppins', 'sans-serif'] },
+                    colors: { brand: { 50: '#f0f9ff', 500: '#0ea5e9', 900: '#0c4a6e' } },
+                    animation: { 'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        #appContent {
+            transform: translateZ(0);
+            will-change: transform;
+            backface-visibility: hidden;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
+        }
+
+        body.is-scrolling .glass,
+        body.is-scrolling .glass-card {
+            backdrop-filter: none;
+            transition: backdrop-filter 0.3s ease;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+
+            .glass,
+            .glass-card {
+                backdrop-filter: none !important;
+                background: rgba(255, 255, 255, 0.95) !important;
+            }
+
+            .animate-blob {
+                animation: none !important;
+                opacity: 0.05 !important;
+            }
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 2rem;
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.05);
+            transform-style: preserve-3d;
+            will-change: transform;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #0ea5e9;
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s;
+        }
+
+        .cursor-outline {
+            width: 32px;
+            height: 32px;
+            border: 2px solid rgba(14, 165, 233, 0.3);
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transition: transform 0.15s;
+        }
+
+        /* Navigation Styles */
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            padding: 0 1rem;
+        }
+
+        .section-header::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(to right, rgba(148, 163, 184, 0.3), transparent);
+            margin-left: 0.75rem;
+        }
+
+        .nav-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(8px);
+            z-index: 40;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-backdrop.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .retractable-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 280px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.98));
+            backdrop-filter: blur(20px);
+            z-index: 50;
+            transform: translateX(-100%);
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
+            will-change: transform;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .retractable-sidebar.open {
+            transform: translateX(0);
+        }
+
+        .nav-item.active {
+            background: rgba(14, 165, 233, 0.08);
+            color: #0284c7;
+            font-weight: 700;
+        }
+
+        .nav-item.active i {
+            color: #0ea5e9;
+        }
+
+        /* Hamburger */
+        #appHeader .hamburger-btn {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 0.375rem;
+            width: 3rem;
+            height: 3rem;
+            padding: 0.75rem;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.8));
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 4px 16px -2px rgba(14, 165, 233, 0.1), 0 2px 8px -1px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .hamburger-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+        }
+
+        .hamburger-line {
+            width: 100%;
+            height: 0.15625rem;
+            background: linear-gradient(90deg, #0ea5e9, #06b6d4);
+            border-radius: 0.125rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: center;
+        }
+
+        .hamburger-btn.open .hamburger-line:nth-child(1) {
+            transform: translateY(0.25rem) rotate(45deg);
+            background: linear-gradient(90deg, #0284c7, #0891b2);
+        }
+
+        .hamburger-btn.open .hamburger-line:nth-child(2) {
+            transform: translateY(-0.25rem) rotate(-45deg);
+            background: linear-gradient(90deg, #0284c7, #0891b2);
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid #fff;
+            width: 1rem;
+            height: 1rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Detail Grid */
+        .detail-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #94a3b8;
+            margin-bottom: 2px;
+        }
+
+        .detail-value {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        /* Daily Output Table */
+        .output-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .output-table thead th {
+            position: sticky;
+            top: 0;
+            background: rgba(248, 250, 252, 0.95);
+            backdrop-filter: blur(8px);
+            padding: 12px 16px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #64748b;
+            text-align: left;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .output-table tbody td {
+            padding: 10px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.875rem;
+            vertical-align: middle;
+        }
+
+        .output-table tbody tr:hover td {
+            background: rgba(14, 165, 233, 0.03);
+        }
+
+        .output-table input[type="number"] {
+            width: 100px;
+            padding: 6px 10px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .output-table input[type="number"]:focus {
+            outline: none;
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+        }
+
+        /* Efficiency Badge */
+        .eff-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .eff-good {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .eff-warn {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .eff-bad {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .eff-none {
+            background: #f1f5f9;
+            color: #94a3b8;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-completed {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-in-progress {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-pending {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        /* Comparison Card */
+        .compare-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(248, 250, 252, 0.6));
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 1.25rem;
+            padding: 1.25rem;
+        }
+
+        .compare-card h4 {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            margin-bottom: 0.75rem;
+        }
+    </style>
+    <script>
+        window.initMobileBehavior = () => {
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) { /* Disable heavy animations on mobile */ }
+        };
+    </script>
+</head>
+
+<body class="relative min-h-screen">
+
+    <div class="cursor-dot hidden md:block"></div>
+    <div class="cursor-outline hidden md:block"></div>
+
+    <div class="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
+        <div
+            class="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(99,102,241,0.3)_0%,rgba(255,255,255,0)_70%)] animate-pulse-slow">
+        </div>
+        <div
+            class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(14,165,233,0.3)_0%,rgba(255,255,255,0)_70%)] animate-pulse-slow">
+        </div>
+    </div>
+
+    <!-- Navigation Backdrop -->
+    <div id="navBackdrop" class="nav-backdrop" aria-hidden="true"></div>
+
+    <!-- Retractable Sidebar -->
+    <aside id="appSidebar" class="retractable-sidebar" aria-hidden="true">
+        <div class="sidebar-header h-20 flex-shrink-0 flex items-center px-6 border-b border-white/30">
+            <a href="../index.html" class="flex items-center gap-3 group transition-all hover:scale-105">
+                <div
+                    class="w-10 h-10 bg-gradient-to-br from-slate-900 to-slate-700 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:shadow-xl transition-all group-hover:rotate-6">
+                    <i data-lucide="layers" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-800 text-sm tracking-wide">QCO Portal</h1>
+                    <p class="text-[10px] text-slate-500 font-medium">Enterprise v2.1</p>
+                </div>
+            </a>
+        </div>
+        <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-6">
+            <div>
+                <div class="section-header">General</div>
+                <ul class="space-y-1">
+                    <li><a href="../index.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors"><i
+                                data-lucide="home" class="w-4 h-4 text-slate-500"></i><span>Home</span></a></li>
+                    <li><a href="dashboard.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors"><i
+                                data-lucide="line-chart" class="w-4 h-4 text-slate-500"></i><span>Dashboard</span></a>
+                    </li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-header">Workflow</div>
+                <ul class="space-y-1">
+                    <li><a href="creation.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors"><i
+                                data-lucide="pen-tool" class="w-4 h-4 text-slate-500"></i><span>QCO Creation</span></a>
+                    </li>
+                    <li><a href="operations.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors"><i
+                                data-lucide="list-ordered"
+                                class="w-4 h-4 text-slate-500"></i><span>Operations</span></a></li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-header">Planning</div>
+                <ul class="space-y-1">
+                    <li><a href="planning.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors"><i
+                                data-lucide="layout-grid" class="w-4 h-4 text-slate-500"></i><span>Planning</span></a>
+                    </li>
+                    <li><a href="schedule.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors"><i
+                                data-lucide="calendar" class="w-4 h-4 text-slate-500"></i><span>Schedule</span></a></li>
+                </ul>
+            </div>
+            <div>
+                <div class="section-header">Utilities</div>
+                <ul class="space-y-1">
+                    <li><a href="checklist.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors"><i
+                                data-lucide="clipboard-list"
+                                class="w-4 h-4 text-slate-500"></i><span>Checklist</span></a></li>
+                    <li><a href="recorder.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors"><i
+                                data-lucide="mic" class="w-4 h-4 text-slate-500"></i><span>Recorder</span></a></li>
+                    <li><a href="style.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors active"><i
+                                data-lucide="shirt" class="w-4 h-4 text-slate-500"></i><span>Style Repository</span></a>
+                    </li>
+                    <li><a href="summary.html"
+                            class="nav-item flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white/50 rounded-lg transition-colors"><i
+                                data-lucide="file-text" class="w-4 h-4 text-slate-500"></i><span>Reports</span></a></li>
+                </ul>
+            </div>
+        </nav>
+        <div class="sidebar-footer flex-shrink-0 p-4 border-t border-white/30">
+            <div
+                class="flex items-center justify-center gap-2 text-[10px] font-bold text-slate-400 tracking-widest uppercase">
+                <i data-lucide="lock" class="w-3 h-3 text-slate-300"></i> Secure Access
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main App Shell -->
+    <div id="appShell" class="flex flex-col h-screen overflow-hidden">
+        <!-- Header -->
+        <header id="appHeader"
+            class="glass h-20 flex items-center justify-between px-4 md:px-8 z-20 flex-shrink-0 sticky top-0 border-b border-white/20">
+            <button id="navToggle" class="hamburger-btn touch-target" aria-label="Toggle navigation">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            <div class="flex items-center gap-4">
+                <div
+                    class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span class="text-[10px] font-bold text-emerald-700 tracking-wider uppercase">System Online</span>
+                </div>
+                <div class="relative group">
+                    <button
+                        class="flex items-center gap-3 focus:outline-none group p-1.5 pr-3 rounded-full hover:bg-white/60 transition-all border border-transparent hover:border-slate-200">
+                        <div
+                            class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 border border-white shadow-sm flex items-center justify-center overflow-hidden">
+                            <span class="text-xs font-bold text-white user-initials-display">??</span>
+                        </div>
+                        <div class="text-left hidden md:block">
+                            <p class="text-xs font-bold text-slate-900 user-name-display leading-tight">User</p>
+                            <p
+                                class="text-[10px] text-slate-500 user-role-display leading-tight uppercase font-semibold">
+                                Member</p>
+                        </div>
+                        <i data-lucide="chevron-down"
+                            class="w-3 h-3 text-slate-400 ml-1 group-hover:text-slate-600 transition-colors"></i>
+                    </button>
+                    <div
+                        class="absolute right-0 mt-2 w-56 bg-white/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/50 ring-1 ring-slate-900/5 transform opacity-0 scale-95 pointer-events-none group-hover:pointer-events-auto group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 origin-top-right z-50">
+                        <div class="p-2">
+                            <button onclick="handleLogout()"
+                                class="w-full group flex items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-xl transition-colors text-left">
+                                <i data-lucide="log-out"
+                                    class="w-4 h-4 text-red-400 group-hover:text-red-600 transition-colors mr-3"></i>
+                                Sign Out
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Scrollable Content Area -->
+        <div id="appContent" class="flex-1 relative overflow-y-auto">
+            <div id="mainApp" class="min-h-full flex flex-col pt-8 pb-32 px-6 opacity-0">
+                <div class="max-w-[1400px] mx-auto w-full">
+
+                    <!-- Page Header -->
+                    <div class="mb-8">
+                        <h1 class="text-3xl lg:text-4xl font-heading font-bold text-slate-900 tracking-tight mb-2">
+                            Style <span
+                                class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">Repository</span>
+                        </h1>
+                        <p class="text-slate-500 text-sm max-w-xl">Complete QCO details, daily output tracking, and
+                            per-day efficiency analysis.</p>
+                    </div>
+
+                    <!-- QCO Selector Card -->
+                    <div class="glass-card p-6 mb-6 relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 to-blue-500">
+                        </div>
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                            <div class="flex items-center gap-3">
+                                <span
+                                    class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center"><i
+                                        data-lucide="hash" class="w-5 h-5"></i></span>
+                                <div>
+                                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Select QCO</p>
+                                    <p class="text-sm text-slate-600" id="activeQCOName">No changeover selected</p>
+                                </div>
+                            </div>
+                            <div class="relative group w-full sm:w-auto sm:ml-auto">
+                                <select id="qcoSelector" onchange="handleQCOChange(this.value)"
+                                    class="appearance-none w-full sm:w-auto bg-white border border-slate-200 text-slate-700 font-bold py-2.5 pl-4 pr-10 rounded-xl hover:border-indigo-400 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-sm min-w-[240px]">
+                                    <option value="">Select Changeover...</option>
+                                </select>
+                                <i data-lucide="chevron-down"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QCO Details Section (hidden until selection) -->
+                    <div id="qcoDetailsSection" class="hidden space-y-6">
+
+                        <!-- Details Grid -->
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <!-- Overview Card -->
+                            <div class="glass-card p-6 relative overflow-hidden lg:col-span-2">
+                                <div
+                                    class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-teal-500">
+                                </div>
+                                <h3 class="text-lg font-heading font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                    <i data-lucide="info" class="w-5 h-5 text-emerald-600"></i> QCO Overview
+                                </h3>
+                                <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <p class="detail-label">QCO Number</p>
+                                        <p class="detail-value" id="detQCONumber">—</p>
+                                    </div>
+                                    <div>
+                                        <p class="detail-label">Line</p>
+                                        <p class="detail-value" id="detLine">—</p>
+                                    </div>
+                                    <div>
+                                        <p class="detail-label">Status</p>
+                                        <p id="detStatus" class="mt-1">—</p>
+                                    </div>
+                                    <div>
+                                        <p class="detail-label">Created By</p>
+                                        <p class="detail-value" id="detCreatedBy">—</p>
+                                    </div>
+                                    <div>
+                                        <p class="detail-label">Created At</p>
+                                        <p class="detail-value" id="detCreatedAt">—</p>
+                                    </div>
+                                    <div>
+                                        <p class="detail-label">Completed At</p>
+                                        <p class="detail-value" id="detCompletedAt">—</p>
+                                    </div>
+                                    <div>
+                                        <p class="detail-label">Manpower (WP)</p>
+                                        <p class="detail-value" id="detManpower">—</p>
+                                    </div>
+                                    <div>
+                                        <p class="detail-label">Operations</p>
+                                        <p class="detail-value" id="detOpsCount">—</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Style Comparison Card -->
+                            <div class="glass-card p-6 relative overflow-hidden">
+                                <div
+                                    class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-violet-400 to-purple-500">
+                                </div>
+                                <h3 class="text-lg font-heading font-bold text-slate-900 mb-4 flex items-center gap-2">
+                                    <i data-lucide="git-compare" class="w-5 h-5 text-violet-600"></i> Style Comparison
+                                </h3>
+                                <div class="space-y-3">
+                                    <div class="compare-card">
+                                        <h4 class="text-slate-400">Current Style</h4>
+                                        <p class="text-base font-bold text-slate-900 mb-1" id="detCurrentStyle">—</p>
+                                        <div class="flex gap-4 text-sm">
+                                            <span class="text-slate-500">SMV: <strong class="text-slate-800"
+                                                    id="detCurrentSMV">—</strong></span>
+                                            <span class="text-slate-500">Target: <strong class="text-slate-800"
+                                                    id="detCurrentTarget">—</strong></span>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-center"><i data-lucide="arrow-down"
+                                            class="w-5 h-5 text-slate-300"></i></div>
+                                    <div class="compare-card"
+                                        style="border-color: rgba(99,102,241,0.3); background: linear-gradient(135deg, rgba(238,242,255,0.8), rgba(224,231,255,0.4));">
+                                        <h4 class="text-indigo-400">Upcoming Style</h4>
+                                        <p class="text-base font-bold text-indigo-900 mb-1" id="detUpcomingStyle">—</p>
+                                        <div class="flex gap-4 text-sm">
+                                            <span class="text-indigo-400">SMV: <strong class="text-indigo-800"
+                                                    id="detUpcomingSMV">—</strong></span>
+                                            <span class="text-indigo-400">Target: <strong class="text-indigo-800"
+                                                    id="detUpcomingTarget">—</strong></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Daily Output & Efficiency Section -->
+                        <div class="glass-card p-6 relative overflow-hidden">
+                            <div
+                                class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-400 to-orange-500">
+                            </div>
+                            <div
+                                class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                                <div>
+                                    <h3 class="text-lg font-heading font-bold text-slate-900 flex items-center gap-2">
+                                        <i data-lucide="bar-chart-3" class="w-5 h-5 text-amber-600"></i> Daily Output &
+                                        Efficiency
+                                    </h3>
+                                    <p class="text-xs text-slate-500 mt-1">Formula: (SMV × Daily Output) / (630 min ×
+                                        Manpower) × 100</p>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="text-right">
+                                        <p class="text-xs font-bold text-slate-400 uppercase">Avg Efficiency</p>
+                                        <p class="text-xl font-heading font-bold text-slate-900" id="avgEfficiency">—
+                                        </p>
+                                    </div>
+                                    <button onclick="saveAllOutputs()"
+                                        class="px-4 py-2 rounded-xl bg-slate-900 text-white text-sm font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all flex items-center gap-2">
+                                        <i data-lucide="save" class="w-4 h-4"></i> Save All
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Efficiency Chart -->
+                            <div class="mb-6 bg-white/50 rounded-2xl p-4 border border-slate-100">
+                                <div class="relative h-[200px] w-full">
+                                    <canvas id="efficiencyChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Output Table -->
+                            <div class="overflow-x-auto rounded-2xl border border-slate-100 bg-white/50">
+                                <table class="output-table" id="outputTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Day</th>
+                                            <th>Date</th>
+                                            <th>Phase</th>
+                                            <th>Daily Output</th>
+                                            <th>Efficiency %</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="outputTableBody">
+                                        <tr>
+                                            <td colspan="6" class="text-center text-slate-400 py-8">Select a changeover
+                                                to see daily output data</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Machine Summary (collapsible) -->
+                        <div class="glass-card p-6 relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-slate-400 to-slate-500">
+                            </div>
+                            <button onclick="toggleMachines()" class="w-full flex items-center justify-between">
+                                <h3 class="text-lg font-heading font-bold text-slate-900 flex items-center gap-2">
+                                    <i data-lucide="cpu" class="w-5 h-5 text-slate-500"></i> Machine Summary
+                                </h3>
+                                <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400 transition-transform"
+                                    id="machineChevron"></i>
+                            </button>
+                            <div id="machineContent" class="hidden mt-4">
+                                <div class="overflow-x-auto rounded-xl border border-slate-100 bg-white/50">
+                                    <table class="output-table" id="machineTable">
+                                        <thead>
+                                            <tr>
+                                                <th>Machine</th>
+                                                <th>Current</th>
+                                                <th>Upcoming</th>
+                                                <th>Required</th>
+                                                <th>Surplus</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="machineTableBody">
+                                            <tr>
+                                                <td colspan="5" class="text-center text-slate-400 py-4">No machine data
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <!-- Footer -->
+                <footer
+                    class="mt-24 py-8 px-8 border-t border-slate-200/30 relative z-10 bg-white/30 backdrop-blur-md -mx-6 -mb-32">
+                    <div class="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                        <p class="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase">© 2026 MANUFACTURING
+                            EXCELLENCE SYSTEM</p>
+                    </div>
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCayfWGQP1t3oBU9eFj-3Ww0uu7nSl3Q4g",
+            authDomain: "sidneymailer.firebaseapp.com",
+            projectId: "sidneymailer",
+            storageBucket: "sidneymailer.firebasestorage.app",
+            messagingSenderId: "911316068119",
+            appId: "1:911316068119:web:ce23dbe663dc385a81f952",
+            measurementId: "G-NJ0QH6DEXG"
+        };
+
+        const SHIFT_MINUTES = 630; // 7:30am to 6:00pm = 10.5 hours = 630 minutes
+
+        let db, auth;
+        let currentUser = JSON.parse(localStorage.getItem('qcoCurrentUser') || 'null');
+        let currentQCOId = null;
+        let currentQCOData = null;
+        let efficiencyChart = null;
+        let autoSaveTimeout = null;
+
+        // --- Initialization ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            gsap.to("#mainApp", { opacity: 1, duration: 0.4, ease: "power2.out" });
+
+            if (typeof NavigationSystem !== 'undefined' && !window.navSystem) {
+                window.navSystem = new NavigationSystem();
+            }
+            if (typeof initMobileBehavior !== 'undefined') {
+                initMobileBehavior();
+                window.addEventListener('resize', initMobileBehavior);
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            // Auth check
+            if (!currentUser) {
+                window.location.href = '../index.html';
+                return;
+            }
+            if (currentUser.role === 'planning') {
+                window.location.replace('schedule.html');
+                return;
+            }
+
+            // Init Firebase
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            auth = firebase.auth();
+
+            // Auth state listener
+            auth.onAuthStateChanged(u => {
+                if (u) {
+                    const sessionUser = {
+                        uid: u.uid,
+                        name: u.displayName || 'User',
+                        email: u.email,
+                        role: currentUser?.role || 'Member'
+                    };
+                    currentUser = sessionUser;
+                    localStorage.setItem('qcoCurrentUser', JSON.stringify(sessionUser));
+                }
+                updateUserUI();
+            });
+
+            initLenis();
+            await loadChangeoverList();
+            initEfficiencyChart();
+
+            // Check URL for pre-selected QCO
+            const urlParams = new URLSearchParams(window.location.search);
+            const preselected = urlParams.get('qco');
+            if (preselected) {
+                document.getElementById('qcoSelector').value = preselected;
+                await handleQCOChange(preselected);
+            }
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        });
+
+        // --- Navigation System ---
+        class NavigationSystem {
+            constructor() { this.isOpen = false; this.init(); }
+            init() {
+                const toggle = document.getElementById('navToggle');
+                const backdrop = document.getElementById('navBackdrop');
+                if (toggle) toggle.addEventListener('click', () => this.toggle());
+                if (backdrop) backdrop.addEventListener('click', () => this.close());
+            }
+            toggle() { this.isOpen ? this.close() : this.open(); }
+            open() {
+                this.isOpen = true;
+                document.getElementById('appSidebar')?.classList.add('open');
+                document.getElementById('navBackdrop')?.classList.add('active');
+                document.getElementById('navToggle')?.classList.add('open');
+            }
+            close() {
+                this.isOpen = false;
+                document.getElementById('appSidebar')?.classList.remove('open');
+                document.getElementById('navBackdrop')?.classList.remove('active');
+                document.getElementById('navToggle')?.classList.remove('open');
+            }
+        }
+        window.navSystem = new NavigationSystem();
+
+        // --- Cursor effect ---
+        document.addEventListener('mousemove', e => {
+            const dot = document.querySelector('.cursor-dot');
+            const outline = document.querySelector('.cursor-outline');
+            if (dot) { dot.style.left = e.clientX - 4 + 'px'; dot.style.top = e.clientY - 4 + 'px'; }
+            if (outline) { outline.style.left = e.clientX - 16 + 'px'; outline.style.top = e.clientY - 16 + 'px'; }
+        });
+
+        // --- Lenis smooth scroll ---
+        function initLenis() {
+            const container = document.getElementById('appContent');
+            if (!container) return;
+            window.lenis = new Lenis({
+                wrapper: container,
+                content: container.querySelector('#mainApp'),
+                duration: 1.2,
+                easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                smoothWheel: true, smoothTouch: false, touchMultiplier: 1.5,
+            });
+            function raf(time) { window.lenis.raf(time); requestAnimationFrame(raf); }
+            requestAnimationFrame(raf);
+        }
+
+        // --- User UI ---
+        function updateUserUI() {
+            let user = {};
+            try { user = currentUser || JSON.parse(localStorage.getItem('qcoCurrentUser')) || {}; } catch (e) { }
+            const name = user.displayName || user.name || 'User';
+            const role = user.role || 'Member';
+            const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            document.querySelectorAll('.user-initials-display').forEach(el => el.textContent = initials);
+            document.querySelectorAll('.user-name-display').forEach(el => el.textContent = name);
+            document.querySelectorAll('.user-role-display').forEach(el => el.textContent = role);
+        }
+
+        function handleLogout() {
+            const performLogout = () => {
+                localStorage.removeItem('qcoCurrentUser');
+                localStorage.removeItem('qcoSessionActive');
+                window.location.href = '../index.html';
+            };
+            if (auth) { auth.signOut().then(performLogout).catch(performLogout); }
+            else { performLogout(); }
+        }
+
+        // --- Data Loading ---
+        async function loadChangeoverList() {
+            const selector = document.getElementById('qcoSelector');
+            if (!db) return;
+            try {
+                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(100).get();
+                selector.innerHTML = '<option value="">Select Changeover...</option>';
+                const savedId = localStorage.getItem('currentStyleQCOId');
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    const qcoNum = data.qcoNumber || doc.id.substring(0, 8);
+                    const style = data.upcomingStyle || 'Unknown';
+                    const last4 = style.length >= 4 ? style.slice(-4) : style;
+                    option.textContent = `${qcoNum} — ${last4}`;
+                    if (doc.id === savedId) option.selected = true;
+                    selector.appendChild(option);
+                });
+                if (savedId) await handleQCOChange(savedId);
+            } catch (error) {
+                console.error("Error loading QCO list:", error);
+            }
+        }
+
+        async function handleQCOChange(qcoId) {
+            if (!qcoId) {
+                currentQCOId = null;
+                currentQCOData = null;
+                document.getElementById('qcoDetailsSection').classList.add('hidden');
+                document.getElementById('activeQCOName').textContent = 'No changeover selected';
+                return;
+            }
+            currentQCOId = qcoId;
+            localStorage.setItem('currentStyleQCOId', qcoId);
+
+            try {
+                const doc = await db.collection('changeovers').doc(qcoId).get();
+                if (!doc.exists) {
+                    alert('Changeover not found');
+                    return;
+                }
+                currentQCOData = { id: doc.id, ...doc.data() };
+                document.getElementById('activeQCOName').textContent = currentQCOData.qcoNumber || qcoId;
+                renderQCODetails();
+                renderDailyOutputs();
+                renderMachineTable();
+                document.getElementById('qcoDetailsSection').classList.remove('hidden');
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            } catch (error) {
+                console.error("Error loading QCO:", error);
+            }
+        }
+
+        // --- Render QCO Details ---
+        function renderQCODetails() {
+            const d = currentQCOData;
+            if (!d) return;
+
+            document.getElementById('detQCONumber').textContent = d.qcoNumber || '—';
+            document.getElementById('detLine').textContent = d.lineNumber || '—';
+
+            const status = d.status || 'pending';
+            const statusEl = document.getElementById('detStatus');
+            const statusMap = { completed: 'status-completed', 'in-progress': 'status-in-progress', pending: 'status-pending' };
+            statusEl.innerHTML = `<span class="status-badge ${statusMap[status] || 'status-pending'}">${status}</span>`;
+
+            document.getElementById('detCreatedBy').textContent = d.createdBy || '—';
+
+            const createdAt = d.createdAt?.toDate?.() || (d.createdAt ? new Date(d.createdAt) : null);
+            document.getElementById('detCreatedAt').textContent = createdAt ? createdAt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+
+            const completedAt = d.completedAt?.toDate?.() || (d.completedAt ? new Date(d.completedAt) : null);
+            document.getElementById('detCompletedAt').textContent = completedAt ? completedAt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+
+            const manpower = d.savedManpower || d.allotedWP || 0;
+            document.getElementById('detManpower').textContent = manpower || '—';
+
+            const ops = d.operationsList || [];
+            document.getElementById('detOpsCount').textContent = ops.length || '0';
+
+            document.getElementById('detCurrentStyle').textContent = d.currentStyle || '—';
+            document.getElementById('detCurrentSMV').textContent = d.currentSMV ? parseFloat(d.currentSMV).toFixed(2) : '—';
+            document.getElementById('detCurrentTarget').textContent = d.currentTarget || '—';
+
+            document.getElementById('detUpcomingStyle').textContent = d.upcomingStyle || '—';
+            document.getElementById('detUpcomingSMV').textContent = d.upcomingSMV ? parseFloat(d.upcomingSMV).toFixed(2) : '—';
+            document.getElementById('detUpcomingTarget').textContent = d.upcomingTarget || '—';
+        }
+
+        // --- Daily Output Logic ---
+        function getDailyOutputDateRange() {
+            const d = currentQCOData;
+            if (!d) return [];
+
+            // Find changeover start date
+            let startDate = null;
+            const timings = d.operationTimings || {};
+            const timingStarts = Object.values(timings).filter(t => t.start).map(t => new Date(t.start));
+            if (timingStarts.length > 0) {
+                startDate = new Date(Math.min(...timingStarts.map(dt => dt.getTime())));
+            } else {
+                startDate = d.createdAt?.toDate?.() || (d.createdAt ? new Date(d.createdAt) : new Date());
+            }
+
+            // Find changeover end date
+            let endDate = null;
+            if (d.completedAt) {
+                endDate = d.completedAt?.toDate?.() || new Date(d.completedAt);
+            } else {
+                // If not completed, use today
+                endDate = new Date();
+            }
+
+            // Normalize to midnight
+            startDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+            endDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+
+            // 1 day before start, 1 day after end
+            const rangeStart = new Date(startDate);
+            rangeStart.setDate(rangeStart.getDate() - 1);
+
+            const rangeEnd = new Date(endDate);
+            if (d.status === 'completed') {
+                rangeEnd.setDate(rangeEnd.getDate() + 1);
+            }
+
+            // Generate date array
+            const dates = [];
+            const current = new Date(rangeStart);
+            while (current <= rangeEnd) {
+                dates.push(new Date(current));
+                current.setDate(current.getDate() + 1);
+            }
+            return dates;
+        }
+
+        function getDateKey(date) {
+            return date.toISOString().split('T')[0]; // YYYY-MM-DD
+        }
+
+        function calculateEfficiency(dailyOutput) {
+            const d = currentQCOData;
+            if (!d || !dailyOutput || dailyOutput <= 0) return null;
+            const smv = parseFloat(d.upcomingSMV) || 0;
+            const manpower = parseInt(d.savedManpower || d.allotedWP) || 0;
+            if (!smv || !manpower) return null;
+            return ((smv * dailyOutput) / (SHIFT_MINUTES * manpower)) * 100;
+        }
+
+        function getPhaseLabel(date, startDate, endDate) {
+            const dateTs = date.getTime();
+            const startTs = startDate.getTime();
+            const endTs = endDate.getTime();
+            if (dateTs < startTs) return 'Pre-CO';
+            if (dateTs > endTs) return 'Post-CO';
+            return 'During';
+        }
+
+        function renderDailyOutputs() {
+            const tbody = document.getElementById('outputTableBody');
+            const dates = getDailyOutputDateRange();
+            const savedOutputs = currentQCOData.dailyOutputs || {};
+
+            if (dates.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-slate-400 py-8">No date range available</td></tr>';
+                return;
+            }
+
+            // Get changeover boundaries for phase labels
+            const timings = currentQCOData.operationTimings || {};
+            const timingStarts = Object.values(timings).filter(t => t.start).map(t => new Date(t.start));
+            let coStart = timingStarts.length > 0 ? new Date(Math.min(...timingStarts.map(dt => dt.getTime()))) : (currentQCOData.createdAt?.toDate?.() || new Date(currentQCOData.createdAt || Date.now()));
+            coStart = new Date(coStart.getFullYear(), coStart.getMonth(), coStart.getDate());
+
+            let coEnd = currentQCOData.completedAt?.toDate?.() || (currentQCOData.completedAt ? new Date(currentQCOData.completedAt) : new Date());
+            coEnd = new Date(coEnd.getFullYear(), coEnd.getMonth(), coEnd.getDate());
+
+            let efficiencies = [];
+            let html = '';
+
+            dates.forEach((date, idx) => {
+                const key = getDateKey(date);
+                const saved = savedOutputs[key];
+                const output = saved?.output || '';
+                const eff = output ? calculateEfficiency(parseFloat(output)) : null;
+                if (eff !== null) efficiencies.push(eff);
+
+                const phase = getPhaseLabel(date, coStart, coEnd);
+                const phaseColors = { 'Pre-CO': 'bg-blue-50 text-blue-700', 'During': 'bg-amber-50 text-amber-700', 'Post-CO': 'bg-emerald-50 text-emerald-700' };
+
+                let effBadge = '<span class="eff-badge eff-none">—</span>';
+                if (eff !== null) {
+                    const cls = eff >= 50 ? 'eff-good' : eff >= 30 ? 'eff-warn' : 'eff-bad';
+                    effBadge = `<span class="eff-badge ${cls}">${eff.toFixed(1)}%</span>`;
+                }
+
+                const isToday = getDateKey(new Date()) === key;
+                const rowHighlight = isToday ? 'bg-indigo-50/50' : '';
+
+                html += `<tr class="${rowHighlight}">
+                    <td class="font-mono text-xs text-slate-400">Day ${idx + 1}</td>
+                    <td class="font-semibold ${isToday ? 'text-indigo-600' : 'text-slate-800'}">${date.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' })}${isToday ? ' <span class="text-[10px] font-bold text-indigo-500 ml-1">TODAY</span>' : ''}</td>
+                    <td><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${phaseColors[phase]}">${phase}</span></td>
+                    <td><input type="number" value="${output}" min="0" placeholder="—" data-date="${key}" onchange="onOutputChange(this)" /></td>
+                    <td>${effBadge}</td>
+                    <td>${output ? '<i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500 inline"></i>' : '<i data-lucide="circle" class="w-4 h-4 text-slate-300 inline"></i>'}</td>
+                </tr>`;
+            });
+
+            tbody.innerHTML = html;
+
+            // Update average efficiency
+            const avgEff = efficiencies.length > 0 ? (efficiencies.reduce((a, b) => a + b, 0) / efficiencies.length) : 0;
+            document.getElementById('avgEfficiency').textContent = avgEff > 0 ? avgEff.toFixed(1) + '%' : '—';
+
+            // Update chart
+            updateEfficiencyChart(dates, savedOutputs);
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function onOutputChange(input) {
+            const dateKey = input.dataset.date;
+            const value = parseInt(input.value) || 0;
+
+            // Debounced auto-save
+            if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(() => {
+                saveSingleOutput(dateKey, value);
+            }, 800);
+
+            // Immediately update efficiency display
+            renderDailyOutputs();
+        }
+
+        async function saveSingleOutput(dateKey, output) {
+            if (!currentQCOId || !db) return;
+            try {
+                await db.collection('changeovers').doc(currentQCOId).update({
+                    [`dailyOutputs.${dateKey}`]: { output: output }
+                });
+                // Update local cache
+                if (!currentQCOData.dailyOutputs) currentQCOData.dailyOutputs = {};
+                currentQCOData.dailyOutputs[dateKey] = { output };
+            } catch (error) {
+                console.error('Error saving output:', error);
+            }
+        }
+
+        async function saveAllOutputs() {
+            if (!currentQCOId || !db) return;
+            const inputs = document.querySelectorAll('#outputTableBody input[type="number"]');
+            const outputs = {};
+            inputs.forEach(input => {
+                const key = input.dataset.date;
+                const val = parseInt(input.value) || 0;
+                if (val > 0) outputs[key] = { output: val };
+            });
+            try {
+                await db.collection('changeovers').doc(currentQCOId).update({ dailyOutputs: outputs });
+                currentQCOData.dailyOutputs = outputs;
+                renderDailyOutputs();
+                showToast('All daily outputs saved!', 'success');
+            } catch (error) {
+                console.error('Error saving all outputs:', error);
+                showToast('Failed to save outputs', 'error');
+            }
+        }
+
+        // --- Machine Table ---
+        function renderMachineTable() {
+            const tbody = document.getElementById('machineTableBody');
+            const machines = currentQCOData.machineSummary || [];
+            if (machines.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center text-slate-400 py-4">No machine data available</td></tr>';
+                return;
+            }
+            tbody.innerHTML = machines.map(m => `<tr>
+                <td class="font-semibold text-slate-800">${m.machine || '—'}</td>
+                <td>${m.current ?? '—'}</td>
+                <td>${m.upcoming ?? '—'}</td>
+                <td>${m.required ?? '—'}</td>
+                <td><span class="${(m.surplus || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'} font-bold">${m.surplus >= 0 ? '+' : ''}${m.surplus ?? '—'}</span></td>
+            </tr>`).join('');
+        }
+
+        function toggleMachines() {
+            const content = document.getElementById('machineContent');
+            const chevron = document.getElementById('machineChevron');
+            content.classList.toggle('hidden');
+            chevron.style.transform = content.classList.contains('hidden') ? '' : 'rotate(180deg)';
+        }
+
+        // --- Efficiency Chart ---
+        function initEfficiencyChart() {
+            const ctx = document.getElementById('efficiencyChart');
+            if (!ctx) return;
+            efficiencyChart = new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Efficiency %', data: [], borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', borderWidth: 2, fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: '#f59e0b', pointBorderColor: '#fff', pointBorderWidth: 2 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: ctx => ctx.parsed.y.toFixed(1) + '%' } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Efficiency %', font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+                        x: { grid: { display: false }, ticks: { font: { size: 9 } } }
+                    }
+                }
+            });
+        }
+
+        function updateEfficiencyChart(dates, savedOutputs) {
+            if (!efficiencyChart) return;
+            const labels = [];
+            const data = [];
+            dates.forEach(date => {
+                const key = getDateKey(date);
+                const output = savedOutputs[key]?.output;
+                const eff = output ? calculateEfficiency(parseFloat(output)) : null;
+                labels.push(date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }));
+                data.push(eff);
+            });
+            efficiencyChart.data.labels = labels;
+            efficiencyChart.data.datasets[0].data = data;
+            efficiencyChart.update();
+        }
+
+        // --- Toast ---
+        function showToast(message, type = 'info') {
+            let toast = document.getElementById('toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'toast';
+                toast.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;transform:translateY(10px);transition:all 0.3s;box-shadow:0 8px 32px rgba(0,0,0,0.15);';
+                document.body.appendChild(toast);
+            }
+            const colors = { success: { bg: '#dcfce7', text: '#166534' }, error: { bg: '#fee2e2', text: '#991b1b' }, info: { bg: '#dbeafe', text: '#1e40af' } };
+            const c = colors[type] || colors.info;
+            toast.style.background = c.bg; toast.style.color = c.text;
+            toast.textContent = message;
+            toast.style.opacity = '1'; toast.style.transform = 'translateY(0)';
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(10px)'; }, 3000);
+        }
+    </script>
+</body>
+
+</html>
