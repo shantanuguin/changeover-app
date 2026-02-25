@@ -2402,6 +2402,11 @@
                 const now = new Date().getTime();
                 const diff = targetTime - now;
 
+                if (currentQCOData && currentQCOData.status === 'completed') {
+                    document.getElementById('countdownText').textContent = "Changeover Completed";
+                    return;
+                }
+
                 if (diff <= 0) {
                     document.getElementById('countdownText').textContent = "Changeover Started";
                     return;

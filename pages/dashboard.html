@@ -1746,8 +1746,30 @@
                         ? Math.round(completedChangeovers.reduce((sum, c) => sum + calculateActualCOPT(c), 0) / completedChangeovers.length)
                         : 0;
 
-                    const efficiency = (avgTargetCOPT && avgActualCOPT)
-                        ? Math.round((avgTargetCOPT / avgActualCOPT) * 100)
+                    // NEW Efficiency calculation (from dailyOutputs)
+                    // Formula: (SMV * Daily Output) / (630 * Manpower) * 100
+                    let totalValidEfficiencies = 0;
+                    let numValidEfficiencies = 0;
+
+                    data.forEach(qco => {
+                        const outputs = qco.dailyOutputs || {};
+                        const smv = parseFloat(qco.upcomingSMV) || 0;
+                        const manpower = parseInt(qco.savedManpower || qco.allotedWP) || 0;
+
+                        if (smv > 0 && manpower > 0) {
+                            Object.values(outputs).forEach(entry => {
+                                const output = parseFloat(entry.output) || 0;
+                                if (output > 0) {
+                                    const eff = ((smv * output) / (630 * manpower)) * 100;
+                                    totalValidEfficiencies += eff;
+                                    numValidEfficiencies++;
+                                }
+                            });
+                        }
+                    });
+
+                    const efficiency = numValidEfficiencies > 0
+                        ? Math.round(totalValidEfficiencies / numValidEfficiencies)
                         : 0;
 
                     // Critical issues (overdue or high deviation)
@@ -1812,27 +1834,35 @@
                     updateTrendBadge('totalTrend', totalTrend);
 
                     // 2. Efficiency Trend calculation
-                    // Simplified: Compare current efficiency (active selection) vs dummy historical baseline if no history
-                    // Better: Calculate efficiency for "Last 7 days" changeovers
-                    const last7Completed = last7Arr.filter(c => c.status === 'completed');
-                    const prev7Completed = prev7Arr.filter(c => c.status === 'completed');
-
-                    const calcEff = (list) => {
-                        if (!list.length) return 0;
-                        const sums = list.map(q => {
-                            const a = calculateActualCOPT(q);
-                            const t = calculateTargetCOPT(q);
-                            return (a > 0 && t > 0) ? (t / a) * 100 : 0;
-                        }).filter(v => v > 0);
-                        return sums.length ? (sums.reduce((a, b) => a + b, 0) / sums.length) : 0;
+                    // Calculate efficiency for "Last 7 days" vs "Previous 7 days" using dailyOutputs
+                    const calcTrueEff = (list) => {
+                        let totalEff = 0, count = 0;
+                        list.forEach(qco => {
+                            const outputs = qco.dailyOutputs || {};
+                            const smv = parseFloat(qco.upcomingSMV) || 0;
+                            const manpower = parseInt(qco.savedManpower || qco.allotedWP) || 0;
+                            if (smv > 0 && manpower > 0) {
+                                Object.values(outputs).forEach(entry => {
+                                    const out = parseFloat(entry.output) || 0;
+                                    if (out > 0) {
+                                        totalEff += ((smv * out) / (630 * manpower)) * 100;
+                                        count++;
+                                    }
+                                });
+                            }
+                        });
+                        return count > 0 ? totalEff / count : 0;
                     };
 
-                    const effLast7 = calcEff(last7Completed);
-                    const effPrev7 = calcEff(prev7Completed);
+                    const effCurrent = currentEfficiency || calcTrueEff(last7Arr);
+                    const effPrev = calcTrueEff(prev7Arr);
 
-                    const effTrend = effPrev7 > 0
-                        ? Math.round(((effLast7 - effPrev7) / effPrev7) * 100)
-                        : (effLast7 > 0 ? 100 : 0); /* Default to 100% improvement if starting from 0 */
+                    let effTrend = 0;
+                    if (effPrev > 0) {
+                        effTrend = Math.round(((effCurrent - effPrev) / effPrev) * 100);
+                    } else if (effCurrent > 0) {
+                        effTrend = 100;
+                    }
 
                     const effEl = document.getElementById('efficiencyTrend');
                     effEl.textContent = (effTrend >= 0 ? '↑ ' : '↓ ') + Math.abs(effTrend) + '%';
@@ -3373,13 +3403,23 @@
                 // Render efficiency chart on Chart 2 canvas
                 function renderEfficiencyChartOnChart2(data) {
                     const grouped = {};
+
+                    // Instead of plotting by qco.createdAt, we plot by the actual dates in dailyOutputs
                     data.forEach(qco => {
-                        if (!qco.createdAt) return;
-                        const dateKey = (qco.createdAt.toDate ? qco.createdAt.toDate() : new Date(qco.createdAt)).toISOString().split('T')[0];
-                        if (!grouped[dateKey]) grouped[dateKey] = [];
-                        const target = calculateTargetCOPT(qco);
-                        const actual = calculateActualCOPT(qco);
-                        grouped[dateKey].push(calculateEfficiency(target, actual));
+                        const outputs = qco.dailyOutputs || {};
+                        const smv = parseFloat(qco.upcomingSMV) || 0;
+                        const manpower = parseInt(qco.savedManpower || qco.allotedWP) || 0;
+
+                        if (smv > 0 && manpower > 0) {
+                            Object.keys(outputs).forEach(dateKey => {
+                                const output = parseFloat(outputs[dateKey].output) || 0;
+                                if (output > 0) {
+                                    const eff = ((smv * output) / (630 * manpower)) * 100;
+                                    if (!grouped[dateKey]) grouped[dateKey] = [];
+                                    grouped[dateKey].push(eff);
+                                }
+                            });
+                        }
                     });
 
                     // Sort chronological keys first
