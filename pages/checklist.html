@@ -1541,14 +1541,21 @@
         }
 
         function checkAuth() {
-            auth.onAuthStateChanged((user) => {
-                if (user) {
+            // Strict Auth Check
+            const user = JSON.parse(localStorage.getItem('qcoCurrentUser'));
+            if (!user) {
+                window.location.href = '../index.html';
+                return;
+            }
+
+            auth.onAuthStateChanged((u) => {
+                if (u) {
                     const existing = JSON.parse(localStorage.getItem('qcoCurrentUser') || '{}');
                     localStorage.setItem('qcoCurrentUser', JSON.stringify({
                         ...existing,
-                        uid: user.uid,
-                        name: user.displayName || existing.name || 'User',
-                        email: user.email || existing.email,
+                        uid: u.uid,
+                        name: u.displayName || existing.name || 'User',
+                        email: u.email || existing.email,
                         role: existing.role || 'Member'
                     }));
                 } else {
