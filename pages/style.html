@@ -997,7 +997,7 @@
             const completedAt = d.completedAt?.toDate?.() || (d.completedAt ? new Date(d.completedAt) : null);
             document.getElementById('detCompletedAt').textContent = completedAt ? completedAt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
-            const manpower = d.savedManpower || d.allotedWP || 0;
+            const manpower = d.savedManpower || d.allotedWP || d.totalManpower || 0;
             document.getElementById('detManpower').textContent = manpower || '—';
 
             const ops = d.operationsList || [];
@@ -1005,11 +1005,11 @@
 
             document.getElementById('detCurrentStyle').textContent = d.currentStyle || '—';
             document.getElementById('detCurrentSMV').textContent = d.currentSMV ? parseFloat(d.currentSMV).toFixed(2) : '—';
-            document.getElementById('detCurrentTarget').textContent = d.currentTarget || '—';
+            document.getElementById('detCurrentTarget').textContent = d.currentTarget || d.target || '—';
 
             document.getElementById('detUpcomingStyle').textContent = d.upcomingStyle || '—';
             document.getElementById('detUpcomingSMV').textContent = d.upcomingSMV ? parseFloat(d.upcomingSMV).toFixed(2) : '—';
-            document.getElementById('detUpcomingTarget').textContent = d.upcomingTarget || '—';
+            document.getElementById('detUpcomingTarget').textContent = d.upcomingTarget || d.target || '—';
         }
 
         // --- Daily Output Logic ---
@@ -1067,7 +1067,7 @@
             const d = currentQCOData;
             if (!d || !dailyOutput || dailyOutput <= 0) return null;
             const smv = parseFloat(d.upcomingSMV) || 0;
-            const manpower = parseInt(d.savedManpower || d.allotedWP) || 0;
+            const manpower = parseInt(d.savedManpower || d.allotedWP || d.totalManpower) || 0;
             if (!smv || !manpower) return null;
             return ((smv * dailyOutput) / (SHIFT_MINUTES * manpower)) * 100;
         }
