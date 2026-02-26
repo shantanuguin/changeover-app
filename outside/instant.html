@@ -572,7 +572,7 @@
             try {
                 const snapshot = await db.collection('changeovers')
                     .where('lineNumber', '==', line)
-                    .where('status', '==', 'in-progress')
+                    .where('status', 'in', ['upcoming', 'in-progress'])
                     .get();
 
                 if (!snapshot.empty) {
@@ -740,11 +740,16 @@
             }
 
             el('currentStyle').value = data.currentStyle || '';
-            el('currentTarget').value = data.currentTarget || '';
             el('upcomingStyle').value = data.upcomingStyle || '';
-            el('upcomingSMV').value = data.upcomingSMV || '';
-            el('upcomingTarget').value = data.upcomingTarget || '';
-            el('totalManpower').value = data.totalManpower || '';
+
+            const renderNum = (val, isFloat = false) => (val !== undefined && val !== null && val !== 0 && val !== '') ? (isFloat ? parseFloat(val) : parseInt(val)) : '';
+
+            el('upcomingSMV').value = renderNum(data.upcomingSMV, true);
+            el('upcomingTarget').value = renderNum(data.upcomingTarget);
+
+            // Handle manpower fallback through multiple possible keys
+            const mp = data.totalManpower || data.allotedWP || data.savedManpower || null;
+            el('totalManpower').value = renderNum(mp);
 
             el('qcoBadge').classList.remove('hidden');
             el('qcoDisplay').textContent = currentQCONumber;
@@ -766,6 +771,7 @@
 
             lucide.createIcons();
             renderOperations();
+            recalcTarget(); // Ensure target is calculated if not fully loaded
             recalcSummary();
         }
 
@@ -1214,6 +1220,7 @@
                     el('upcomingTarget').value = '';
                     el('qcoBadge').classList.add('hidden');
                     el('supervisorDisplay').classList.add('hidden');
+                    el('finishBtn').classList.add('hidden');
                     renderOperations();
                     recalcSummary();
                 }
