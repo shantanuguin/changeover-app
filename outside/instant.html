@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Instant Changeover Recorder</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], heading: ['Poppins', 'sans-serif'] },
+                    colors: { brand: { 50: '#f0f9ff', 500: '#0ea5e9', 900: '#0c4a6e' } },
+                    animation: { 'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #f8fafc;
+            color: #1e293b;
+            overflow-x: hidden;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 60px -12px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1);
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            box-shadow: 0 30px 80px -12px rgba(0, 0, 0, 0.12);
+        }
+
+        .cursor-dot {
+            width: 8px;
+            height: 8px;
+            background: #0ea5e9;
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transition: 0.05s;
+        }
+
+        .cursor-outline {
+            width: 32px;
+            height: 32px;
+            border: 2px solid rgba(14, 165, 233, 0.3);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9998;
+            transition: 0.15s;
+        }
+
+        input,
+        select,
+        textarea {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            background: #fff;
+            outline: none;
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+        }
+
+        .op-row {
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 2px solid #fff;
+            width: 1rem;
+            height: 1rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @media (max-width: 768px) {
+            .glass-card {
+                border-radius: 1rem;
+                padding: 1rem;
+            }
+
+            #mainApp {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="relative min-h-screen">
+
+    <div class="cursor-dot hidden md:block"></div>
+    <div class="cursor-outline hidden md:block"></div>
+
+    <!-- Background Gradients -->
+    <div class="fixed inset-0 overflow-hidden -z-10 pointer-events-none">
+        <div
+            class="absolute top-0 right-0 w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(99,102,241,0.3)_0%,rgba(255,255,255,0)_70%)] animate-pulse-slow">
+        </div>
+        <div
+            class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[radial-gradient(circle,rgba(251,207,232,0.3)_0%,rgba(255,255,255,0)_70%)] animate-pulse-slow">
+        </div>
+    </div>
+
+    <!-- Main Shell -->
+    <div id="appShell" class="flex flex-col min-h-screen">
+
+        <!-- Header -->
+        <header
+            class="glass h-20 flex items-center justify-between px-4 md:px-8 z-20 sticky top-0 border-b border-white/20">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-500 to-orange-500 flex items-center justify-center text-white shadow-lg">
+                    <i data-lucide="zap" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <span class="text-base md:text-lg font-heading font-bold text-slate-900 tracking-tight">Instant
+                        Recorder</span>
+                    <p class="text-[10px] text-rose-600 font-bold uppercase tracking-widest">Live</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="exportSession()"
+                    class="px-3 py-2 rounded-xl bg-white/80 border border-slate-200 text-slate-700 text-xs font-bold hover:bg-white transition-all flex items-center gap-2"
+                    title="Export JSON">
+                    <i data-lucide="download" class="w-4 h-4"></i><span class="hidden sm:inline">Export</span>
+                </button>
+                <button onclick="resetSession()"
+                    class="px-3 py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-bold hover:bg-rose-100 transition-all flex items-center gap-2"
+                    title="Reset">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i><span class="hidden sm:inline">Reset</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <div id="mainApp" class="flex-1 pt-6 pb-24 px-4 md:px-8 opacity-0">
+            <div class="max-w-[1400px] mx-auto space-y-6">
+
+                <!-- ============ PANEL 1: SETUP ============ -->
+                <div class="glass-card relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-rose-500 to-orange-500"></div>
+                    <h2 class="text-lg font-heading font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="clipboard-edit" class="w-5 h-5 text-rose-600"></i> Changeover Setup
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Line
+                                Number</label>
+                            <input type="text" id="lineNumber" placeholder="e.g. S-01"
+                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-bold"
+                                oninput="persistSetup()">
+                        </div>
+                        <div>
+                            <label
+                                class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Current
+                                Style</label>
+                            <input type="text" id="currentStyle" placeholder="Outgoing style"
+                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold"
+                                oninput="persistSetup()">
+                        </div>
+                        <div>
+                            <label
+                                class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Upcoming
+                                Style</label>
+                            <input type="text" id="upcomingStyle" placeholder="Incoming style"
+                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold"
+                                oninput="persistSetup()">
+                        </div>
+                        <div>
+                            <label
+                                class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Upcoming
+                                SMV</label>
+                            <input type="number" step="0.01" id="upcomingSMV" placeholder="0.00"
+                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-bold"
+                                oninput="persistSetup(); recalcSummary()">
+                        </div>
+                        <div>
+                            <label
+                                class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Total
+                                Manpower</label>
+                            <input type="number" id="totalManpower" placeholder="0"
+                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-bold"
+                                oninput="persistSetup(); recalcSummary()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============ PANEL 2: OPERATIONS RECORDER ============ -->
+                <div class="glass-card relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-400 to-yellow-500"></div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                        <h2 class="text-lg font-heading font-bold text-slate-900 flex items-center gap-2">
+                            <i data-lucide="list-plus" class="w-5 h-5 text-amber-600"></i> Operations
+                            <span id="opCount"
+                                class="text-xs font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">0</span>
+                        </h2>
+                        <button onclick="addOperation()"
+                            class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-slate-900 to-slate-700 text-white text-xs font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Add Operation
+                        </button>
+                    </div>
+                    <div id="operationsList" class="space-y-3">
+                        <div class="text-center py-8 text-slate-400 text-sm">
+                            <i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+                            <p>No operations added yet. Click <strong>Add Operation</strong> to begin.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============ PANEL 3: SUMMARY ============ -->
+                <div class="glass-card relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
+                    <h2 class="text-lg font-heading font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <i data-lucide="bar-chart-3" class="w-5 h-5 text-emerald-600"></i> Summary
+                    </h2>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Style Change</p>
+                            <p class="text-sm font-bold text-slate-800 mt-1" id="sumStyleChange">— → —</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Time (min)
+                            </p>
+                            <p class="text-2xl font-heading font-bold text-slate-900 mt-1" id="sumTotalMin">0</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Time (hrs)
+                            </p>
+                            <p class="text-2xl font-heading font-bold text-slate-900 mt-1" id="sumTotalHrs">0.0</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">SMV Multiple</p>
+                            <p class="text-2xl font-heading font-bold text-indigo-600 mt-1" id="sumSMVMultiple">—</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date Started</p>
+                            <p class="text-sm font-bold text-slate-800 mt-1" id="sumStartDate">—</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date Ended</p>
+                            <p class="text-sm font-bold text-slate-800 mt-1" id="sumEndDate">—</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============ PANEL 4: LOSS TIME ANALYSIS ============ -->
+                <div class="glass-card relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-violet-500 to-purple-500">
+                    </div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                        <h2 class="text-lg font-heading font-bold text-slate-900 flex items-center gap-2">
+                            <i data-lucide="pie-chart" class="w-5 h-5 text-violet-600"></i> Loss Time Analysis
+                        </h2>
+                        <div class="flex items-center gap-2">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase">Cost/Min ($)</label>
+                            <input type="number" id="costPerMin" value="0.11" step="0.01" min="0"
+                                class="w-20 px-2 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-center"
+                                oninput="recalcSummary()">
+                        </div>
+                    </div>
+
+                    <!-- Breakdown Table -->
+                    <div class="overflow-x-auto rounded-xl border border-slate-100 bg-white/50 mb-6">
+                        <table class="w-full border-collapse text-sm">
+                            <thead>
+                                <tr class="bg-slate-50/80 text-left">
+                                    <th class="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                        Department</th>
+                                    <th
+                                        class="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">
+                                        Time (min)</th>
+                                    <th
+                                        class="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">
+                                        Cost ($)</th>
+                                    <th
+                                        class="py-3 px-4 text-[10px] font-bold text-slate-500 uppercase tracking-wider text-right">
+                                        Share</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lossTableBody">
+                                <tr>
+                                    <td colspan="4" class="py-6 text-center text-slate-400">No data yet</td>
+                                </tr>
+                            </tbody>
+                            <tfoot id="lossTableFoot" class="border-t-2 border-slate-200 font-bold text-slate-800">
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- Charts -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white/50 rounded-2xl p-4 border border-slate-100">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Loss Time Per
+                                Department</h4>
+                            <div class="relative h-[280px]"><canvas id="lossTimeChart"></canvas></div>
+                        </div>
+                        <div class="bg-white/50 rounded-2xl p-4 border border-slate-100">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Revenue Loss Per
+                                Department</h4>
+                            <div class="relative h-[280px]"><canvas id="revenueLossChart"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="py-6 px-8 border-t border-slate-200/30 bg-white/30 backdrop-blur-md">
+            <div class="max-w-[1400px] mx-auto text-center">
+                <p class="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase">© 2026 Instant Changeover
+                    Recorder — Standalone</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ============ EDIT MODAL ============ -->
+    <div id="editModal"
+        class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+        <div id="editModalContent" class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-base font-heading font-bold text-slate-900">Edit Timing</h3>
+                <button onclick="closeEditModal()" class="p-2 rounded-lg hover:bg-slate-100 transition-all"><i
+                        data-lucide="x" class="w-4 h-4 text-slate-500"></i></button>
+            </div>
+            <p class="text-sm font-bold text-slate-700" id="editOpTitle">Operation</p>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Start Time</label>
+                    <input type="datetime-local" id="editStartTime" step="1"
+                        class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1">End Time</label>
+                    <input type="datetime-local" id="editEndTime" step="1"
+                        class="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold">
+                </div>
+            </div>
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeEditModal()"
+                    class="flex-1 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all">Cancel</button>
+                <button onclick="saveEditModal()"
+                    class="flex-1 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-bold hover:bg-slate-800 transition-all">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  STATE
+        // ============================================================
+        const DEPARTMENTS = ['Trims', 'Cutting', 'Production', 'Merchandiser', 'IE', 'Technical', 'Maintenance'];
+        const MACHINES = ['SNLS', 'DNLS', 'OL3T', 'OL4T', 'OL5T', 'FL', 'Kansai', 'Bartack', 'Buttonhole', 'Button Stitch', 'Snap', 'Eyelet', 'Heat Press', 'Fusing', 'Band Knife', 'Iron', 'Manual', 'Other'];
+
+        const DEPT_COLORS = {
+            'Trims': '#8b5cf6', 'Cutting': '#3b82f6', 'Production': '#10b981',
+            'Merchandiser': '#ec4899', 'IE': '#6366f1', 'Technical': '#a855f7',
+            'Maintenance': '#f43f5e', 'Unknown': '#94a3b8'
+        };
+
+        let operations = []; // { id, name, operatorId, operatorName, department, machine, remarks, start, end }
+        let editingOpId = null;
+        let lossTimeChartInstance = null;
+        let revenueLossChartInstance = null;
+
+        // ============================================================
+        //  INIT
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            gsap.to("#mainApp", { opacity: 1, duration: 0.4, ease: "power2.out" });
+            lucide.createIcons();
+            loadSession();
+            renderOperations();
+            recalcSummary();
+        });
+
+        // Cursor effect
+        document.addEventListener('mousemove', e => {
+            const dot = document.querySelector('.cursor-dot');
+            const outline = document.querySelector('.cursor-outline');
+            if (dot) { dot.style.left = e.clientX - 4 + 'px'; dot.style.top = e.clientY - 4 + 'px'; }
+            if (outline) { outline.style.left = e.clientX - 16 + 'px'; outline.style.top = e.clientY - 16 + 'px'; }
+        });
+
+        // ============================================================
+        //  PERSISTENCE (localStorage)
+        // ============================================================
+        function persistSetup() {
+            const setup = {
+                lineNumber: el('lineNumber').value,
+                currentStyle: el('currentStyle').value,
+                upcomingStyle: el('upcomingStyle').value,
+                upcomingSMV: el('upcomingSMV').value,
+                totalManpower: el('totalManpower').value
+            };
+            localStorage.setItem('instantSetup', JSON.stringify(setup));
+        }
+        function persistOps() {
+            localStorage.setItem('instantOps', JSON.stringify(operations));
+        }
+        function loadSession() {
+            try {
+                const setup = JSON.parse(localStorage.getItem('instantSetup') || '{}');
+                if (setup.lineNumber) el('lineNumber').value = setup.lineNumber;
+                if (setup.currentStyle) el('currentStyle').value = setup.currentStyle;
+                if (setup.upcomingStyle) el('upcomingStyle').value = setup.upcomingStyle;
+                if (setup.upcomingSMV) el('upcomingSMV').value = setup.upcomingSMV;
+                if (setup.totalManpower) el('totalManpower').value = setup.totalManpower;
+
+                const ops = JSON.parse(localStorage.getItem('instantOps') || '[]');
+                if (ops.length > 0) operations = ops;
+            } catch (e) { console.warn('Session load failed', e); }
+        }
+
+        function el(id) { return document.getElementById(id); }
+
+        // ============================================================
+        //  ADD OPERATION
+        // ============================================================
+        function addOperation() {
+            Swal.fire({
+                title: 'New Operation',
+                input: 'text',
+                inputLabel: 'Operation Name',
+                inputPlaceholder: 'e.g. Layout Marking',
+                showCancelButton: true,
+                confirmButtonText: 'Add',
+                confirmButtonColor: '#0f172a',
+                inputValidator: v => { if (!v) return 'Please enter a name'; }
+            }).then(result => {
+                if (result.isConfirmed && result.value) {
+                    operations.push({
+                        id: Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+                        name: result.value.trim(),
+                        operatorId: '',
+                        operatorName: '',
+                        department: '',
+                        machine: '',
+                        remarks: '',
+                        start: null,
+                        end: null
+                    });
+                    persistOps();
+                    renderOperations();
+                    recalcSummary();
+                }
+            });
+        }
+
+        // ============================================================
+        //  RENDER OPERATIONS
+        // ============================================================
+        function renderOperations() {
+            const container = el('operationsList');
+            el('opCount').textContent = operations.length;
+
+            if (operations.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm"><i data-lucide="inbox" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i><p>No operations added yet. Click <strong>Add Operation</strong> to begin.</p></div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = operations.map((op, idx) => {
+                const hasStart = !!op.start;
+                const hasEnd = !!op.end;
+                const timeTaken = (hasStart && hasEnd) ? calculateWorkingHoursOnly(op.start, op.end).toFixed(2) : null;
+                const fbo = hasEnd ? formatDateTime(op.end) : '—';
+
+                // Status styling
+                let statusBg, statusIcon, statusText;
+                if (hasEnd) {
+                    statusBg = 'bg-emerald-100 text-emerald-600'; statusIcon = 'check'; statusText = `${timeTaken}m`;
+                } else if (hasStart) {
+                    statusBg = 'bg-amber-100 text-amber-600'; statusIcon = 'clock'; statusText = 'Running...';
+                } else {
+                    statusBg = 'bg-slate-100 text-slate-400'; statusIcon = 'circle'; statusText = 'Pending';
+                }
+
+                // Department options
+                const deptOptions = DEPARTMENTS.map(d => `<option value="${d}" ${op.department === d ? 'selected' : ''}>${d}</option>`).join('');
+                // Machine options
+                const machOptions = MACHINES.map(m => `<option value="${m}" ${op.machine === m ? 'selected' : ''}>${m}</option>`).join('');
+
+                return `
+                <div class="op-row glass-card !p-4 !rounded-xl space-y-3" data-id="${op.id}">
+                    <!-- Row 1: Status + Name + Timing controls -->
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                        <div class="flex items-center gap-3 flex-1 min-w-0">
+                            <div class="flex items-center justify-center w-8 h-8 rounded-lg ${statusBg} flex-shrink-0">
+                                ${hasStart && !hasEnd ? '<span class="w-2 h-2 bg-amber-600 rounded-full animate-ping"></span>' : `<i data-lucide="${statusIcon}" class="w-4 h-4"></i>`}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-bold text-slate-900 truncate">${op.name}</p>
+                                <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+                                    <span class="text-[10px] font-bold ${hasEnd ? 'text-emerald-600' : hasStart ? 'text-amber-600' : 'text-slate-400'}">${statusText}</span>
+                                    ${hasEnd ? `<span class="text-[10px] text-slate-400">FBO: ${fbo}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Timing buttons -->
+                        <div class="flex items-center gap-2 ml-auto flex-shrink-0">
+                            ${!hasStart ? `<button onclick="startOp('${op.id}')" class="px-4 py-2 rounded-lg bg-emerald-500 text-white text-xs font-bold hover:bg-emerald-600 transition-all shadow-sm">▶ Start</button>` : ''}
+                            ${hasStart && !hasEnd ? `<button onclick="endOp('${op.id}')" class="px-4 py-2 rounded-lg bg-rose-500 text-white text-xs font-bold hover:bg-rose-600 transition-all shadow-sm">■ End</button>` : ''}
+                            ${hasStart ? `<button onclick="openEditModal('${op.id}')" class="px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-600 text-xs font-bold hover:bg-slate-50 transition-all"><i data-lucide="edit-3" class="w-3 h-3 inline"></i></button>` : ''}
+                            <button onclick="removeOp('${op.id}')" class="px-3 py-2 rounded-lg bg-white border border-rose-200 text-rose-500 text-xs font-bold hover:bg-rose-50 transition-all"><i data-lucide="trash-2" class="w-3 h-3 inline"></i></button>
+                        </div>
+                    </div>
+                    <!-- Row 2: Details -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                        <input type="text" placeholder="Operator ID" value="${op.operatorId || ''}" onchange="updateOpField('${op.id}','operatorId',this.value)" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold">
+                        <input type="text" placeholder="Operator Name" value="${op.operatorName || ''}" onchange="updateOpField('${op.id}','operatorName',this.value)" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold">
+                        <select onchange="updateOpField('${op.id}','department',this.value)" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold">
+                            <option value="">Dept...</option>${deptOptions}
+                        </select>
+                        <select onchange="updateOpField('${op.id}','machine',this.value)" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold">
+                            <option value="">Machine...</option>${machOptions}
+                        </select>
+                        <input type="text" placeholder="Remarks" value="${op.remarks || ''}" onchange="updateOpField('${op.id}','remarks',this.value)" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold col-span-2 sm:col-span-1 lg:col-span-2">
+                    </div>
+                </div>`;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        // ============================================================
+        //  OPERATION ACTIONS
+        // ============================================================
+        function startOp(id) {
+            const op = operations.find(o => o.id === id);
+            if (!op) return;
+
+            // Inherit last end time if available
+            let timestamp = new Date().toISOString();
+            const completedOps = operations.filter(o => o.end);
+            if (completedOps.length > 0) {
+                const latestEnd = completedOps.reduce((max, o) => {
+                    const t = new Date(o.end).getTime();
+                    return t > max ? t : max;
+                }, 0);
+                if (latestEnd > 0) timestamp = new Date(latestEnd).toISOString();
+            }
+
+            op.start = timestamp;
+            persistOps();
+            renderOperations();
+            recalcSummary();
+        }
+
+        function endOp(id) {
+            const op = operations.find(o => o.id === id);
+            if (!op || !op.start) return;
+            op.end = new Date().toISOString();
+            persistOps();
+            renderOperations();
+            recalcSummary();
+        }
+
+        function removeOp(id) {
+            Swal.fire({
+                title: 'Remove operation?',
+                text: 'This cannot be undone.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Remove',
+                confirmButtonColor: '#ef4444'
+            }).then(r => {
+                if (r.isConfirmed) {
+                    operations = operations.filter(o => o.id !== id);
+                    persistOps();
+                    renderOperations();
+                    recalcSummary();
+                }
+            });
+        }
+
+        function updateOpField(id, field, value) {
+            const op = operations.find(o => o.id === id);
+            if (op) { op[field] = value; persistOps(); recalcSummary(); }
+        }
+
+        // ============================================================
+        //  EDIT MODAL
+        // ============================================================
+        function openEditModal(id) {
+            const op = operations.find(o => o.id === id);
+            if (!op) return;
+            editingOpId = id;
+            el('editOpTitle').textContent = op.name;
+
+            const fmt = iso => {
+                if (!iso) return '';
+                const d = new Date(iso);
+                if (isNaN(d.getTime())) return '';
+                const z = d.getTimezoneOffset() * 60 * 1000;
+                return new Date(d - z).toISOString().slice(0, 19);
+            };
+
+            el('editStartTime').value = fmt(op.start);
+            el('editEndTime').value = fmt(op.end);
+
+            const modal = el('editModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+            gsap.from('#editModalContent', { y: 20, opacity: 0, duration: 0.3 });
+        }
+
+        function closeEditModal() {
+            const modal = el('editModal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            editingOpId = null;
+        }
+
+        function saveEditModal() {
+            if (!editingOpId) return;
+            const op = operations.find(o => o.id === editingOpId);
+            if (!op) return;
+
+            const newStart = el('editStartTime').value;
+            const newEnd = el('editEndTime').value;
+
+            if (newStart) op.start = new Date(newStart).toISOString();
+            if (newEnd) op.end = new Date(newEnd).toISOString();
+            else op.end = null;
+
+            persistOps();
+            closeEditModal();
+            renderOperations();
+            recalcSummary();
+        }
+
+        // ============================================================
+        //  TIME CALCULATION (Working Hours Only: 7:30 – 17:30)
+        // ============================================================
+        function calculateWorkingHoursOnly(startTimestamp, endTimestamp) {
+            const SHIFT_START_HOUR = 7, SHIFT_START_MINUTE = 30;
+            const SHIFT_END_HOUR = 17, SHIFT_END_MINUTE = 30;
+
+            let start = new Date(startTimestamp);
+            let end = new Date(endTimestamp);
+            if (isNaN(start.getTime()) || isNaN(end.getTime()) || start >= end) return 0;
+
+            let totalMinutes = 0;
+            let currentDay = new Date(start);
+            currentDay.setHours(0, 0, 0, 0);
+
+            while (currentDay <= end) {
+                const shiftStart = new Date(currentDay);
+                shiftStart.setHours(SHIFT_START_HOUR, SHIFT_START_MINUTE, 0, 0);
+                const shiftEnd = new Date(currentDay);
+                shiftEnd.setHours(SHIFT_END_HOUR, SHIFT_END_MINUTE, 0, 0);
+
+                const overlapStart = start > shiftStart ? start : shiftStart;
+                const overlapEnd = end < shiftEnd ? end : shiftEnd;
+                if (overlapStart < overlapEnd) totalMinutes += (overlapEnd - overlapStart) / (1000 * 60);
+                currentDay.setDate(currentDay.getDate() + 1);
+            }
+            return totalMinutes;
+        }
+
+        // ============================================================
+        //  SUMMARY + LOSS TIME RECALCULATION
+        // ============================================================
+        function recalcSummary() {
+            const curr = el('currentStyle').value || '—';
+            const upcoming = el('upcomingStyle').value || '—';
+            const smv = parseFloat(el('upcomingSMV').value) || 0;
+            const manpower = parseInt(el('totalManpower').value) || 0;
+            const costPerMin = parseFloat(el('costPerMin').value) || 0.11;
+
+            el('sumStyleChange').textContent = `${curr} → ${upcoming}`;
+
+            // Collect completed ops
+            const completed = operations.filter(o => o.start && o.end);
+            if (completed.length === 0) {
+                el('sumTotalMin').textContent = '0';
+                el('sumTotalHrs').textContent = '0.0';
+                el('sumSMVMultiple').textContent = '—';
+                el('sumStartDate').textContent = '—';
+                el('sumEndDate').textContent = '—';
+                renderLossTable([], 0, costPerMin, manpower);
+                renderCharts([]);
+                return;
+            }
+
+            const starts = completed.map(o => new Date(o.start).getTime()).filter(t => !isNaN(t));
+            const ends = completed.map(o => new Date(o.end).getTime()).filter(t => !isNaN(t));
+            const overallStart = Math.min(...starts);
+            const overallEnd = Math.max(...ends);
+            const totalTime = calculateWorkingHoursOnly(overallStart, overallEnd);
+
+            el('sumTotalMin').textContent = totalTime.toFixed(0);
+            el('sumTotalHrs').textContent = (totalTime / 60).toFixed(1);
+            el('sumSMVMultiple').textContent = smv > 0 ? (totalTime / smv).toFixed(1) + 'x' : '—';
+            el('sumStartDate').textContent = formatDateTime(new Date(overallStart).toISOString());
+            el('sumEndDate').textContent = formatDateTime(new Date(overallEnd).toISOString());
+
+            // Dept breakdown
+            const deptMap = {};
+            DEPARTMENTS.forEach(d => deptMap[d] = 0);
+
+            completed.forEach(op => {
+                const time = calculateWorkingHoursOnly(op.start, op.end);
+                const dept = op.department || 'Unknown';
+                deptMap[dept] = (deptMap[dept] || 0) + time;
+            });
+
+            const deptData = Object.entries(deptMap)
+                .map(([dept, time]) => ({ dept, time, cost: time * costPerMin * (manpower || 1), share: totalTime > 0 ? (time / totalTime) * 100 : 0 }))
+                .filter(d => d.time > 0);
+
+            renderLossTable(deptData, totalTime, costPerMin, manpower);
+            renderCharts(deptData);
+        }
+
+        function renderLossTable(deptData, totalTime, costPerMin, manpower) {
+            const tbody = el('lossTableBody');
+            const tfoot = el('lossTableFoot');
+
+            if (deptData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-slate-400">No data yet</td></tr>';
+                tfoot.innerHTML = '';
+                return;
+            }
+
+            const totalCost = deptData.reduce((s, d) => s + d.cost, 0);
+
+            tbody.innerHTML = deptData.map(d => `
+                <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
+                    <td class="py-3 px-4 font-bold text-slate-700 flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-full" style="background:${DEPT_COLORS[d.dept] || '#94a3b8'}"></span>${d.dept}
+                    </td>
+                    <td class="py-3 px-4 font-mono text-slate-600 text-right">${d.time.toFixed(1)}</td>
+                    <td class="py-3 px-4 font-mono text-rose-600 font-bold text-right">$${d.cost.toFixed(2)}</td>
+                    <td class="py-3 px-4 text-right">
+                        <div class="flex items-center justify-end gap-2">
+                            <span class="text-xs font-bold text-slate-500">${d.share.toFixed(0)}%</span>
+                            <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden"><div class="h-full rounded-full" style="width:${d.share}%; background:${DEPT_COLORS[d.dept] || '#94a3b8'}"></div></div>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            tfoot.innerHTML = `<tr>
+                <td class="py-3 px-4 uppercase tracking-wider text-xs">Total</td>
+                <td class="py-3 px-4 text-right font-mono text-lg">${totalTime.toFixed(0)}</td>
+                <td class="py-3 px-4 text-right font-mono text-lg text-rose-600">$${totalCost.toFixed(2)}</td>
+                <td class="py-3 px-4 text-right">100%</td>
+            </tr>`;
+        }
+
+        // ============================================================
+        //  CHARTS
+        // ============================================================
+        function renderCharts(deptData) {
+            // Loss Time Pie
+            const ctxPie = el('lossTimeChart').getContext('2d');
+            if (lossTimeChartInstance) lossTimeChartInstance.destroy();
+
+            if (deptData.length > 0) {
+                lossTimeChartInstance = new Chart(ctxPie, {
+                    type: 'doughnut',
+                    data: {
+                        labels: deptData.map(d => d.dept),
+                        datasets: [{ data: deptData.map(d => d.time), backgroundColor: deptData.map(d => DEPT_COLORS[d.dept] || '#94a3b8'), borderWidth: 0, hoverOffset: 4 }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'right', labels: { usePointStyle: true, font: { family: 'Inter', size: 11 } } },
+                            tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw.toFixed(1)}m` } }
+                        },
+                        cutout: '65%'
+                    }
+                });
+            }
+
+            // Revenue Loss Bar
+            const ctxBar = el('revenueLossChart').getContext('2d');
+            if (revenueLossChartInstance) revenueLossChartInstance.destroy();
+
+            if (deptData.length > 0) {
+                revenueLossChartInstance = new Chart(ctxBar, {
+                    type: 'bar',
+                    data: {
+                        labels: deptData.map(d => d.dept),
+                        datasets: [{ label: 'Revenue Loss ($)', data: deptData.map(d => d.cost), backgroundColor: deptData.map(d => DEPT_COLORS[d.dept] || '#94a3b8'), borderRadius: 6, barThickness: 24 }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { callbacks: { label: ctx => ` $${ctx.raw.toFixed(2)}` } }
+                        },
+                        scales: {
+                            x: { grid: { display: false }, beginAtZero: true, ticks: { callback: v => '$' + v } },
+                            y: { grid: { display: false }, ticks: { font: { size: 11, weight: 600 } } }
+                        }
+                    }
+                });
+            }
+        }
+
+        // ============================================================
+        //  EXPORT & RESET
+        // ============================================================
+        function exportSession() {
+            const data = {
+                setup: {
+                    lineNumber: el('lineNumber').value,
+                    currentStyle: el('currentStyle').value,
+                    upcomingStyle: el('upcomingStyle').value,
+                    upcomingSMV: el('upcomingSMV').value,
+                    totalManpower: el('totalManpower').value
+                },
+                operations: operations,
+                exportedAt: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `instant_changeover_${el('lineNumber').value || 'export'}_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function resetSession() {
+            Swal.fire({
+                title: 'Reset everything?',
+                text: 'All operations and setup data will be cleared.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Reset',
+                confirmButtonColor: '#ef4444'
+            }).then(r => {
+                if (r.isConfirmed) {
+                    operations = [];
+                    localStorage.removeItem('instantSetup');
+                    localStorage.removeItem('instantOps');
+                    el('lineNumber').value = '';
+                    el('currentStyle').value = '';
+                    el('upcomingStyle').value = '';
+                    el('upcomingSMV').value = '';
+                    el('totalManpower').value = '';
+                    renderOperations();
+                    recalcSummary();
+                }
+            });
+        }
+
+        // ============================================================
+        //  HELPERS
+        // ============================================================
+        function formatDateTime(iso) {
+            if (!iso) return '—';
+            const d = new Date(iso);
+            if (isNaN(d.getTime())) return '—';
+            return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+    </script>
+</body>
+
+</html>
