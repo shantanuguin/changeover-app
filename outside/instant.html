@@ -537,10 +537,16 @@
         });
 
         // ============================================================
-        //  LINE CHANGE + SUPERVISOR
+        //  LINE CHANGE + SUPERVISOR + QCO PROMPT
         // ============================================================
-        function onLineChange() {
+        async function onLineChange() {
             const line = el('lineNumber').value;
+            if (!line) {
+                el('supervisorDisplay').classList.add('hidden');
+                el('supervisorName').textContent = '';
+                return;
+            }
+
             const data = personnelData[line];
             if (data) {
                 el('supervisorDisplay').classList.remove('hidden');
@@ -550,6 +556,40 @@
                 el('supervisorName').textContent = '';
             }
             lucide.createIcons();
+
+            // Check for existing active QCOs for this line
+            try {
+                const snapshot = await db.collection('changeovers')
+                    .where('lineNumber', '==', line)
+                    .where('status', '==', 'in-progress')
+                    .limit(1)
+                    .get();
+
+                if (!snapshot.empty) {
+                    const doc = snapshot.docs[0];
+                    const qcoData = doc.data();
+                    const qcoId = doc.id;
+
+                    // Don't prompt if it's already the currently loaded one
+                    if (currentQCONumber === qcoId) return;
+
+                    Swal.fire({
+                        title: 'Active Changeover Found',
+                        html: `An in-progress changeover (<b>${qcoId}</b>) already exists for Line ${line}.<br><br>Style: ${qcoData.currentStyle} → ${qcoData.upcomingStyle}`,
+                        icon: 'info',
+                        showCancelButton: true,
+                        confirmButtonText: 'Load Existing',
+                        cancelButtonText: 'Ignore',
+                        confirmButtonColor: '#0ea5e9'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            populateSession(qcoData, qcoId);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("Error checking for existing QCOs:", error);
+            }
         }
 
         // ============================================================
@@ -656,31 +696,51 @@
                 try {
                     const doc = await db.collection('changeovers').doc(savedQCO).get();
                     if (doc.exists) {
-                        const data = doc.data();
-                        currentQCONumber = savedQCO;
-                        el('lineNumber').value = data.lineNumber || '';
-                        el('currentStyle').value = data.currentStyle || '';
-                        el('upcomingStyle').value = data.upcomingStyle || '';
-                        el('upcomingSMV').value = data.upcomingSMV || '';
-                        el('totalManpower').value = data.totalManpower || '';
-                        onLineChange();
-                        el('qcoBadge').classList.remove('hidden');
-                        el('qcoDisplay').textContent = currentQCONumber;
-                        // Restore operations from operationTimings
-                        if (data.operationTimings) {
-                            operations = Object.entries(data.operationTimings).map(([name, t]) => ({
-                                id: Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
-                                name, start: t.start || null, end: t.end || null,
-                                department: t.department || '', machine: t.machine || '',
-                                operatorId: t.operatorId || '', operatorName: t.operatorName || '',
-                                remarks: t.remarks || ''
-                            }));
-                        }
-                        lucide.createIcons();
+                        populateSession(doc.data(), savedQCO);
                         return;
                     }
                 } catch (e) { console.warn('Firebase load failed, using localStorage', e); }
             }
+        }
+
+        function populateSession(data, qcoId) {
+            currentQCONumber = qcoId;
+            el('lineNumber').value = data.lineNumber || '';
+
+            // Show supervisor
+            const pData = personnelData[data.lineNumber];
+            if (pData) {
+                el('supervisorDisplay').classList.remove('hidden');
+                el('supervisorName').textContent = pData.supervisor;
+            } else {
+                el('supervisorDisplay').classList.add('hidden');
+            }
+
+            el('currentStyle').value = data.currentStyle || '';
+            el('upcomingStyle').value = data.upcomingStyle || '';
+            el('upcomingSMV').value = data.upcomingSMV || '';
+            el('totalManpower').value = data.totalManpower || '';
+
+            el('qcoBadge').classList.remove('hidden');
+            el('qcoDisplay').textContent = currentQCONumber;
+            localStorage.setItem('instantQCOId', currentQCONumber);
+
+            // Restore operations from operationTimings
+            if (data.operationTimings) {
+                operations = Object.entries(data.operationTimings).map(([name, t]) => ({
+                    id: Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+                    name, start: t.start || null, end: t.end || null,
+                    department: t.department || '', machine: t.machine || '',
+                    operatorId: t.operatorId || '', operatorName: t.operatorName || '',
+                    remarks: t.remarks || ''
+                }));
+            } else {
+                operations = [];
+            }
+
+            lucide.createIcons();
+            renderOperations();
+            recalcSummary();
         }
 
         // ============================================================
