@@ -212,9 +212,13 @@
                                 class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all flex items-center gap-2">
                                 <i data-lucide="save" class="w-4 h-4"></i> Save Setup
                             </button>
+                            <button id="finishBtn" onclick="finishChangeover()"
+                                class="hidden px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-blue-500 text-white text-xs font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all flex items-center gap-2">
+                                <i data-lucide="check-circle" class="w-4 h-4"></i> Finish
+                            </button>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div>
                             <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Line
                                 Number</label>
@@ -258,6 +262,14 @@
                         </div>
                         <div>
                             <label
+                                class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Total
+                                Manpower</label>
+                            <input type="number" id="totalManpower" placeholder="0"
+                                class="w-full px-3 py-3 rounded-xl border border-slate-200 text-sm font-bold"
+                                oninput="recalcTarget(); recalcSummary()">
+                        </div>
+                        <div>
+                            <label
                                 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Current
                                 Style</label>
                             <input type="text" id="currentStyle" placeholder="Outgoing style"
@@ -270,21 +282,20 @@
                             <input type="text" id="upcomingStyle" placeholder="Incoming style"
                                 class="w-full px-3 py-3 rounded-xl border border-slate-200 text-sm font-semibold">
                         </div>
-                        <div>
+                        <div class="lg:col-start-1">
                             <label
                                 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Upcoming
                                 SMV</label>
                             <input type="number" step="0.01" id="upcomingSMV" placeholder="0.00"
                                 class="w-full px-3 py-3 rounded-xl border border-slate-200 text-sm font-bold"
-                                oninput="recalcSummary()">
+                                oninput="recalcTarget(); recalcSummary()">
                         </div>
                         <div>
                             <label
-                                class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Total
-                                Manpower</label>
-                            <input type="number" id="totalManpower" placeholder="0"
-                                class="w-full px-3 py-3 rounded-xl border border-slate-200 text-sm font-bold"
-                                oninput="recalcSummary()">
+                                class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Upcoming
+                                Target</label>
+                            <input type="number" id="upcomingTarget" placeholder="0" readonly
+                                class="w-full px-3 py-3 rounded-xl border border-slate-100 bg-slate-50/50 text-sm font-bold text-indigo-600">
                         </div>
                     </div>
                 </div>
@@ -628,15 +639,14 @@
             }
         }
 
-        // ============================================================
-        //  SAVE SETUP (generates QCO + saves to Firebase)
-        // ============================================================
         async function saveSetup() {
             const lineVal = el('lineNumber').value;
             const curStyle = el('currentStyle').value.trim();
             const upStyle = el('upcomingStyle').value.trim();
+            const upTarget = el('upcomingTarget').value;
             const smv = el('upcomingSMV').value;
             const mp = el('totalManpower').value;
+
             if (!lineVal || !curStyle || !upStyle) {
                 Swal.fire('Missing Fields', 'Please select a line and enter both styles.', 'warning');
                 return;
@@ -653,7 +663,9 @@
                     currentStyle: curStyle,
                     upcomingStyle: upStyle,
                     upcomingSMV: parseFloat(smv) || 0,
+                    upcomingTarget: parseInt(upTarget) || 0,
                     totalManpower: parseInt(mp) || 0,
+                    allotedWP: parseInt(mp) || 0, // Mirrored for style.html
                     supervisor: supervisor,
                     status: 'in-progress',
                     source: 'instant',
@@ -665,6 +677,7 @@
                 localStorage.setItem('instantQCOId', currentQCONumber);
                 el('qcoBadge').classList.remove('hidden');
                 el('qcoDisplay').textContent = currentQCONumber;
+                el('finishBtn').classList.remove('hidden');
                 lucide.createIcons();
                 Swal.fire({ icon: 'success', title: 'Saved!', text: `QCO: ${currentQCONumber}`, timer: 1500, showConfirmButton: false });
             } catch (e) {
@@ -727,12 +740,15 @@
             }
 
             el('currentStyle').value = data.currentStyle || '';
+            el('currentTarget').value = data.currentTarget || '';
             el('upcomingStyle').value = data.upcomingStyle || '';
             el('upcomingSMV').value = data.upcomingSMV || '';
+            el('upcomingTarget').value = data.upcomingTarget || '';
             el('totalManpower').value = data.totalManpower || '';
 
             el('qcoBadge').classList.remove('hidden');
             el('qcoDisplay').textContent = currentQCONumber;
+            el('finishBtn').classList.remove('hidden');
             localStorage.setItem('instantQCOId', currentQCONumber);
 
             // Restore operations from operationTimings
@@ -972,6 +988,17 @@
         // ============================================================
         //  TIME CALCULATION (Working Hours Only: 7:30 – 17:30)
         // ============================================================
+        function recalcTarget() {
+            const smv = parseFloat(el('upcomingSMV').value) || 0;
+            const mp = parseInt(el('totalManpower').value) || 0;
+            if (smv > 0) {
+                const target = Math.round((600 * mp) / smv);
+                el('upcomingTarget').value = target;
+            } else {
+                el('upcomingTarget').value = '';
+            }
+        }
+
         function calculateWorkingHoursOnly(startTimestamp, endTimestamp) {
             const SHIFT_START_HOUR = 7, SHIFT_START_MINUTE = 30;
             const SHIFT_END_HOUR = 17, SHIFT_END_MINUTE = 30;
@@ -1184,6 +1211,7 @@
                     el('upcomingStyle').value = '';
                     el('upcomingSMV').value = '';
                     el('totalManpower').value = '';
+                    el('upcomingTarget').value = '';
                     el('qcoBadge').classList.add('hidden');
                     el('supervisorDisplay').classList.add('hidden');
                     renderOperations();
