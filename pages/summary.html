@@ -747,6 +747,21 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Efficiency Graph Section (Injected from Style Page) -->
+                    <div class="glass-card p-8 mb-8 overflow-hidden relative group" id="efficiencyCard"
+                        style="display: none;">
+                        <div class="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <i data-lucide="line-chart" class="w-24 h-24 text-blue-600"></i>
+                        </div>
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-heading font-bold text-slate-900 flex items-center gap-2">
+                                <i data-lucide="trending-up" class="w-5 h-5 text-emerald-500"></i> Efficiency Trend
+                            </h3>
+                        </div>
+                        <div class="w-full h-[300px] mt-4 relative">
+                            <canvas id="efficiencyChart"></canvas>
+                        </div>
+                    </div>
 
                     <!-- Table -->
                     <!-- Loss Time Breakdown Table -->
@@ -995,6 +1010,7 @@
             await loadChangeoverList();
             await populateLineNumbers();
 
+            initEfficiencyChart();
             lucide.createIcons();
             gsap.to("#mainApp", { opacity: 1, duration: 0.5 });
         });
@@ -1327,9 +1343,7 @@
                 currentReportData.operations = [];
 
                 // Prioritize saved manpower, fallback to allotted, default to 0
-                currentReportData.manpower = Math.max(0, data.savedManpower !== undefined
-                    ? parseInt(data.savedManpower)
-                    : (data.allotedWP ? parseInt(data.allotedWP) : 0));
+                currentReportData.manpower = Math.max(0, parseInt(data.savedManpower || data.allotedWP || data.totalManpower) || 0);
 
                 // Prioritize saved cost rate, default to 0.11
                 currentReportData.costRate = Math.max(0, data.savedCostRate !== undefined
@@ -1405,6 +1419,7 @@
                 }
 
                 recalculateCosts();
+                updateEfficiencyChart();
 
             } catch (e) {
                 console.error("Error generating report", e);
@@ -1461,7 +1476,9 @@
                     qcoCount++;
 
                     if (data.upcomingStyle) styles.add(data.upcomingStyle);
-                    if (data.allotedWP) totalManpower += parseInt(data.allotedWP);
+
+                    const wp = parseInt(data.savedManpower || data.allotedWP || data.totalManpower) || 0;
+                    totalManpower += wp;
 
                     // Aggregate operations
                     if (data.operationTimings) {
@@ -1869,6 +1886,169 @@
             });
 
             return Math.max(0, totalMinutes - totalDeduction);
+        }
+        // --- Efficiency Chart Logic ---
+        let efficiencyChart = null;
+        const SHIFT_MINUTES = 600; // Standard shift length (10 hours)
+
+        function initEfficiencyChart() {
+            const ctx = document.getElementById('efficiencyChart');
+            if (!ctx) return;
+
+            if (efficiencyChart) {
+                efficiencyChart.destroy();
+            }
+
+            efficiencyChart = new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Efficiency %',
+                        data: [],
+                        borderColor: '#10b981', // emerald-500
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#10b981',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    return ' Efficiency: ' + context.parsed.y.toFixed(1) + '%';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            suggestedMax: 100,
+                            title: { display: true, text: 'Efficiency %', font: { size: 10, weight: 'bold' } },
+                            grid: { color: 'rgba(0,0,0,0.04)' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { font: { size: 9 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function getDailyOutputDateRange() {
+            const data = currentReportData.metadata;
+            if (!data) return [];
+
+            // Find changeover start date
+            let startDate = null;
+            const timings = data.operationTimings || {};
+            const timingStarts = Object.values(timings).filter(t => t.start).map(t => new Date(t.start));
+
+            if (timingStarts.length > 0) {
+                startDate = new Date(Math.min(...timingStarts.map(dt => dt.getTime())));
+            } else {
+                startDate = data.createdAt?.toDate?.() || (data.createdAt ? new Date(data.createdAt) : new Date());
+            }
+
+            // Find changeover end date
+            let endDate = null;
+            if (data.completedAt) {
+                endDate = data.completedAt?.toDate?.() || new Date(data.completedAt);
+            } else {
+                endDate = new Date();
+            }
+
+            // Normalize to midnight
+            startDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+            endDate = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+
+            // 1 day before start, 1 day after end
+            const rangeStart = new Date(startDate);
+            rangeStart.setDate(rangeStart.getDate() - 1);
+
+            const rangeEnd = new Date(endDate);
+            if (data.status === 'completed') {
+                rangeEnd.setDate(rangeEnd.getDate() + 1);
+            }
+
+            // Generate date array
+            const dates = [];
+            const current = new Date(rangeStart);
+            while (current <= rangeEnd) {
+                dates.push(new Date(current));
+                current.setDate(current.getDate() + 1);
+            }
+            return dates;
+        }
+
+        function calculateEfficiency(dailyOutput) {
+            const data = currentReportData.metadata;
+            if (!data || !dailyOutput || dailyOutput <= 0) return null;
+
+            // Try to find the SMV
+            const smv = parseFloat(data.upcomingSMV) || parseFloat(data.newSMV) || 0;
+            // Get manpower (using the already resolved fallback from `loadReportData`)
+            const manpower = currentReportData.manpower || 0;
+
+            if (!smv || !manpower) return null;
+
+            return ((smv * dailyOutput) / (SHIFT_MINUTES * manpower)) * 100;
+        }
+
+        function updateEfficiencyChart() {
+            const card = document.getElementById('efficiencyCard');
+            if (!card || !efficiencyChart) return;
+
+            // If there's no single metadata (e.g. Aggregated Report), we can't show a single QCO chart easily yet
+            if (!currentReportData.metadata) {
+                card.style.display = 'none';
+                return;
+            }
+
+            const data = currentReportData.metadata;
+            const savedOutputs = data.dailyOutputs || {};
+            const dates = getDailyOutputDateRange();
+
+            // Only show chart if there's actual output recorded somewhere in range
+            const hasData = dates.some(date => {
+                const key = date.toISOString().split('T')[0];
+                return savedOutputs[key]?.output > 0;
+            });
+
+            if (!hasData) {
+                card.style.display = 'none';
+                return;
+            }
+
+            card.style.display = 'block';
+
+            const labels = [];
+            const values = [];
+
+            dates.forEach(date => {
+                const key = date.toISOString().split('T')[0];
+                const output = savedOutputs[key]?.output;
+                const eff = output ? calculateEfficiency(parseFloat(output)) : null;
+
+                labels.push(date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }));
+                values.push(eff);
+            });
+
+            efficiencyChart.data.labels = labels;
+            efficiencyChart.data.datasets[0].data = values;
+            efficiencyChart.update();
         }
     </script>
 </body>
