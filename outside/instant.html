@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Instant Changeover Recorder</title>
 
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link
@@ -195,32 +198,77 @@
                 <!-- ============ PANEL 1: SETUP ============ -->
                 <div class="glass-card relative overflow-hidden">
                     <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-rose-500 to-orange-500"></div>
-                    <h2 class="text-lg font-heading font-bold text-slate-900 mb-4 flex items-center gap-2">
-                        <i data-lucide="clipboard-edit" class="w-5 h-5 text-rose-600"></i> Changeover Setup
-                    </h2>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                        <h2 class="text-lg font-heading font-bold text-slate-900 flex items-center gap-2">
+                            <i data-lucide="clipboard-edit" class="w-5 h-5 text-rose-600"></i> Changeover Setup
+                        </h2>
+                        <div class="flex items-center gap-2">
+                            <div id="qcoBadge"
+                                class="hidden px-3 py-1.5 rounded-xl bg-gradient-to-r from-slate-900 to-slate-700 text-white text-xs font-bold tracking-wider shadow-lg">
+                                <i data-lucide="hash" class="w-3 h-3 inline mr-1"></i><span
+                                    id="qcoDisplay">S-X-XXX-XXX-XX</span>
+                            </div>
+                            <button onclick="saveSetup()"
+                                class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all flex items-center gap-2">
+                                <i data-lucide="save" class="w-4 h-4"></i> Save Setup
+                            </button>
+                        </div>
+                    </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                         <div>
                             <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Line
                                 Number</label>
-                            <input type="text" id="lineNumber" placeholder="e.g. S-01"
+                            <select id="lineNumber"
                                 class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-bold"
-                                oninput="persistSetup()">
+                                onchange="onLineChange()">
+                                <option value="">Choose a line...</option>
+                                <option value="1">Line 1 - ADIDAS</option>
+                                <option value="1A">Line 1A - TNF</option>
+                                <option value="2">Line 2 - LULU</option>
+                                <option value="3">Line 3 - ADIDAS</option>
+                                <option value="6+17">Line 6+17 - ADIDAS</option>
+                                <option value="7">Line 7 - TNF</option>
+                                <option value="7A">Line 7A - ADIDAS</option>
+                                <option value="8+5">Line 8+5 - ADIDAS</option>
+                                <option value="9">Line 9 - ALO</option>
+                                <option value="10">Line 10 - TNF</option>
+                                <option value="11+15">Line 11+15 - ADIDAS</option>
+                                <option value="12">Line 12 - ADIDAS</option>
+                                <option value="13/21">Line 13/21 - WALLMART</option>
+                                <option value="14">Line 14 - TNF</option>
+                                <option value="16">Line 16 - ALO</option>
+                                <option value="16A">Line 16A - ALO</option>
+                                <option value="18">Line 18 - ALO</option>
+                                <option value="19">Line 19 - ADIDAS</option>
+                                <option value="20">Line 20 - ADIDAS</option>
+                                <option value="22">Line 22 - ADIDAS</option>
+                                <option value="23">Line 23 - TNF</option>
+                                <option value="24">Line 24 - ADIDAS</option>
+                                <option value="25">Line 25 - ADIDAS</option>
+                                <option value="26/4">Line 26/4 - ADIDAS</option>
+                                <option value="28">Line 28 - TNF</option>
+                                <option value="29">Line 29 - ADIDAS</option>
+                                <option value="30">Line 30 - TNF</option>
+                                <option value="31">Line 31 - ADIDAS</option>
+                                <option value="32">Line 32 - ALO</option>
+                            </select>
+                            <p id="supervisorDisplay" class="text-[10px] font-bold text-emerald-600 mt-1 hidden"><i
+                                    data-lucide="user" class="w-3 h-3 inline mr-0.5"></i> Supervisor: <span
+                                    id="supervisorName"></span></p>
                         </div>
                         <div>
                             <label
                                 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Current
                                 Style</label>
                             <input type="text" id="currentStyle" placeholder="Outgoing style"
-                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold"
-                                oninput="persistSetup()">
+                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold">
                         </div>
                         <div>
                             <label
                                 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Upcoming
                                 Style</label>
                             <input type="text" id="upcomingStyle" placeholder="Incoming style"
-                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold"
-                                oninput="persistSetup()">
+                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold">
                         </div>
                         <div>
                             <label
@@ -228,7 +276,7 @@
                                 SMV</label>
                             <input type="number" step="0.01" id="upcomingSMV" placeholder="0.00"
                                 class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-bold"
-                                oninput="persistSetup(); recalcSummary()">
+                                oninput="recalcSummary()">
                         </div>
                         <div>
                             <label
@@ -236,7 +284,7 @@
                                 Manpower</label>
                             <input type="number" id="totalManpower" placeholder="0"
                                 class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-bold"
-                                oninput="persistSetup(); recalcSummary()">
+                                oninput="recalcSummary()">
                         </div>
                     </div>
                 </div>
@@ -403,34 +451,84 @@
 
     <script>
         // ============================================================
-        //  STATE
+        //  FIREBASE CONFIG
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCayfWGQP1t3oBU9eFj-3Ww0uu7nSl3Q4g",
+            authDomain: "sidneymailer.firebaseapp.com",
+            projectId: "sidneymailer",
+            storageBucket: "sidneymailer.firebasestorage.app",
+            messagingSenderId: "911316068119",
+            appId: "1:911316068119:web:ce23dbe663dc385a81f952",
+            measurementId: "G-NJ0QH6DEXG"
+        };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // ============================================================
+        //  CONSTANTS
         // ============================================================
         const DEPARTMENTS = ['Trims', 'Cutting', 'Production', 'Merchandiser', 'IE', 'Technical', 'Maintenance'];
         const MACHINES = ['SNLS', 'DNLS', 'OL3T', 'OL4T', 'OL5T', 'FL', 'Kansai', 'Bartack', 'Buttonhole', 'Button Stitch', 'Snap', 'Eyelet', 'Heat Press', 'Fusing', 'Band Knife', 'Iron', 'Manual', 'Other'];
-
         const DEPT_COLORS = {
             'Trims': '#8b5cf6', 'Cutting': '#3b82f6', 'Production': '#10b981',
             'Merchandiser': '#ec4899', 'IE': '#6366f1', 'Technical': '#a855f7',
             'Maintenance': '#f43f5e', 'Unknown': '#94a3b8'
         };
+        const personnelData = {
+            "1": { supervisor: "WASANA", rqc: "SANGIB", ie: "BUDDIKA", lineIncharge: "MOHAMAD", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "SAMINATHAN" },
+            "1A": { supervisor: "WASANA", rqc: "MIYARAJ", ie: "BUDDIKA", lineIncharge: "MOHAMAD", qam: "ANIL/SUJAN", mechIncharge: "MOTHIN", technical: "SAMINATHAN" },
+            "2": { supervisor: "SOHORAB", rqc: "SHERAJ", ie: "BUDDIKA", lineIncharge: "VARMA", qam: "JANAKA", mechIncharge: "MOTHIN", technical: "KOUSAR" },
+            "3": { supervisor: "SOHEL", rqc: "RIPON", ie: "SANAKA", lineIncharge: "TARAJUL", qam: "", mechIncharge: "SAKIB", technical: "SAMINATHAN" },
+            "6+17": { supervisor: "SHAKIL/MUSUM", rqc: "NURADAM/KHOKUN", ie: "SANAKA", lineIncharge: "TARAJUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
+            "7": { supervisor: "NAGENDER", rqc: "SHAMIM", ie: "BUDDIKA", lineIncharge: "VARMA", qam: "ANIL/SUJAN", mechIncharge: "MOTHIN", technical: "KOUSAR" },
+            "7A": { supervisor: "KAMAL", rqc: "LABO", ie: "BUDDIKA", lineIncharge: "VARMA", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "KOUSAR" },
+            "8+5": { supervisor: "BALISTER/FARUK", rqc: "SABOZ/NAIME", ie: "SANAKA", lineIncharge: "SAKIR", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "SAMINATHAN" },
+            "9": { supervisor: "SUMI", rqc: "HELAL", ie: "SANAKA", lineIncharge: "FARIDUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "RASHID" },
+            "10": { supervisor: "RAJ KUMAR", rqc: "RAM KUMAR", ie: "THANVIR", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "11+15": { supervisor: "KAMAL/MUNSAF", rqc: "ANWER/ARIFUL", ie: "SANAKA", lineIncharge: "TARAJUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "SAMINATHAN" },
+            "12": { supervisor: "DHARAMEDER", rqc: "JAHEDUL", ie: "BUDDIKA", lineIncharge: "VARMA", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "RASHID" },
+            "13/21": { supervisor: "SUMON/DEVRAJ", rqc: "ABU KASAM/ABHAY", ie: "THANVIR", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "14": { supervisor: "SHARIF", rqc: "GUDDU", ie: "BUDDIKA", lineIncharge: "MOHAMAD", qam: "ANIL/SUJAN", mechIncharge: "SAKIB", technical: "KOUSAR" },
+            "16": { supervisor: "RAHMAN", rqc: "JAHURUL", ie: "THANVIR", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "16A": { supervisor: "RHANIA", rqc: "VIJAY", ie: "THANVIR", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "18": { supervisor: "JAKIR", rqc: "RASHMI", ie: "THANVIR", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "19": { supervisor: "ALAMGIR", rqc: "ASLAM", ie: "SANAKA", lineIncharge: "TARAJUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
+            "20": { supervisor: "GAYANI", rqc: "TUHIN", ie: "SANAKA", lineIncharge: "FARIDUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
+            "22": { supervisor: "ASHRAFUL", rqc: "FOKRUL", ie: "BUDDIKA", lineIncharge: "MOHAMAD", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "KOUSAR" },
+            "23": { supervisor: "RUMA", rqc: "SAMANMALI", ie: "THANVIR", lineIncharge: "FARIDUL", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "24": { supervisor: "NASIR", rqc: "SOBUJ", ie: "BUDDIKA", lineIncharge: "MOHAMAD", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
+            "25": { supervisor: "AKBAR", rqc: "SAKIB", ie: "SANAKA", lineIncharge: "SAKIR", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "RASHID" },
+            "26/4": { supervisor: "HIMAYIT/AHMAD", rqc: "BELAYET/ASHISH", ie: "THANVIR", lineIncharge: "VARMA", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "28": { supervisor: "RUPNANAYAN", rqc: "NASRUL", ie: "SANAKA", lineIncharge: "SAKIR", qam: "ANIL/SUJAN", mechIncharge: "MOTHIN", technical: "RASHID" },
+            "29": { supervisor: "SUBA", rqc: "FATEMA", ie: "SANAKA", lineIncharge: "FARIDUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "RASHID" },
+            "30": { supervisor: "RAZIB", rqc: "ZAHIDUL", ie: "BUDDIKA", lineIncharge: "MOHAMAD", qam: "ANIL/SUJAN", mechIncharge: "MOTHIN", technical: "KOUSAR" },
+            "31": { supervisor: "AKESH", rqc: "MONJURY", ie: "SANAKA", lineIncharge: "FARIDUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
+            "32": { supervisor: "KALU", rqc: "MUSTAK", ie: "THANVIR", lineIncharge: "FARIDUL", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" }
+        };
 
-        let operations = []; // { id, name, operatorId, operatorName, department, machine, remarks, start, end }
+        // ============================================================
+        //  STATE
+        // ============================================================
+        let operations = [];
         let editingOpId = null;
         let lossTimeChartInstance = null;
         let revenueLossChartInstance = null;
+        let currentQCONumber = null;
+
+        function el(id) { return document.getElementById(id); }
 
         // ============================================================
         //  INIT
         // ============================================================
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             gsap.to("#mainApp", { opacity: 1, duration: 0.4, ease: "power2.out" });
             lucide.createIcons();
-            loadSession();
+            await loadSession();
             renderOperations();
             recalcSummary();
         });
 
-        // Cursor effect
         document.addEventListener('mousemove', e => {
             const dot = document.querySelector('.cursor-dot');
             const outline = document.querySelector('.cursor-outline');
@@ -439,36 +537,151 @@
         });
 
         // ============================================================
-        //  PERSISTENCE (localStorage)
+        //  LINE CHANGE + SUPERVISOR
         // ============================================================
-        function persistSetup() {
-            const setup = {
-                lineNumber: el('lineNumber').value,
-                currentStyle: el('currentStyle').value,
-                upcomingStyle: el('upcomingStyle').value,
-                upcomingSMV: el('upcomingSMV').value,
-                totalManpower: el('totalManpower').value
-            };
-            localStorage.setItem('instantSetup', JSON.stringify(setup));
+        function onLineChange() {
+            const line = el('lineNumber').value;
+            const data = personnelData[line];
+            if (data) {
+                el('supervisorDisplay').classList.remove('hidden');
+                el('supervisorName').textContent = data.supervisor;
+            } else {
+                el('supervisorDisplay').classList.add('hidden');
+                el('supervisorName').textContent = '';
+            }
+            lucide.createIcons();
         }
-        function persistOps() {
-            localStorage.setItem('instantOps', JSON.stringify(operations));
-        }
-        function loadSession() {
+
+        // ============================================================
+        //  QCO NUMBER GENERATION (same logic as creation.html)
+        // ============================================================
+        async function getNextQCONumber(lineNumber, currentStyle, upcomingStyle) {
+            const cleanLine = lineNumber ? lineNumber.toString().replace(/[^0-9A-Z]/gi, '') : "0";
+            const curLast3 = currentStyle ? (currentStyle.length > 3 ? currentStyle.slice(-3) : currentStyle.padStart(3, '0')) : "000";
+            const nextLast3 = upcomingStyle ? (upcomingStyle.length > 3 ? upcomingStyle.slice(-3) : upcomingStyle.padStart(3, '0')) : "000";
             try {
-                const setup = JSON.parse(localStorage.getItem('instantSetup') || '{}');
-                if (setup.lineNumber) el('lineNumber').value = setup.lineNumber;
-                if (setup.currentStyle) el('currentStyle').value = setup.currentStyle;
-                if (setup.upcomingStyle) el('upcomingStyle').value = setup.upcomingStyle;
-                if (setup.upcomingSMV) el('upcomingSMV').value = setup.upcomingSMV;
-                if (setup.totalManpower) el('totalManpower').value = setup.totalManpower;
-
-                const ops = JSON.parse(localStorage.getItem('instantOps') || '[]');
-                if (ops.length > 0) operations = ops;
-            } catch (e) { console.warn('Session load failed', e); }
+                const uniqueKey = `S${cleanLine}-${curLast3}-${nextLast3}`;
+                const sequenceRef = db.collection('qco_sequences').doc(uniqueKey);
+                const nextSeq = await db.runTransaction(async (transaction) => {
+                    const doc = await transaction.get(sequenceRef);
+                    let seq = 1;
+                    if (doc.exists) seq = (doc.data().count || 0) + 1;
+                    transaction.set(sequenceRef, { count: seq, lastUpdated: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                    return seq;
+                });
+                const seqStr = nextSeq.toString().padStart(2, '0');
+                return `S-${cleanLine}-${curLast3}-${nextLast3}-${seqStr}`;
+            } catch (error) {
+                console.error('QCO generation error:', error);
+                const fallbackSeq = Date.now().toString().slice(-4);
+                return `S-${cleanLine}-${curLast3}-${nextLast3}-${fallbackSeq}`;
+            }
         }
 
-        function el(id) { return document.getElementById(id); }
+        // ============================================================
+        //  SAVE SETUP (generates QCO + saves to Firebase)
+        // ============================================================
+        async function saveSetup() {
+            const lineVal = el('lineNumber').value;
+            const curStyle = el('currentStyle').value.trim();
+            const upStyle = el('upcomingStyle').value.trim();
+            const smv = el('upcomingSMV').value;
+            const mp = el('totalManpower').value;
+            if (!lineVal || !curStyle || !upStyle) {
+                Swal.fire('Missing Fields', 'Please select a line and enter both styles.', 'warning');
+                return;
+            }
+            try {
+                Swal.fire({ title: 'Saving...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                if (!currentQCONumber) {
+                    currentQCONumber = await getNextQCONumber(lineVal, curStyle, upStyle);
+                }
+                const supervisor = personnelData[lineVal]?.supervisor || 'TBD';
+                const docData = {
+                    qcoNumber: currentQCONumber,
+                    lineNumber: lineVal,
+                    currentStyle: curStyle,
+                    upcomingStyle: upStyle,
+                    upcomingSMV: parseFloat(smv) || 0,
+                    totalManpower: parseInt(mp) || 0,
+                    supervisor: supervisor,
+                    status: 'in-progress',
+                    source: 'instant',
+                    createdBy: JSON.parse(localStorage.getItem('qcoCurrentUser') || '{}').name || 'Instant User',
+                    createdAt: new Date().toISOString(),
+                    operationTimings: buildTimingsMap()
+                };
+                await db.collection('changeovers').doc(currentQCONumber).set(docData, { merge: true });
+                localStorage.setItem('instantQCOId', currentQCONumber);
+                el('qcoBadge').classList.remove('hidden');
+                el('qcoDisplay').textContent = currentQCONumber;
+                lucide.createIcons();
+                Swal.fire({ icon: 'success', title: 'Saved!', text: `QCO: ${currentQCONumber}`, timer: 1500, showConfirmButton: false });
+            } catch (e) {
+                console.error('Save error:', e);
+                Swal.fire('Error', 'Failed to save: ' + e.message, 'error');
+            }
+        }
+
+        function buildTimingsMap() {
+            const map = {};
+            operations.forEach(op => {
+                map[op.name] = {
+                    start: op.start, end: op.end,
+                    department: op.department || '', machine: op.machine || '',
+                    operatorId: op.operatorId || '', operatorName: op.operatorName || '',
+                    remarks: op.remarks || '',
+                    actualTime: (op.start && op.end) ? parseFloat(calculateWorkingHoursOnly(op.start, op.end).toFixed(2)) : null
+                };
+            });
+            return map;
+        }
+
+        // ============================================================
+        //  FIREBASE SYNC HELPERS
+        // ============================================================
+        async function syncToFirebase() {
+            if (!currentQCONumber) return;
+            try {
+                await db.collection('changeovers').doc(currentQCONumber).update({ operationTimings: buildTimingsMap() });
+            } catch (e) { console.warn('Sync failed:', e); }
+        }
+
+        // ============================================================
+        //  LOAD SESSION (Firebase-first, localStorage fallback)
+        // ============================================================
+        async function loadSession() {
+            const savedQCO = localStorage.getItem('instantQCOId');
+            if (savedQCO) {
+                try {
+                    const doc = await db.collection('changeovers').doc(savedQCO).get();
+                    if (doc.exists) {
+                        const data = doc.data();
+                        currentQCONumber = savedQCO;
+                        el('lineNumber').value = data.lineNumber || '';
+                        el('currentStyle').value = data.currentStyle || '';
+                        el('upcomingStyle').value = data.upcomingStyle || '';
+                        el('upcomingSMV').value = data.upcomingSMV || '';
+                        el('totalManpower').value = data.totalManpower || '';
+                        onLineChange();
+                        el('qcoBadge').classList.remove('hidden');
+                        el('qcoDisplay').textContent = currentQCONumber;
+                        // Restore operations from operationTimings
+                        if (data.operationTimings) {
+                            operations = Object.entries(data.operationTimings).map(([name, t]) => ({
+                                id: Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
+                                name, start: t.start || null, end: t.end || null,
+                                department: t.department || '', machine: t.machine || '',
+                                operatorId: t.operatorId || '', operatorName: t.operatorName || '',
+                                remarks: t.remarks || ''
+                            }));
+                        }
+                        lucide.createIcons();
+                        return;
+                    }
+                } catch (e) { console.warn('Firebase load failed, using localStorage', e); }
+            }
+        }
 
         // ============================================================
         //  ADD OPERATION
@@ -496,7 +709,7 @@
                         start: null,
                         end: null
                     });
-                    persistOps();
+                    syncToFirebase();
                     renderOperations();
                     recalcSummary();
                 }
@@ -598,7 +811,7 @@
             }
 
             op.start = timestamp;
-            persistOps();
+            syncToFirebase();
             renderOperations();
             recalcSummary();
         }
@@ -607,7 +820,7 @@
             const op = operations.find(o => o.id === id);
             if (!op || !op.start) return;
             op.end = new Date().toISOString();
-            persistOps();
+            syncToFirebase();
             renderOperations();
             recalcSummary();
         }
@@ -623,7 +836,7 @@
             }).then(r => {
                 if (r.isConfirmed) {
                     operations = operations.filter(o => o.id !== id);
-                    persistOps();
+                    syncToFirebase();
                     renderOperations();
                     recalcSummary();
                 }
@@ -632,7 +845,7 @@
 
         function updateOpField(id, field, value) {
             const op = operations.find(o => o.id === id);
-            if (op) { op[field] = value; persistOps(); recalcSummary(); }
+            if (op) { op[field] = value; syncToFirebase(); recalcSummary(); }
         }
 
         // ============================================================
@@ -680,7 +893,7 @@
             if (newEnd) op.end = new Date(newEnd).toISOString();
             else op.end = null;
 
-            persistOps();
+            syncToFirebase();
             closeEditModal();
             renderOperations();
             recalcSummary();
@@ -886,7 +1099,7 @@
         function resetSession() {
             Swal.fire({
                 title: 'Reset everything?',
-                text: 'All operations and setup data will be cleared.',
+                text: 'This will clear all local data and start a new changeover.',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'Reset',
@@ -894,13 +1107,15 @@
             }).then(r => {
                 if (r.isConfirmed) {
                     operations = [];
-                    localStorage.removeItem('instantSetup');
-                    localStorage.removeItem('instantOps');
+                    currentQCONumber = null;
+                    localStorage.removeItem('instantQCOId');
                     el('lineNumber').value = '';
                     el('currentStyle').value = '';
                     el('upcomingStyle').value = '';
                     el('upcomingSMV').value = '';
                     el('totalManpower').value = '';
+                    el('qcoBadge').classList.add('hidden');
+                    el('supervisorDisplay').classList.add('hidden');
                     renderOperations();
                     recalcSummary();
                 }
