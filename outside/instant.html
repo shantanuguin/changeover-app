@@ -219,7 +219,7 @@
                             <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Line
                                 Number</label>
                             <select id="lineNumber"
-                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-bold"
+                                class="w-full px-3 py-3 rounded-xl border border-slate-200 text-sm font-bold"
                                 onchange="onLineChange()">
                                 <option value="">Choose a line...</option>
                                 <option value="1">Line 1 - ADIDAS</option>
@@ -252,7 +252,7 @@
                                 <option value="31">Line 31 - ADIDAS</option>
                                 <option value="32">Line 32 - ALO</option>
                             </select>
-                            <p id="supervisorDisplay" class="text-[10px] font-bold text-emerald-600 mt-1 hidden"><i
+                            <p id="supervisorDisplay" class="text-[10px] font-bold text-emerald-600 mt-2 hidden"><i
                                     data-lucide="user" class="w-3 h-3 inline mr-0.5"></i> Supervisor: <span
                                     id="supervisorName"></span></p>
                         </div>
@@ -261,21 +261,21 @@
                                 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Current
                                 Style</label>
                             <input type="text" id="currentStyle" placeholder="Outgoing style"
-                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold">
+                                class="w-full px-3 py-3 rounded-xl border border-slate-200 text-sm font-semibold">
                         </div>
                         <div>
                             <label
                                 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Upcoming
                                 Style</label>
                             <input type="text" id="upcomingStyle" placeholder="Incoming style"
-                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold">
+                                class="w-full px-3 py-3 rounded-xl border border-slate-200 text-sm font-semibold">
                         </div>
                         <div>
                             <label
                                 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Upcoming
                                 SMV</label>
                             <input type="number" step="0.01" id="upcomingSMV" placeholder="0.00"
-                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-bold"
+                                class="w-full px-3 py-3 rounded-xl border border-slate-200 text-sm font-bold"
                                 oninput="recalcSummary()">
                         </div>
                         <div>
@@ -283,7 +283,7 @@
                                 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Total
                                 Manpower</label>
                             <input type="number" id="totalManpower" placeholder="0"
-                                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm font-bold"
+                                class="w-full px-3 py-3 rounded-xl border border-slate-200 text-sm font-bold"
                                 oninput="recalcSummary()">
                         </div>
                     </div>
@@ -348,7 +348,7 @@
                 </div>
 
                 <!-- ============ PANEL 4: LOSS TIME ANALYSIS ============ -->
-                <div class="glass-card relative overflow-hidden">
+                <div class="glass-card relative overflow-hidden overflow-x-auto">
                     <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-violet-500 to-purple-500">
                     </div>
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
@@ -562,28 +562,38 @@
                 const snapshot = await db.collection('changeovers')
                     .where('lineNumber', '==', line)
                     .where('status', '==', 'in-progress')
-                    .limit(1)
                     .get();
 
                 if (!snapshot.empty) {
-                    const doc = snapshot.docs[0];
-                    const qcoData = doc.data();
-                    const qcoId = doc.id;
+                    const options = {};
+                    snapshot.docs.forEach(doc => {
+                        const d = doc.data();
+                        options[doc.id] = `${doc.id} (${d.currentStyle || '-'} → ${d.upcomingStyle || '-'})`;
+                    });
 
-                    // Don't prompt if it's already the currently loaded one
-                    if (currentQCONumber === qcoId) return;
+                    // Don't prompt if the only active QCO is already loaded
+                    if (snapshot.size === 1 && currentQCONumber === snapshot.docs[0].id) return;
 
                     Swal.fire({
-                        title: 'Active Changeover Found',
-                        html: `An in-progress changeover (<b>${qcoId}</b>) already exists for Line ${line}.<br><br>Style: ${qcoData.currentStyle} → ${qcoData.upcomingStyle}`,
+                        title: 'Active Changeovers Found',
+                        text: `Select an existing changeover for Line ${line} or start a new one.`,
                         icon: 'info',
+                        input: 'select',
+                        inputOptions: options,
+                        inputPlaceholder: 'Select a changeover...',
                         showCancelButton: true,
-                        confirmButtonText: 'Load Existing',
-                        cancelButtonText: 'Ignore',
-                        confirmButtonColor: '#0ea5e9'
+                        confirmButtonText: 'Load Selected',
+                        cancelButtonText: 'Ignore / New',
+                        confirmButtonColor: '#0ea5e9',
+                        inputValidator: (value) => {
+                            if (!value) {
+                                return 'You need to select a QCO or click Ignore'
+                            }
+                        }
                     }).then((result) => {
-                        if (result.isConfirmed) {
-                            populateSession(qcoData, qcoId);
+                        if (result.isConfirmed && result.value) {
+                            const selectedDoc = snapshot.docs.find(d => d.id === result.value);
+                            if (selectedDoc) populateSession(selectedDoc.data(), selectedDoc.id);
                         }
                     });
                 }
@@ -834,17 +844,17 @@
                             <button onclick="removeOp('${op.id}')" class="px-3 py-2 rounded-lg bg-white border border-rose-200 text-rose-500 text-xs font-bold hover:bg-rose-50 transition-all"><i data-lucide="trash-2" class="w-3 h-3 inline"></i></button>
                         </div>
                     </div>
-                    <!-- Row 2: Details -->
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-                        <input type="text" placeholder="Operator ID" value="${op.operatorId || ''}" onchange="updateOpField('${op.id}','operatorId',this.value)" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold">
-                        <input type="text" placeholder="Operator Name" value="${op.operatorName || ''}" onchange="updateOpField('${op.id}','operatorName',this.value)" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold">
-                        <select onchange="updateOpField('${op.id}','department',this.value)" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold">
+                    <!-- Row 2: Details stacked for mobile -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 pt-2">
+                        <input type="text" placeholder="Operator ID" value="${op.operatorId || ''}" onchange="updateOpField('${op.id}','operatorId',this.value)" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold">
+                        <input type="text" placeholder="Operator Name" value="${op.operatorName || ''}" onchange="updateOpField('${op.id}','operatorName',this.value)" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold">
+                        <select onchange="updateOpField('${op.id}','department',this.value)" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold">
                             <option value="">Dept...</option>${deptOptions}
                         </select>
-                        <select onchange="updateOpField('${op.id}','machine',this.value)" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold">
+                        <select onchange="updateOpField('${op.id}','machine',this.value)" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold">
                             <option value="">Machine...</option>${machOptions}
                         </select>
-                        <input type="text" placeholder="Remarks" value="${op.remarks || ''}" onchange="updateOpField('${op.id}','remarks',this.value)" class="px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold col-span-2 sm:col-span-1 lg:col-span-2">
+                        <input type="text" placeholder="Remarks" value="${op.remarks || ''}" onchange="updateOpField('${op.id}','remarks',this.value)" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold col-span-1 sm:col-span-2 lg:col-span-2">
                     </div>
                 </div>`;
             }).join('');
