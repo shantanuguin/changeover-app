@@ -1987,35 +1987,7 @@
                         <select id="lineSelect"
                             class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
                             <option value="">Choose a line...</option>
-                            <option value="1">Line 1 - ADIDAS</option>
-                            <option value="1A">Line 1A - TNF</option>
-                            <option value="2">Line 2 - LULU</option>
-                            <option value="3">Line 3 - ADIDAS</option>
-                            <option value="6+17">Line 6+17 - ADIDAS</option>
-                            <option value="7">Line 7 - TNF</option>
-                            <option value="7A">Line 7A - ADIDAS</option>
-                            <option value="8+5">Line 8+5 - ADIDAS</option>
-                            <option value="9">Line 9 - ALO</option>
-                            <option value="10">Line 10 - TNF</option>
-                            <option value="11+15">Line 11+15 - ADIDAS</option>
-                            <option value="12">Line 12 - ADIDAS</option>
-                            <option value="13/21">Line 13/21 - WALLMART</option>
-                            <option value="14">Line 14 - TNF</option>
-                            <option value="16">Line 16 - ALO</option>
-                            <option value="16A">Line 16A - ALO</option>
-                            <option value="18">Line 18 - ALO</option>
-                            <option value="19">Line 19 - ADIDAS</option>
-                            <option value="20">Line 20 - ADIDAS</option>
-                            <option value="22">Line 22 - ADIDAS</option>
-                            <option value="23">Line 23 - TNF</option>
-                            <option value="24">Line 24 - ADIDAS</option>
-                            <option value="25">Line 25 - ADIDAS</option>
-                            <option value="26/4">Line 26/4 - ADIDAS</option>
-                            <option value="28">Line 28 - TNF</option>
-                            <option value="29">Line 29 - ADIDAS</option>
-                            <option value="30">Line 30 - TNF</option>
-                            <option value="31">Line 31 - ADIDAS</option>
-                            <option value="32">Line 32 - ALO</option>
+                            <!-- Options will be populated dynamically from emailData -->
                         </select>
                         <div id="subLineContainer" class="hidden mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                             <label class="block text-sm font-medium text-blue-800 mb-2">Select Exact Line Number <span
@@ -4296,6 +4268,9 @@
                         renderEmailManagementTable();
                     }
 
+                    // Populate line dropdown with supervisor names
+                    populateLineDropdown();
+
                     showNotification('Email data loaded from Firebase', 'success');
                 } else {
                     addFirebaseLog('No email data in Firebase, creating default structure', 'info');
@@ -4323,6 +4298,9 @@
                     if (!document.getElementById('emailManagementSection').classList.contains('hidden')) {
                         renderEmailManagementTable();
                     }
+
+                    // Populate line dropdown with supervisor names
+                    populateLineDropdown();
                 } catch (error) {
                     addFirebaseLog(`Error parsing local email data: ${error.message}`, 'error');
                     initializeDefaultEmailData();
@@ -4358,7 +4336,33 @@
 
             localStorage.setItem('emailData', JSON.stringify(emailData));
             renderEmailManagementTable();
+            populateLineDropdown();
             addFirebaseLog('Created default email data structure', 'info');
+        }
+
+        function populateLineDropdown() {
+            const select = document.getElementById('lineSelect');
+            if (!select) return;
+
+            // Keep the first default option
+            select.innerHTML = '<option value="">Choose a line...</option>';
+
+            // Define line order to ensure consistent display
+            const orderedLines = ["1", "1A", "2", "3", "6+17", "7", "7A", "8+5", "9", "10", "11+15", "12", "13/21", "14", "16", "16A", "18", "19", "20", "22", "23", "24", "25", "26/4", "28", "29", "30", "31", "32"];
+
+            orderedLines.forEach(line => {
+                const option = document.createElement('option');
+                option.value = line;
+
+                // Get supervisor name from emailData if available
+                let supervisor = "Unassigned";
+                if (emailData && emailData[line] && emailData[line].supervisor) {
+                    supervisor = emailData[line].supervisor;
+                }
+
+                option.textContent = `Line ${line} - ${supervisor}`;
+                select.appendChild(option);
+            });
         }
 
         async function saveEmailDataToFirebase() {
