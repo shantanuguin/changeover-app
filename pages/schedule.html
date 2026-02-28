@@ -1813,9 +1813,12 @@
                         // Changeover Date
                         changeoverDateStr = `${execDate.getDate().toString().padStart(2, '0')}-${months[execDate.getMonth()]}-${execDate.getFullYear()}`;
 
-                        // Meeting Date (1 day prior)
+                        // Meeting Date (1 day prior, but skip Friday)
                         const meetDate = new Date(execDate);
                         meetDate.setDate(execDate.getDate() - 1);
+                        if (meetDate.getDay() === 5) { // If Friday, move to Thursday
+                            meetDate.setDate(meetDate.getDate() - 1);
+                        }
                         meetDateStr = `${meetDate.getDate().toString().padStart(2, '0')}-${months[meetDate.getMonth()]}-${meetDate.getFullYear()}`;
 
                     } catch (e) {

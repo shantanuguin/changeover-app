@@ -1415,14 +1415,28 @@
         }
 
         /**
-         * Calculates net duration in minutes, excluding break times.
-         * Day Mode: Deducts any time outside 07:00-18:00.
+         * Calculates net duration in minutes, excluding break times and Fridays.
          */
         function getNetDuration(startISO, endISO, schedule) {
             const start = new Date(startISO);
             const end = new Date(endISO);
             if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
             const mode = shiftMode;
+
+            // Deduct Friday Overlap across ANY mode
+            let fridayDeductionMinutes = 0;
+            let tempStart = new Date(start);
+            while (tempStart < end) {
+                if (tempStart.getDay() === 5) {
+                    const fStart = new Date(Math.max(start.getTime(), new Date(tempStart.getFullYear(), tempStart.getMonth(), tempStart.getDate(), 0, 0, 0).getTime()));
+                    const fEnd = new Date(Math.min(end.getTime(), new Date(tempStart.getFullYear(), tempStart.getMonth(), tempStart.getDate(), 23, 59, 59, 999).getTime()));
+                    if (fStart < fEnd) {
+                        fridayDeductionMinutes += (fEnd - fStart) / 60000;
+                    }
+                }
+                tempStart.setDate(tempStart.getDate() + 1);
+                tempStart.setHours(0, 0, 0, 0);
+            }
 
             if (mode === 'day') {
                 // Logic: Only count minutes within 07:00 and 18:00
@@ -1432,17 +1446,19 @@
 
                 while (iter < end) {
                     const nextMin = new Date(iter.getTime() + 60000);
-                    const h = iter.getHours();
-                    const isWithinShift = h >= 7 && h < 18; // 07:00 to 17:59:59
+                    if (iter.getDay() !== 5) { // Skip Friday explicitly
+                        const h = iter.getHours();
+                        const isWithinShift = h >= 7 && h < 18; // 07:00 to 17:59:59
 
-                    if (isWithinShift) {
-                        // Check if this minute overlaps with a break
-                        let inBreak = false;
-                        if (schedule && schedule.breaks) {
-                            const timeStr = `${h.toString().padStart(2, '0')}:${iter.getMinutes().toString().padStart(2, '0')}`;
-                            inBreak = schedule.breaks.some(b => timeStr >= b.start && timeStr < b.end);
+                        if (isWithinShift) {
+                            // Check if this minute overlaps with a break
+                            let inBreak = false;
+                            if (schedule && schedule.breaks) {
+                                const timeStr = `${h.toString().padStart(2, '0')}:${iter.getMinutes().toString().padStart(2, '0')}`;
+                                inBreak = schedule.breaks.some(b => timeStr >= b.start && timeStr < b.end);
+                            }
+                            if (!inBreak) totalMins++;
                         }
-                        if (!inBreak) totalMins++;
                     }
                     iter = nextMin;
                 }
@@ -1450,6 +1466,8 @@
             } else {
                 // Day-Night (24h) Mode
                 let totalMinutes = (end - start) / 60000;
+                totalMinutes = Math.max(0, totalMinutes - fridayDeductionMinutes); // Deduct Friday time
+
                 if (!schedule || !schedule.breaks || !Array.isArray(schedule.breaks)) return totalMinutes;
 
                 // Simple break overlap logic for 24h (same day assumption for now)
@@ -1463,7 +1481,12 @@
 
                     const overlapStart = new Date(Math.max(start, bStart));
                     const overlapEnd = new Date(Math.min(end, bEnd));
-                    return (overlapStart < overlapEnd) ? (overlapEnd - overlapStart) / 60000 : 0;
+
+                    // Do not deduct break if the overlap itself is on a Friday, as it's already deducted above
+                    if (overlapStart < overlapEnd && overlapStart.getDay() !== 5) {
+                        return (overlapEnd - overlapStart) / 60000;
+                    }
+                    return 0;
                 };
 
                 let deduction = 0;

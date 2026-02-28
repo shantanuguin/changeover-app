@@ -1023,6 +1023,11 @@
             currentDay.setHours(0, 0, 0, 0);
 
             while (currentDay <= end) {
+                if (currentDay.getDay() === 5) { // Skip Friday
+                    currentDay.setDate(currentDay.getDate() + 1);
+                    continue;
+                }
+
                 const shiftStart = new Date(currentDay);
                 shiftStart.setHours(SHIFT_START_HOUR, SHIFT_START_MINUTE, 0, 0);
                 const shiftEnd = new Date(currentDay);

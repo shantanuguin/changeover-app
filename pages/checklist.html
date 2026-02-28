@@ -2412,13 +2412,31 @@
                     return;
                 }
 
-                const totalHours = Math.floor(diff / (1000 * 60 * 60));
-                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                // Calculate display difference by excluding Fridays
+                let fridayMsec = 0;
+                let tempStart = new Date(now);
+                const tempEnd = new Date(targetTime);
+
+                while (tempStart < tempEnd) {
+                    if (tempStart.getDay() === 5) {
+                        const fStart = new Date(Math.max(now, new Date(tempStart.getFullYear(), tempStart.getMonth(), tempStart.getDate(), 0, 0, 0).getTime()));
+                        const fEnd = new Date(Math.min(targetTime, new Date(tempStart.getFullYear(), tempStart.getMonth(), tempStart.getDate(), 23, 59, 59, 999).getTime()));
+                        if (fStart < fEnd) {
+                            fridayMsec += (fEnd - fStart);
+                        }
+                    }
+                    tempStart.setDate(tempStart.getDate() + 1);
+                    tempStart.setHours(0, 0, 0, 0);
+                }
+
+                const displayDiff = Math.max(0, diff - fridayMsec);
+                const displayHours = Math.floor(displayDiff / (1000 * 60 * 60));
+                const displayDays = Math.floor(displayDiff / (1000 * 60 * 60 * 24));
 
                 // Format: "2 Days (48 Hours)"
-                document.getElementById('countdownText').textContent = `${days} Days (${totalHours} Hours)`;
+                document.getElementById('countdownText').textContent = `${displayDays} Days (${displayHours} Hours)`;
 
-                // Persistence Logic
+                // Persistence Logic (Internal tracking keeps Friday hours for interval timings)
                 const hoursRemaining = diff / (1000 * 60 * 60);
 
                 // Determine Interval

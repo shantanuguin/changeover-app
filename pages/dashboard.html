@@ -2170,6 +2170,9 @@
                     for (let i = days - 1; i >= 0; i--) {
                         const date = new Date();
                         date.setDate(date.getDate() - i);
+
+                        if (date.getDay() === 5) continue; // Skip Friday
+
                         labels.push(date.toLocaleDateString('en-US', { weekday: 'short' }));
 
                         // Find changeovers for this day

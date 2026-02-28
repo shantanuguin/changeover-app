@@ -1854,6 +1854,23 @@
             const end = new Date(endISO);
             let totalMinutes = (end - start) / 60000;
 
+            // Deduct Friday Overlap
+            let fridayDeductionMinutes = 0;
+            let tempStart = new Date(start);
+            while (tempStart < end) {
+                if (tempStart.getDay() === 5) {
+                    const fStart = new Date(Math.max(start.getTime(), new Date(tempStart.getFullYear(), tempStart.getMonth(), tempStart.getDate(), 0, 0, 0).getTime()));
+                    const fEnd = new Date(Math.min(end.getTime(), new Date(tempStart.getFullYear(), tempStart.getMonth(), tempStart.getDate(), 23, 59, 59, 999).getTime()));
+                    if (fStart < fEnd) {
+                        fridayDeductionMinutes += (fEnd - fStart) / 60000;
+                    }
+                }
+                tempStart.setDate(tempStart.getDate() + 1);
+                tempStart.setHours(0, 0, 0, 0);
+            }
+
+            totalMinutes = Math.max(0, totalMinutes - fridayDeductionMinutes);
+
             if (!schedule || !schedule.breaks || !Array.isArray(schedule.breaks)) {
                 return totalMinutes;
             }
@@ -1871,7 +1888,7 @@
                 const overlapStart = new Date(Math.max(start, bStart));
                 const overlapEnd = new Date(Math.min(end, bEnd));
 
-                if (overlapStart < overlapEnd) {
+                if (overlapStart < overlapEnd && overlapStart.getDay() !== 5) {
                     return (overlapEnd - overlapStart) / 60000;
                 }
                 return 0;
@@ -1987,7 +2004,10 @@
             const dates = [];
             const current = new Date(rangeStart);
             while (current <= rangeEnd) {
-                dates.push(new Date(current));
+                // Skip Fridays
+                if (current.getDay() !== 5) {
+                    dates.push(new Date(current));
+                }
                 current.setDate(current.getDate() + 1);
             }
             return dates;

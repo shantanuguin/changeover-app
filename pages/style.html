@@ -1053,7 +1053,10 @@
             const dates = [];
             const current = new Date(rangeStart);
             while (current <= rangeEnd) {
-                dates.push(new Date(current));
+                // Skip Fridays
+                if (current.getDay() !== 5) {
+                    dates.push(new Date(current));
+                }
                 current.setDate(current.getDate() + 1);
             }
             return dates;

@@ -6920,8 +6920,28 @@ Shantanu & Sampreeti`;
         function setDefaultMeetingDate() {
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
+            if (tomorrow.getDay() === 5) {
+                tomorrow.setDate(tomorrow.getDate() - 1); // Shift Friday to Thursday
+            }
             const formattedDate = tomorrow.toISOString().split('T')[0];
-            document.getElementById('meetingDate').value = formattedDate;
+            const dateInput = document.getElementById('meetingDate');
+            dateInput.value = formattedDate;
+
+            // Prevent manual selection of Fridays
+            dateInput.addEventListener('change', function (e) {
+                const selectedDate = new Date(this.value);
+                if (selectedDate.getDay() === 5) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Friday Selected',
+                        text: 'Meetings cannot be scheduled on Fridays. The date has been moved to Thursday.',
+                        confirmButtonColor: '#0ea5e9'
+                    });
+                    const thursday = new Date(selectedDate);
+                    thursday.setDate(thursday.getDate() - 1);
+                    this.value = thursday.toISOString().split('T')[0];
+                }
+            });
         }
 
         function saveToLocalStorage() {
