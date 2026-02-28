@@ -778,62 +778,40 @@
                     <div id="dashboardGrid"
                         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-40 relative z-10">
 
-                        <!-- Outside -->
+                        <!-- ROW 1: Dashboard & Monitor | QCO Creation | Operations -->
+                        <!-- Dashboard & Monitor -->
                         <div
                             class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm overflow-hidden block h-full">
                             <div
                                 class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
                             </div>
-                            <div
-                                class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-bl-[4rem] -mr-8 -mt-8">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-[4rem] -mr-8 -mt-8">
                             </div>
 
                             <div class="relative z-10 h-full flex flex-col">
                                 <div
-                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-emerald-600 mb-4 shadow-sm border border-slate-100">
-                                    <i data-lucide="external-link" class="w-7 h-7"></i>
+                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-blue-600 mb-4 shadow-sm border border-slate-100">
+                                    <i data-lucide="line-chart" class="w-7 h-7"></i>
                                 </div>
-                                <h3 class="text-2xl font-bold text-slate-900 mb-2">
-                                    Outside</h3>
-                                <p class="text-slate-500 text-xs leading-relaxed mb-5">External standalone modules for
-                                    field operations.</p>
+                                <h3 class="text-2xl font-bold text-slate-900 mb-2">Dashboard Center</h3>
+                                <p class="text-slate-500 text-xs leading-relaxed mb-5">Analytics & real-time monitoring
+                                </p>
 
                                 <div class="flex flex-col gap-3 mt-auto">
-                                    <!-- Changeover Checklist -->
-                                    <a href="outside/outlist.html"
+                                    <a href="pages/dashboard.html"
                                         class="flex items-center gap-3 p-3 rounded-xl bg-white/70 border border-slate-100 hover:border-blue-300 hover:shadow-md hover:bg-white transition-all duration-300 group/sub">
                                         <div
                                             class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0 group-hover/sub:scale-110 transition-transform">
-                                            <i data-lucide="clipboard-check" class="w-4 h-4"></i>
+                                            <i data-lucide="pie-chart" class="w-4 h-4"></i>
                                         </div>
                                         <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-bold text-slate-800 leading-tight">Changeover
-                                                Checklist</p>
-                                            <p class="text-[11px] text-slate-400 leading-tight mt-0.5">Department task
-                                                tracking</p>
+                                            <p class="text-sm font-bold text-slate-800 leading-tight">Main Dashboard</p>
+                                            <p class="text-[11px] text-slate-400 leading-tight mt-0.5">KPIs and metrics
+                                            </p>
                                         </div>
                                         <i data-lucide="chevron-right"
                                             class="w-4 h-4 text-slate-300 group-hover/sub:text-blue-500 group-hover/sub:translate-x-1 transition-all flex-shrink-0"></i>
                                     </a>
-
-                                    <!-- Operations Recorder -->
-                                    <a href="outside/outorder.html"
-                                        class="flex items-center gap-3 p-3 rounded-xl bg-white/70 border border-slate-100 hover:border-amber-300 hover:shadow-md hover:bg-white transition-all duration-300 group/sub">
-                                        <div
-                                            class="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 flex-shrink-0 group-hover/sub:scale-110 transition-transform">
-                                            <i data-lucide="stop-circle" class="w-4 h-4"></i>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-bold text-slate-800 leading-tight">Operations
-                                                Recorder</p>
-                                            <p class="text-[11px] text-slate-400 leading-tight mt-0.5">Track operation
-                                                timings</p>
-                                        </div>
-                                        <i data-lucide="chevron-right"
-                                            class="w-4 h-4 text-slate-300 group-hover/sub:text-amber-500 group-hover/sub:translate-x-1 transition-all flex-shrink-0"></i>
-                                    </a>
-
-                                    <!-- Live Monitor -->
                                     <a href="outside/change.html"
                                         class="flex items-center gap-3 p-3 rounded-xl bg-white/70 border border-slate-100 hover:border-emerald-300 hover:shadow-md hover:bg-white transition-all duration-300 group/sub">
                                         <div
@@ -842,8 +820,8 @@
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <p class="text-sm font-bold text-slate-800 leading-tight">Live Monitor</p>
-                                            <p class="text-[11px] text-slate-400 leading-tight mt-0.5">Real-time
-                                                changeover view</p>
+                                            <p class="text-[11px] text-slate-400 leading-tight mt-0.5">Real-time status
+                                            </p>
                                         </div>
                                         <i data-lucide="chevron-right"
                                             class="w-4 h-4 text-slate-300 group-hover/sub:text-emerald-500 group-hover/sub:translate-x-1 transition-all flex-shrink-0"></i>
@@ -851,38 +829,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Dashboard -->
-                        <a href="pages/dashboard.html"
-                            class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
-                            <div
-                                class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
-                            </div>
-                            <div
-                                class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-bl-[4rem] -mr-8 -mt-8 group-hover:scale-125 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
-                            </div>
-
-                            <div class="relative z-10 h-full flex flex-col">
-                                <div
-                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-blue-600 mb-6 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
-                                    <i data-lucide="line-chart" class="w-7 h-7"></i>
-                                </div>
-                                <h3
-                                    class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-blue-600 transition-colors">
-                                    Dashboard</h3>
-                                <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">Real-time KPIs,
-                                    workflow
-                                    efficiency monitoring, and operational throughput metrics.</p>
-
-                                <div class="flex items-center justify-between mt-auto">
-                                    <span
-                                        class="flex items-center text-sm font-bold text-slate-900 group-hover:translate-x-2 transition-transform duration-300">
-                                        Launch Dashboard <i data-lucide="arrow-right"
-                                            class="ml-2 w-4 h-4 text-blue-500"></i>
-                                    </span>
-                                </div>
-                            </div>
-                        </a>
 
                         <!-- QCO Creation -->
                         <a href="pages/creation.html"
@@ -902,8 +848,7 @@
                                 <h3
                                     class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-indigo-600 transition-colors">
                                     QCO Creation</h3>
-                                <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">Draft and issue
-                                    Quality
+                                <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">Draft and issue Quality
                                     Control Orders with automated compliance checks.</p>
 
                                 <div class="flex items-center justify-between mt-auto">
@@ -935,8 +880,7 @@
                                     class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-violet-600 transition-colors">
                                     Operations</h3>
                                 <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">View, combine, and
-                                    reorder
-                                    operations for upcoming styles.</p>
+                                    reorder operations for upcoming styles.</p>
 
                                 <div class="flex items-center justify-between mt-auto">
                                     <span
@@ -948,135 +892,225 @@
                             </div>
                         </a>
 
-                        <!-- Planning -->
-                        <a href="pages/planning.html"
-                            class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
+                        <!-- ROW 2: Planning & Schedule | Checklists | Recording Tools -->
+                        <!-- Planning & Schedule -->
+                        <div
+                            class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm overflow-hidden block h-full">
                             <div
                                 class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
                             </div>
-                            <div
-                                class="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-bl-[4rem] -mr-8 -mt-8 group-hover:scale-125 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-bl-[4rem] -mr-8 -mt-8">
                             </div>
 
                             <div class="relative z-10 h-full flex flex-col">
                                 <div
-                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-cyan-600 mb-6 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
-                                    <i data-lucide="layout-grid" class="w-7 h-7"></i>
+                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-cyan-600 mb-4 shadow-sm border border-slate-100">
+                                    <i data-lucide="calendar-days" class="w-7 h-7"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold text-slate-900 mb-2">Planning & Schedule</h3>
+                                <p class="text-slate-500 text-xs leading-relaxed mb-5">Workflow timelines and resource
+                                    planning</p>
+
+                                <div class="flex flex-col gap-3 mt-auto">
+                                    <a href="pages/planning.html"
+                                        class="flex items-center gap-3 p-3 rounded-xl bg-white/70 border border-slate-100 hover:border-cyan-300 hover:shadow-md hover:bg-white transition-all duration-300 group/sub">
+                                        <div
+                                            class="w-9 h-9 rounded-lg bg-cyan-50 flex items-center justify-center text-cyan-600 flex-shrink-0 group-hover/sub:scale-110 transition-transform">
+                                            <i data-lucide="layout-grid" class="w-4 h-4"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-bold text-slate-800 leading-tight">Master Planning
+                                            </p>
+                                            <p class="text-[11px] text-slate-400 leading-tight mt-0.5">Resource
+                                                allocation</p>
+                                        </div>
+                                        <i data-lucide="chevron-right"
+                                            class="w-4 h-4 text-slate-300 group-hover/sub:text-cyan-500 group-hover/sub:translate-x-1 transition-all flex-shrink-0"></i>
+                                    </a>
+                                    <a href="pages/schedule.html"
+                                        class="flex items-center gap-3 p-3 rounded-xl bg-white/70 border border-slate-100 hover:border-violet-300 hover:shadow-md hover:bg-white transition-all duration-300 group/sub">
+                                        <div
+                                            class="w-9 h-9 rounded-lg bg-violet-50 flex items-center justify-center text-violet-600 flex-shrink-0 group-hover/sub:scale-110 transition-transform">
+                                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-bold text-slate-800 leading-tight">QCO Schedule</p>
+                                            <p class="text-[11px] text-slate-400 leading-tight mt-0.5">Timelines per UN
+                                            </p>
+                                        </div>
+                                        <i data-lucide="chevron-right"
+                                            class="w-4 h-4 text-slate-300 group-hover/sub:text-violet-500 group-hover/sub:translate-x-1 transition-all flex-shrink-0"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Checklists -->
+                        <div
+                            class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm overflow-hidden block h-full">
+                            <div
+                                class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
+                            </div>
+                            <div
+                                class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-bl-[4rem] -mr-8 -mt-8">
+                            </div>
+
+                            <div class="relative z-10 h-full flex flex-col">
+                                <div
+                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-emerald-600 mb-4 shadow-sm border border-slate-100">
+                                    <i data-lucide="check-square" class="w-7 h-7"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold text-slate-900 mb-2">Checklists</h3>
+                                <p class="text-slate-500 text-xs leading-relaxed mb-5">Track tasks and SOP adherence</p>
+
+                                <div class="flex flex-col gap-3 mt-auto">
+                                    <a href="pages/checklist.html"
+                                        class="flex items-center gap-3 p-3 rounded-xl bg-white/70 border border-slate-100 hover:border-emerald-300 hover:shadow-md hover:bg-white transition-all duration-300 group/sub">
+                                        <div
+                                            class="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600 flex-shrink-0 group-hover/sub:scale-110 transition-transform">
+                                            <i data-lucide="clipboard-list" class="w-4 h-4"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-bold text-slate-800 leading-tight">Master Checklist
+                                            </p>
+                                            <p class="text-[11px] text-slate-400 leading-tight mt-0.5">Internal task
+                                                view</p>
+                                        </div>
+                                        <i data-lucide="chevron-right"
+                                            class="w-4 h-4 text-slate-300 group-hover/sub:text-emerald-500 group-hover/sub:translate-x-1 transition-all flex-shrink-0"></i>
+                                    </a>
+                                    <a href="outside/outlist.html"
+                                        class="flex items-center gap-3 p-3 rounded-xl bg-white/70 border border-slate-100 hover:border-blue-300 hover:shadow-md hover:bg-white transition-all duration-300 group/sub">
+                                        <div
+                                            class="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 flex-shrink-0 group-hover/sub:scale-110 transition-transform">
+                                            <i data-lucide="clipboard-check" class="w-4 h-4"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-bold text-slate-800 leading-tight">Department View
+                                            </p>
+                                            <p class="text-[11px] text-slate-400 leading-tight mt-0.5">Outside tracking
+                                            </p>
+                                        </div>
+                                        <i data-lucide="chevron-right"
+                                            class="w-4 h-4 text-slate-300 group-hover/sub:text-blue-500 group-hover/sub:translate-x-1 transition-all flex-shrink-0"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recording Tools -->
+                        <div
+                            class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm overflow-hidden block h-full">
+                            <div
+                                class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
+                            </div>
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-bl-[4rem] -mr-8 -mt-8">
+                            </div>
+
+                            <div class="relative z-10 h-full flex flex-col">
+                                <div
+                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-amber-600 mb-4 shadow-sm border border-slate-100">
+                                    <i data-lucide="activity" class="w-7 h-7"></i>
+                                </div>
+                                <h3 class="text-2xl font-bold text-slate-900 mb-2">Recording Tools</h3>
+                                <p class="text-slate-500 text-xs leading-relaxed mb-5">Capture metrics and notes</p>
+
+                                <div class="flex flex-col gap-3 mt-auto">
+                                    <a href="pages/recorder.html"
+                                        class="flex items-center gap-3 p-3 rounded-xl bg-white/70 border border-slate-100 hover:border-amber-300 hover:shadow-md hover:bg-white transition-all duration-300 group/sub">
+                                        <div
+                                            class="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600 flex-shrink-0 group-hover/sub:scale-110 transition-transform">
+                                            <i data-lucide="mic" class="w-4 h-4"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-bold text-slate-800 leading-tight">Admin Recorder</p>
+                                            <p class="text-[11px] text-slate-400 leading-tight mt-0.5">Admin field
+                                                recording</p>
+                                        </div>
+                                        <i data-lucide="chevron-right"
+                                            class="w-4 h-4 text-slate-300 group-hover/sub:text-amber-500 group-hover/sub:translate-x-1 transition-all flex-shrink-0"></i>
+                                    </a>
+                                    <a href="outside/outorder.html"
+                                        class="flex items-center gap-3 p-3 rounded-xl bg-white/70 border border-slate-100 hover:border-orange-300 hover:shadow-md hover:bg-white transition-all duration-300 group/sub">
+                                        <div
+                                            class="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600 flex-shrink-0 group-hover/sub:scale-110 transition-transform">
+                                            <i data-lucide="stop-circle" class="w-4 h-4"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-bold text-slate-800 leading-tight">Field Recorder
+                                            </p>
+                                            <p class="text-[11px] text-slate-400 leading-tight mt-0.5">User field
+                                                recording</p>
+                                        </div>
+                                        <i data-lucide="chevron-right"
+                                            class="w-4 h-4 text-slate-300 group-hover/sub:text-orange-500 group-hover/sub:translate-x-1 transition-all flex-shrink-0"></i>
+                                    </a>
+                                    <a href="outside/instant.html"
+                                        class="flex items-center gap-3 p-3 rounded-xl bg-white/70 border border-slate-100 hover:border-red-300 hover:shadow-md hover:bg-white transition-all duration-300 group/sub">
+                                        <div
+                                            class="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center text-red-600 flex-shrink-0 group-hover/sub:scale-110 transition-transform">
+                                            <i data-lucide="zap" class="w-4 h-4"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-bold text-slate-800 leading-tight">Instant Recorder
+                                            </p>
+                                            <p class="text-[11px] text-slate-400 leading-tight mt-0.5">For unplanned
+                                                recordings</p>
+                                        </div>
+                                        <i data-lucide="chevron-right"
+                                            class="w-4 h-4 text-slate-300 group-hover/sub:text-red-500 group-hover/sub:translate-x-1 transition-all flex-shrink-0"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ROW 3: Style Repository (Wide) | Reports (Standard) -->
+                        <!-- Style Repository -->
+                        <a href="pages/style.html"
+                            class="dashboard-card md:col-span-2 lg:col-span-2 group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
+                            <div
+                                class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
+                            </div>
+                            <div
+                                class="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-bl-[4rem] -mr-8 -mt-8 group-hover:scale-125 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                            </div>
+
+                            <div class="relative z-10 h-full flex flex-col">
+                                <div
+                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-teal-600 mb-6 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                                    <i data-lucide="swatch-book" class="w-7 h-7"></i>
                                 </div>
                                 <h3
-                                    class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-cyan-600 transition-colors">
-                                    Planning</h3>
-                                <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">Strategic resource
-                                    allocation
-                                    and workflow optimization planning.</p>
+                                    class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-teal-600 transition-colors">
+                                    Style Repository</h3>
+                                <p class="text-slate-500 text-sm leading-relaxed mb-6 flex-grow">Centralized database
+                                    for
+                                    style configurations, efficiency targets, and operational plans.</p>
+
+                                <div class="flex items-center gap-2 mb-8">
+                                    <div
+                                        class="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center text-teal-600">
+                                        <i data-lucide="database" class="w-4 h-4"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                            Unique Styles</p>
+                                        <p id="styleCountMetric" class="text-sm font-bold text-slate-800">...
+                                        </p>
+                                    </div>
+                                </div>
 
                                 <div class="flex items-center justify-between mt-auto">
                                     <span
                                         class="flex items-center text-sm font-bold text-slate-900 group-hover:translate-x-2 transition-transform duration-300">
-                                        View Plans <i data-lucide="arrow-right" class="ml-2 w-4 h-4 text-cyan-500"></i>
+                                        Access Repository <i data-lucide="arrow-right"
+                                            class="ml-2 w-4 h-4 text-teal-500"></i>
                                     </span>
                                 </div>
                             </div>
                         </a>
 
-                        <!-- QCO Schedule -->
-                        <a href="pages/schedule.html"
-                            class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
-                            <div
-                                class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
-                            </div>
-                            <div
-                                class="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-bl-[4rem] -mr-8 -mt-8 group-hover:scale-125 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
-                            </div>
-
-                            <div class="relative z-10 h-full flex flex-col">
-                                <div
-                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-violet-600 mb-6 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
-                                    <i data-lucide="calendar" class="w-7 h-7"></i>
-                                </div>
-                                <h3
-                                    class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-violet-600 transition-colors">
-                                    QCO Schedule</h3>
-                                <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">Manage changeover
-                                    dates
-                                    and
-                                    timelines for all Unique Numbers.</p>
-
-                                <div class="flex items-center justify-between mt-auto">
-                                    <span
-                                        class="flex items-center text-sm font-bold text-slate-900 group-hover:translate-x-2 transition-transform duration-300">
-                                        Manage Schedule <i data-lucide="arrow-right"
-                                            class="ml-2 w-4 h-4 text-violet-500"></i>
-                                    </span>
-                                </div>
-                            </div>
-                        </a>
-
-                        <!-- Activity Checklist -->
-                        <a href="pages/checklist.html"
-                            class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
-                            <div
-                                class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
-                            </div>
-                            <div
-                                class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-bl-[4rem] -mr-8 -mt-8 group-hover:scale-125 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
-                            </div>
-
-                            <div class="relative z-10 h-full flex flex-col">
-                                <div
-                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-emerald-600 mb-6 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
-                                    <i data-lucide="clipboard-list" class="w-7 h-7"></i>
-                                </div>
-                                <h3
-                                    class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-emerald-600 transition-colors">
-                                    Checklist</h3>
-                                <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">Track daily tasks,
-                                    monitor
-                                    process completion, and ensure SOP adherence.</p>
-
-                                <div class="flex items-center justify-between mt-auto">
-                                    <span
-                                        class="flex items-center text-sm font-bold text-slate-900 group-hover:translate-x-2 transition-transform duration-300">
-                                        View Tasks <i data-lucide="arrow-right"
-                                            class="ml-2 w-4 h-4 text-emerald-500"></i>
-                                    </span>
-                                </div>
-                            </div>
-                        </a>
-
-                        <!-- QCO Recorder -->
-                        <a href="pages/recorder.html"
-                            class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
-                            <div
-                                class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
-                            </div>
-                            <div
-                                class="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-bl-[4rem] -mr-8 -mt-8 group-hover:scale-125 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
-                            </div>
-
-                            <div class="relative z-10 h-full flex flex-col">
-                                <div
-                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-amber-600 mb-6 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
-                                    <i data-lucide="mic" class="w-7 h-7"></i>
-                                </div>
-                                <h3
-                                    class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-amber-600 transition-colors">
-                                    Recorder</h3>
-                                <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">Capture verbal
-                                    updates,
-                                    session notes, and maintain audio audit trails.</p>
-
-                                <div class="flex items-center justify-between mt-auto">
-                                    <span
-                                        class="flex items-center text-sm font-bold text-slate-900 group-hover:translate-x-2 transition-transform duration-300">
-                                        Open Recorder <i data-lucide="arrow-right"
-                                            class="ml-2 w-4 h-4 text-amber-500"></i>
-                                    </span>
-                                </div>
-                            </div>
-                        </a>
-
-                        <!-- Summary & Reports -->
+                        <!-- Reports -->
                         <a href="pages/summary.html"
                             class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
                             <div
@@ -1094,9 +1128,8 @@
                                 <h3
                                     class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-rose-600 transition-colors">
                                     Reports</h3>
-                                <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">Access historical
-                                    data
-                                    archives and generate comprehensive reports.</p>
+                                <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">Access historical data
+                                    archives and generate comprehensive workflow reports.</p>
 
                                 <div class="flex items-center justify-between mt-auto">
                                     <span
@@ -1118,12 +1151,10 @@
                         <p class="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase">© 2026 MANUFACTURING
                             EXCELLENCE SYSTEM</p>
                         <div class="flex gap-6">
-                            <a href="#" class="text-slate-400 hover:text-slate-600 transition-colors"><i
-                                    data-lucide="twitter" class="w-4 h-4"></i></a>
-                            <a href="#" class="text-slate-400 hover:text-slate-600 transition-colors"><i
-                                    data-lucide="github" class="w-4 h-4"></i></a>
-                            <a href="#" class="text-slate-400 hover:text-slate-600 transition-colors"><i
-                                    data-lucide="linkedin" class="w-4 h-4"></i></a>
+                            <button onclick="toggleGridMode()" title="Change Dashboard Layout"
+                                class="text-slate-400 hover:text-indigo-600 transition-colors p-2 rounded-lg hover:bg-slate-100 flex items-center justify-center">
+                                <i id="gridToggleIcon" data-lucide="layout-grid" class="w-5 h-5"></i>
+                            </button>
                         </div>
                     </div>
                 </footer>
@@ -1923,6 +1954,85 @@
                 if (dd && !dd.classList.contains('hidden')) toggleDropdown();
             }
         });
+
+        // Initialize Style Metrics on Dashboard
+        async function initStyleMetrics() {
+            try {
+                // Check if styleCountMetric exists on this page
+                const countEl = document.getElementById('styleCountMetric');
+
+                if (!countEl) return;
+
+                if (typeof db !== 'undefined' && db && isFirebaseConnected) {
+                    try {
+                        const snap = await db.collection('changeovers').get();
+                        const uniqueStyles = new Set();
+
+                        snap.forEach(doc => {
+                            const data = doc.data();
+                            if (data.upcomingStyle && data.upcomingStyle !== 'Unknown') {
+                                uniqueStyles.add(data.upcomingStyle);
+                            }
+                        });
+
+                        const totalStyles = uniqueStyles.size;
+                        countEl.textContent = totalStyles > 0 ? `${totalStyles}+` : '0';
+                    } catch (e) {
+                        console.warn("Could not fetch changeovers from Firebase for metrics.", e);
+                    }
+                }
+            } catch (error) {
+                console.warn("Error initializing style metrics on dashboard:", error);
+            }
+        }
+
+        // Call initStyleMetrics once the DOM is fully loaded or after login transition
+        document.addEventListener('DOMContentLoaded', () => {
+            // Need a slight delay to ensure DB is initialized elsewhere if necessary
+            setTimeout(initStyleMetrics, 1000);
+        });
+
+        // Grid Toggle Logic
+        let currentGridMode = 0; // 0 = 3x3, 1 = 4x3, 2 = List
+        function toggleGridMode() {
+            const gridEl = document.getElementById('dashboardGrid');
+            if (!gridEl) return;
+
+            const btnIcon = document.getElementById('gridToggleIcon');
+            currentGridMode = (currentGridMode + 1) % 3;
+
+            // Standardize cards back to default state before applying new
+            // We use a custom data attribute to identify cards that are meant to be wide
+            const wideCards = gridEl.querySelectorAll('a[href="pages/style.html"]');
+
+            if (currentGridMode === 0) {
+                // Return to 3 Col (3x3)
+                gridEl.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-40 relative z-10 transition-all duration-500 ease-in-out";
+                wideCards.forEach(card => {
+                    card.classList.add('md:col-span-2', 'lg:col-span-2');
+                });
+                if (btnIcon) btnIcon.setAttribute('data-lucide', 'grid-3X3');
+            } else if (currentGridMode === 1) {
+                // Go to 4 Col (4x4)
+                gridEl.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-40 relative z-10 transition-all duration-500 ease-in-out";
+                wideCards.forEach(card => {
+                    // Make it smaller in 4x3 to accommodate Reports in the same row
+                    card.classList.remove('md:col-span-2', 'lg:col-span-2');
+                });
+                if (btnIcon) btnIcon.setAttribute('data-lucide', 'grid'); // Using default grid icon
+            } else if (currentGridMode === 2) {
+                // Go to List (Flex Col)
+                gridEl.className = "flex flex-col gap-8 mb-40 relative z-10 transition-all duration-500 ease-in-out";
+                wideCards.forEach(card => {
+                    card.classList.remove('md:col-span-2', 'lg:col-span-2');
+                });
+                if (btnIcon) btnIcon.setAttribute('data-lucide', 'list');
+            }
+
+            // Re-render lucide icon if needed
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
     </script>
     <!-- Settings Modal -->
     <div id="settingsModal"
