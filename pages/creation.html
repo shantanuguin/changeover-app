@@ -4354,10 +4354,10 @@
                 const option = document.createElement('option');
                 option.value = line;
 
-                // Get supervisor name from emailData if available
+                // Get supervisor name from personnelData if available
                 let supervisor = "Unassigned";
-                if (emailData && emailData[line] && emailData[line].supervisor) {
-                    supervisor = emailData[line].supervisor;
+                if (typeof personnelData !== 'undefined' && personnelData[line] && personnelData[line].supervisor) {
+                    supervisor = personnelData[line].supervisor;
                 }
 
                 option.textContent = `Line ${line} - ${supervisor}`;
