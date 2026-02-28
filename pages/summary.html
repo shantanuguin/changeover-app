@@ -668,7 +668,7 @@
                     </div>
 
                     <!-- Header Summary Stats -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
                         <!-- Style Info -->
                         <div class="glass-card p-6 border-l-4 border-l-violet-500 relative overflow-hidden group">
                             <div
@@ -693,6 +693,20 @@
                                 <span class="text-sm font-bold text-slate-500">min</span>
                             </div>
                             <p class="text-sm text-blue-600 font-bold mt-1"><span id="totalTimeHours">0</span> Hours</p>
+                        </div>
+
+                        <!-- SMV Multiple -->
+                        <div class="glass-card p-6 border-l-4 border-l-emerald-500 relative overflow-hidden group">
+                            <div
+                                class="absolute right-0 top-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <i data-lucide="layers" class="w-16 h-16 text-emerald-600"></i>
+                            </div>
+                            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">SMV Multiple</p>
+                            <div class="flex items-baseline gap-2">
+                                <p class="text-3xl font-heading font-bold text-slate-900" id="smvMultiple">0.0</p>
+                                <span class="text-sm font-bold text-slate-500">x</span>
+                            </div>
+                            <p class="text-xs text-emerald-600/80 font-bold mt-2">Total Time / Target SMV</p>
                         </div>
 
                         <!-- Manpower & Cost Input -->
@@ -1671,6 +1685,18 @@
             document.getElementById('totalTimeMin').textContent = totalTime.toFixed(0);
             document.getElementById('totalTimeHours').textContent = (totalTime / 60).toFixed(1);
             document.getElementById('totalCostDisplay').textContent = '$' + totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            // Update SMV Multiple
+            let smvMultiple = 0;
+            const meta = currentReportData.metadata;
+            if (meta) {
+                const smv = parseFloat(meta.upcomingSMV) || parseFloat(meta.newSMV) || 0;
+                if (smv > 0) {
+                    smvMultiple = totalTime / smv;
+                }
+            }
+            const smvElem = document.getElementById('smvMultiple');
+            if (smvElem) smvElem.textContent = smvMultiple > 0 ? smvMultiple.toFixed(1) : 'N/A';
 
             // --- PERSISTENCE (Debounced) ---
             if (currentQCOId) {
