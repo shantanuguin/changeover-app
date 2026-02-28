@@ -2830,85 +2830,80 @@
             const cleanLine = lineNumber ? lineNumber.toString().replace(/[^0-9A-Z]/gi, '') : "0";
             const curLast3 = currentStyle ? (currentStyle.length > 3 ? currentStyle.slice(-3) : currentStyle.padStart(3, '0')) : "000";
             const nextLast3 = upcomingStyle ? (upcomingStyle.length > 3 ? upcomingStyle.slice(-3) : upcomingStyle.padStart(3, '0')) : "000";
+            const prefix = `S-${cleanLine}-${curLast3}-${nextLast3}-`;
 
             if (isFirebaseConnected) {
                 try {
-                    addFirebaseLog('Generating QCO number via Firebase transaction...', 'info');
+                    addFirebaseLog(`Finding next available QCO number for ${prefix}...`, 'info');
 
-                    // Construct the Unique Key for this specific combo
-                    const uniqueKey = `S${cleanLine}-${curLast3}-${nextLast3}`;
-                    const sequenceRef = db.collection('qco_sequences').doc(uniqueKey);
+                    // Query all existing changeovers with this prefix
+                    const endPrefix = prefix + '\uf8ff';
+                    const snapshot = await db.collection('changeovers')
+                        .where(firebase.firestore.FieldPath.documentId(), '>=', prefix)
+                        .where(firebase.firestore.FieldPath.documentId(), '<=', endPrefix)
+                        .get();
 
-                    const nextSeq = await db.runTransaction(async (transaction) => {
-                        const doc = await transaction.get(sequenceRef);
-                        let seq = 1;
-
-                        if (doc.exists) {
-                            seq = (doc.data().count || 0) + 1;
+                    const existingSeqs = [];
+                    snapshot.forEach(doc => {
+                        const id = doc.id;
+                        const parts = id.split('-');
+                        const seqPart = parts[parts.length - 1];
+                        const seq = parseInt(seqPart);
+                        if (!isNaN(seq)) {
+                            existingSeqs.push(seq);
                         }
-
-                        transaction.set(sequenceRef, {
-                            count: seq,
-                            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-                        }, { merge: true });
-
-                        return seq;
                     });
 
-                    // Format: S-Line-Cur3-Next3-Seq (01, 02... 99, 100...)
-                    const seqStr = nextSeq.toString().padStart(2, '0');
-                    const newId = `S-${cleanLine}-${curLast3}-${nextLast3}-${seqStr}`;
+                    // Find the smallest missing positive integer
+                    existingSeqs.sort((a, b) => a - b);
+                    let nextSeq = 1;
+                    for (let i = 0; i < existingSeqs.length; i++) {
+                        if (existingSeqs[i] === nextSeq) {
+                            nextSeq++;
+                        } else if (existingSeqs[i] > nextSeq) {
+                            break; // Found a gap
+                        }
+                    }
 
-                    addFirebaseLog(`Generated synced QCO number: ${newId}`, 'success');
+                    const seqStr = nextSeq.toString().padStart(2, '0');
+                    const newId = `${prefix}${seqStr}`;
+
+                    addFirebaseLog(`Generated sequential QCO number: ${newId}`, 'success');
                     return newId;
 
                 } catch (error) {
-                    addFirebaseLog(`Error in QCO sync transaction: ${error.message}`, 'error');
-                    // Fallback to querying changeovers if transaction fails
-                    // Try to count existing changeovers for this specific combination
-                    const prefix = `S-${cleanLine}-${curLast3}-${nextLast3}-`;
-                    /* 
-                       Note: A true "startsWith" query in Firestore requires a range query.
-                       We query for IDs >= prefix and < prefix + last_char_increment
-                    */
-                    try {
-                        const endPrefix = prefix + '\uf8ff';
-                        const snapshot = await db.collection('changeovers')
-                            .where('qcoNumber', '>=', prefix)
-                            .where('qcoNumber', '<=', endPrefix)
-                            .get();
-
-                        const nextSeq = (snapshot.size + 1).toString().padStart(2, '0');
-                        return `${prefix}${nextSeq}`;
-                    } catch (fallbackError) {
-                        // Ultimate fallback if query fails
-                        return `${prefix}01`;
-                    }
+                    addFirebaseLog(`Error generating QCO number: ${error.message}`, 'error');
+                    return `${prefix}01`;
                 }
             } else {
-                // Offline fallback - use localStorage per combo
-                const uniqueKey = `qco_seq_S${cleanLine}-${curLast3}-${nextLast3}`;
-                const localSeq = localStorage.getItem(uniqueKey) || 0;
-                const next = parseInt(localSeq) + 1;
-                localStorage.setItem(uniqueKey, next);
-                const seqStr = next.toString().padStart(2, '0');
-                return `S-${cleanLine}-${curLast3}-${nextLast3}-${seqStr}`;
+                // Offline fallback - check localStorage
+                const localChangeovers = JSON.parse(localStorage.getItem('changeovers') || '[]');
+                const existingSeqs = localChangeovers
+                    .filter(qco => qco.qcoNumber && qco.qcoNumber.startsWith(prefix))
+                    .map(qco => {
+                        const parts = qco.qcoNumber.split('-');
+                        return parseInt(parts[parts.length - 1]);
+                    })
+                    .filter(seq => !isNaN(seq))
+                    .sort((a, b) => a - b);
+
+                let nextSeq = 1;
+                for (let i = 0; i < existingSeqs.length; i++) {
+                    if (existingSeqs[i] === nextSeq) {
+                        nextSeq++;
+                    } else if (existingSeqs[i] > nextSeq) {
+                        break;
+                    }
+                }
+
+                const seqStr = nextSeq.toString().padStart(2, '0');
+                return `${prefix}${seqStr}`;
             }
         }
 
         async function deleteQCONumber(qcoNumber) {
-            const num = parseInt(qcoNumber.replace(/[^0-9]/g, ''));
-
-            if (isFirebaseConnected) {
-                try {
-                    await db.collection('system').doc('qcoSettings').update({
-                        availableNumbers: firebase.firestore.FieldValue.arrayUnion(num)
-                    });
-                    addFirebaseLog(`QCO number ${qcoNumber} marked for reuse`, 'info');
-                } catch (error) {
-                    addFirebaseLog(`Error recycling QCO number: ${error.message}`, 'error');
-                }
-            }
+            // No explicit counter recycling needed since getNextQCONumber checks existing records
+            addFirebaseLog(`QCO number ${qcoNumber} slot will be automatically reused in next generation`, 'info');
         }
 
         async function saveChangeoverToFirebase(qcoData) {
