@@ -728,6 +728,10 @@
 
         function populateSession(data, qcoId) {
             currentQCONumber = qcoId;
+
+            // Trigger QCO alert instantly in case it's discarded
+            if (window.checkQCOStatus) window.checkQCOStatus();
+
             el('lineNumber').value = data.lineNumber || '';
 
             // Show supervisor

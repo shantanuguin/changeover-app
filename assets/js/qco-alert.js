@@ -10,6 +10,7 @@
         if (window.currentQCOId) return window.currentQCOId;
         if (window.currentQCONumber) return window.currentQCONumber;
         if (window.qcoId) return window.qcoId;
+        if (window.existingQCORef) return window.existingQCORef.id || window.existingQCORef.qcoNumber;
 
         // Try to get from URL params
         const urlParams = new URLSearchParams(window.location.search);
@@ -85,6 +86,9 @@
         // Check every 10 seconds
         alertInterval = setInterval(checkQCOStatus, 10000);
     }
+
+    // Export so other pages can trigger it manually
+    window.checkQCOStatus = checkQCOStatus;
 
     // Initialize when DOM is available
     if (document.readyState === 'loading') {

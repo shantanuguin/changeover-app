@@ -2722,6 +2722,9 @@
                 const data = doc.data();
                 existingQCORef = { id: qcoId, ...data };
 
+                // Trigger QCO alert check instantly in case it's discarded
+                if (window.checkQCOStatus) window.checkQCOStatus();
+
                 // Show info card
                 document.getElementById('existingQCONumber').textContent = data.qcoNumber || qcoId;
                 document.getElementById('existingQCOLine').textContent = data.lineNumber || '—';
@@ -3744,7 +3747,7 @@
             // Update Firebase log display
             updateFirebaseLogDisplay();
 
-            // Close preview modal when clicking outside
+            // Close file preview inside DOMContentLoaded
             document.getElementById('filePreviewModal').addEventListener('click', function (e) {
                 if (e.target === this) {
                     closeFilePreview();
@@ -3848,62 +3851,54 @@
 
                     if (!querySnapshot.empty) {
                         const userDoc = querySnapshot.docs[0];
-                        const user = userDoc.data();
-                        user.id = userDoc.id;
+                        const userData = userDoc.data();
 
-                        // Update last login in Firebase
-                        const now = firebase.firestore.FieldValue.serverTimestamp();
-                        await usersCollection.doc(user.id).update({
-                            lastLogin: now
+                        currentUser = {
+                            id: userDoc.id,
+                            name: userData.name,
+                            role: userData.role || 'user',
+                            email: userData.email,
+                            firebaseAuth: true
+                        };
+
+                        // Update last login
+                        await usersCollection.doc(userDoc.id).update({
+                            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
                         });
 
-                        // Also update locally for immediate display
-                        user.lastLogin = new Date().toISOString();
-
-                        currentUser = user;
-                        addFirebaseLog(`User authenticated via Firebase: ${user.name}`, 'success');
-
-                        // Log activity
-                        logActivity(`${user.name} logged in`, 'login');
-
-                        // Start session
                         startUserSession();
-
-                        // Clear password field
-                        passwordInput.value = '';
-                        errorElement.classList.add('hidden');
-
-                        // Show success notification
-                        showNotification(`Welcome, ${user.name}!`, 'success');
                         return;
                     }
-                } catch (firebaseError) {
-                    addFirebaseLog(`Firebase auth failed, falling back to local: ${firebaseError.message}`, 'error');
+                } catch (error) {
+                    console.error("Firebase Auth Error:", error);
+                    addFirebaseLog(`Auth error: ${error.message}`, 'error');
                 }
             }
 
             // Fallback to local authentication
+            addFirebaseLog(`Falling back to local authentication`, 'warning');
             const users = JSON.parse(localStorage.getItem('systemUsers'));
             const user = users.find(u => u.password === password);
 
             if (user) {
-                // Update last login
+                // Determine if we should mock admin features based on user config
+                const configStr = localStorage.getItem('appConfig');
+                let forceAdmin = false;
+                if (configStr) {
+                    try {
+                        const config = JSON.parse(configStr);
+                        forceAdmin = !!config.forceAdmin;
+                    } catch (e) { }
+                }
+
+                currentUser = {
+                    ...user,
+                    role: forceAdmin ? 'admin' : user.role
+                };
+
                 user.lastLogin = new Date().toISOString();
                 localStorage.setItem('systemUsers', JSON.stringify(users));
-
-                // Set current user
-                currentUser = user;
-                addFirebaseLog(`User authenticated locally: ${user.name}`, 'info');
-
-                // Log activity
-                logActivity(`${user.name} logged in`, 'login');
-
-                // Start session
                 startUserSession();
-
-                // Clear password field
-                passwordInput.value = '';
-                errorElement.classList.add('hidden');
 
                 // Check for Planning Role - Strict Redirect
                 if (user.role === 'planning') {
@@ -7110,10 +7105,7 @@ Shantanu & Sampreeti`;
                     <div class="footer">
                         <p>Generated by Changeover Meeting Initiator System on ${new Date().toLocaleString()}</p>
                     </div>
-                
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="../assets/js/qco-alert.js"></script>
-</body>
+                </body>
                 </html>
             `);
             printWindow.document.close();
@@ -7854,6 +7846,9 @@ Shantanu & Sampreeti`;
             });
         });
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../assets/js/qco-alert.js"></script>
 </body>
 
 </html>

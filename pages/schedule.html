@@ -1903,6 +1903,10 @@
             if (!qcoId) { resetFormForExistingMode(); return; }
             if (saveToStorage) localStorage.setItem('scheduleQCOId', qcoId);
             currentQCOId = qcoId;
+
+            // Trigger QCO alert instantly in case it's discarded
+            if (window.checkQCOStatus) window.checkQCOStatus();
+
             await loadScheduleData(qcoId);
 
             // Populate all sections with loaded data
@@ -2575,8 +2579,8 @@ Sidney Apparels QCO Portal`;
                 originalLineBeforeEdit = newLine;
 
                 // 7. Refresh dropdown if in Existing mode
-                if (document.getElementById('modeExisting').checked) {
-                    await loadChangeovers();
+                if (currentMode === 'existing') {
+                    await loadChangeoverList();
                     const selector = document.getElementById('qcoSelector');
                     if (selector) selector.value = newQcoId;
 
@@ -2712,8 +2716,8 @@ Sidney Apparels QCO Portal`;
                 originalToStyle = toInput;
 
                 // 6. Refresh dropdown if in Existing mode
-                if (document.getElementById('modeExisting').checked) {
-                    await loadChangeovers();
+                if (currentMode === 'existing') {
+                    await loadChangeoverList();
                     const selector = document.getElementById('qcoSelector');
                     if (selector) selector.value = newQcoId;
 
