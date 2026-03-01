@@ -7,10 +7,10 @@
 
     function getActiveQCONumber() {
         // Try to find the active QCO based on common global variables used across different pages
-        if (window.currentQCOId) return window.currentQCOId;
-        if (window.currentQCONumber) return window.currentQCONumber;
-        if (window.qcoId) return window.qcoId;
-        if (window.existingQCORef) return window.existingQCORef.id || window.existingQCORef.qcoNumber;
+        if (typeof currentQCOId !== 'undefined' && currentQCOId) return currentQCOId;
+        if (typeof currentQCONumber !== 'undefined' && currentQCONumber) return currentQCONumber;
+        if (typeof qcoId !== 'undefined' && qcoId) return qcoId;
+        if (typeof existingQCORef !== 'undefined' && existingQCORef) return existingQCORef.id || existingQCORef.qcoNumber;
 
         // Try to get from URL params
         const urlParams = new URLSearchParams(window.location.search);
@@ -21,32 +21,46 @@
     }
 
     async function checkQCOStatus() {
+        console.log('[qco-alert] checkQCOStatus triggered.');
         const qcoNumber = getActiveQCONumber();
+        console.log('[qco-alert] getActiveQCONumber returned:', qcoNumber);
         if (!qcoNumber) return;
 
         try {
             // Check Firebase if available
-            if (window.db && window.isFirebaseConnected) {
-                const doc = await window.db.collection('changeovers').doc(qcoNumber).get();
+            const hasDb = typeof db !== 'undefined' && db !== null;
+            const hasFirebase = typeof isFirebaseConnected !== 'undefined' && isFirebaseConnected;
+
+            console.log('[qco-alert] hasDb:', hasDb, 'hasFirebase:', hasFirebase);
+
+            if (hasDb && hasFirebase) {
+                console.log('[qco-alert] Querying Firebase for QCO:', qcoNumber);
+                const doc = await db.collection('changeovers').doc(qcoNumber).get();
+                console.log('[qco-alert] doc.exists?', doc.exists);
                 if (doc.exists) {
                     const data = doc.data();
+                    console.log('[qco-alert] data.status:', data.status);
                     if (data.status === 'discarded') {
                         triggerAlert(qcoNumber, data.movedTo);
                     }
                 }
             } else {
+                console.log('[qco-alert] Falling back to localStorage...');
                 // Fallback to localStorage check if Firebase is not connected or db is not initialized
                 const localData = localStorage.getItem('changeovers');
                 if (localData) {
                     const changeovers = JSON.parse(localData);
                     const qco = changeovers.find(c => c.qcoNumber === qcoNumber || c.id === qcoNumber);
+                    if (qco) {
+                        console.log('[qco-alert] Local QCO found. Status:', qco.status);
+                    }
                     if (qco && qco.status === 'discarded') {
                         triggerAlert(qcoNumber, qco.movedTo);
                     }
                 }
             }
         } catch (error) {
-            console.error("Error checking QCO discarded status:", error);
+            console.error("[qco-alert] Error checking QCO discarded status:", error);
         }
     }
 
