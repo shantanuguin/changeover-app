@@ -1932,20 +1932,14 @@
                         <option value="">Select a scheduled changeover...</option>
                     </select>
                     <div id="existingQCOInfo" class="hidden mt-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                        <div class="flex justify-between items-start gap-4">
-                            <div class="grid grid-cols-2 gap-2 text-sm flex-1">
-                                <div><span class="text-gray-500">QCO:</span> <strong id="existingQCONumber">—</strong>
-                                </div>
-                                <div><span class="text-gray-500">Line:</span> <strong id="existingQCOLine">—</strong>
-                                </div>
-                                <div><span class="text-gray-500">From:</span> <strong id="existingQCOFrom">—</strong>
-                                </div>
-                                <div><span class="text-gray-500">To:</span> <strong id="existingQCOTo">—</strong></div>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div><span class="text-gray-500">QCO:</span> <strong id="existingQCONumber">—</strong>
                             </div>
-                            <button id="deleteScheduledQCOBtn" onclick="deleteScheduledChangeover()"
-                                class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm hidden">
-                                <i class="fas fa-trash mr-1"></i> Delete
-                            </button>
+                            <div><span class="text-gray-500">Line:</span> <strong id="existingQCOLine">—</strong>
+                            </div>
+                            <div><span class="text-gray-500">From:</span> <strong id="existingQCOFrom">—</strong>
+                            </div>
+                            <div><span class="text-gray-500">To:</span> <strong id="existingQCOTo">—</strong></div>
                         </div>
                     </div>
                 </div>
@@ -2750,61 +2744,10 @@
                     lineSelect.dispatchEvent(new Event('change'));
                 }
 
-                // Show delete button if user is admin or created it
-                const delBtn = document.getElementById('deleteScheduledQCOBtn');
-                if (delBtn) {
-                    if (currentUser && currentUser.role === 'admin') {
-                        delBtn.classList.remove('hidden');
-                    } else {
-                        delBtn.classList.add('hidden');
-                    }
-                }
-
                 addFirebaseLog(`Selected existing QCO: ${data.qcoNumber}`, 'success');
             } catch (error) {
                 console.error('Error loading QCO:', error);
                 Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load changeover: ' + error.message });
-            }
-        }
-
-        async function deleteScheduledChangeover() {
-            if (!existingQCORef || !existingQCORef.id) return;
-
-            const result = await Swal.fire({
-                title: 'Delete Scheduled QCO?',
-                text: `Are you sure you want to delete ${existingQCORef.qcoNumber || existingQCORef.id}? This cannot be undone.`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: 'Yes, delete it'
-            });
-
-            if (result.isConfirmed) {
-                try {
-                    await db.collection('changeovers').doc(existingQCORef.id).delete();
-                    showNotification('Scheduled changeover deleted successfully', 'success');
-                    addFirebaseLog(`Deleted scheduled changeover: ${existingQCORef.id}`, 'success');
-
-                    // Reset selection and UI
-                    existingQCORef = null;
-                    document.getElementById('existingQCOInfo').classList.add('hidden');
-                    const selectEl = document.getElementById('existingQCOSelect');
-                    if (selectEl) selectEl.value = '';
-
-                    const lineSelect = document.getElementById('lineSelect');
-                    if (lineSelect) {
-                        lineSelect.disabled = false;
-                        lineSelect.value = '';
-                        lineSelect.dispatchEvent(new Event('change'));
-                    }
-
-                    loadExistingQCOs();
-                    if (typeof refreshChangeoverData === 'function') refreshChangeoverData();
-
-                } catch (e) {
-                    Swal.fire('Error', 'Failed to delete: ' + e.message, 'error');
-                }
             }
         }
 
