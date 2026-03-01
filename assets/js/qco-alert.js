@@ -96,19 +96,23 @@
                     if (selectEl) selectEl.value = newQco;
                     window.handleExistingQCOSelect(newQco);
                 } else if (typeof window.handleQCOChange === 'function') {
-                    // schedule.html
+                    // All other pages that have handleQCOChange
                     const selectEl = document.getElementById('qcoSelector');
                     if (selectEl) selectEl.value = newQco;
+
+                    // Some pages expect a second saveToStorage parameter, others don't.
+                    // Passing `true` as second argument is harmless for those that don't expect it.
                     window.handleQCOChange(newQco, true);
                 } else {
-                    // URL-based pages like checklist, style, instant
+                    // Fallback for pages without JS selection handlers (e.g., pure URL driven pages)
                     const urlParams = new URLSearchParams(window.location.search);
                     if (urlParams.has('qco')) urlParams.set('qco', newQco);
                     if (urlParams.has('id')) urlParams.set('id', newQco);
+
                     if (urlParams.has('qco') || urlParams.has('id')) {
                         window.location.search = urlParams.toString();
                     } else {
-                        // If no params, try to set local storage and reload
+                        // If no params, try to set local storage and reload as a very last resort
                         localStorage.setItem('currentQCO', newQco);
                         window.location.reload();
                     }
