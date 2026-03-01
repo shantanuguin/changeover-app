@@ -1932,11 +1932,20 @@
                         <option value="">Select a scheduled changeover...</option>
                     </select>
                     <div id="existingQCOInfo" class="hidden mt-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                        <div class="grid grid-cols-2 gap-2 text-sm">
-                            <div><span class="text-gray-500">QCO:</span> <strong id="existingQCONumber">—</strong></div>
-                            <div><span class="text-gray-500">Line:</span> <strong id="existingQCOLine">—</strong></div>
-                            <div><span class="text-gray-500">From:</span> <strong id="existingQCOFrom">—</strong></div>
-                            <div><span class="text-gray-500">To:</span> <strong id="existingQCOTo">—</strong></div>
+                        <div class="flex justify-between items-start gap-4">
+                            <div class="grid grid-cols-2 gap-2 text-sm flex-1">
+                                <div><span class="text-gray-500">QCO:</span> <strong id="existingQCONumber">—</strong>
+                                </div>
+                                <div><span class="text-gray-500">Line:</span> <strong id="existingQCOLine">—</strong>
+                                </div>
+                                <div><span class="text-gray-500">From:</span> <strong id="existingQCOFrom">—</strong>
+                                </div>
+                                <div><span class="text-gray-500">To:</span> <strong id="existingQCOTo">—</strong></div>
+                            </div>
+                            <button id="deleteScheduledQCOBtn" onclick="deleteScheduledChangeover()"
+                                class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm hidden">
+                                <i class="fas fa-trash mr-1"></i> Delete
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1944,7 +1953,7 @@
         </div>
 
         <!-- Main Content -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="mainContentGrid">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start" id="mainContentGrid">
             <!-- Left Sidebar -->
             <div class="lg:col-span-1 space-y-6">
                 <!-- File Upload Section -->
@@ -1978,9 +1987,13 @@
                                         <div class="text-xs text-gray-500" id="currentFileSize"></div>
                                     </div>
                                 </div>
-                                <button id="removeCurrentFile" class="text-red-500 hover:text-red-700">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                                <div class="flex items-center gap-2">
+                                    <span id="currentOBBadge"
+                                        class="hidden text-xs font-bold px-2 py-0.5 rounded-full"></span>
+                                    <button id="removeCurrentFile" class="text-red-500 hover:text-red-700">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2011,9 +2024,13 @@
                                         <div class="text-xs text-gray-500" id="upcomingFileSize"></div>
                                     </div>
                                 </div>
-                                <button id="removeUpcomingFile" class="text-red-500 hover:text-red-700">
-                                    <i class="fas fa-times"></i>
-                                </button>
+                                <div class="flex items-center gap-2">
+                                    <span id="upcomingOBBadge"
+                                        class="hidden text-xs font-bold px-2 py-0.5 rounded-full"></span>
+                                    <button id="removeUpcomingFile" class="text-red-500 hover:text-red-700">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -2733,10 +2750,61 @@
                     lineSelect.dispatchEvent(new Event('change'));
                 }
 
+                // Show delete button if user is admin or created it
+                const delBtn = document.getElementById('deleteScheduledQCOBtn');
+                if (delBtn) {
+                    if (currentUser && currentUser.role === 'admin') {
+                        delBtn.classList.remove('hidden');
+                    } else {
+                        delBtn.classList.add('hidden');
+                    }
+                }
+
                 addFirebaseLog(`Selected existing QCO: ${data.qcoNumber}`, 'success');
             } catch (error) {
                 console.error('Error loading QCO:', error);
                 Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load changeover: ' + error.message });
+            }
+        }
+
+        async function deleteScheduledChangeover() {
+            if (!existingQCORef || !existingQCORef.id) return;
+
+            const result = await Swal.fire({
+                title: 'Delete Scheduled QCO?',
+                text: `Are you sure you want to delete ${existingQCORef.qcoNumber || existingQCORef.id}? This cannot be undone.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Yes, delete it'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    await db.collection('changeovers').doc(existingQCORef.id).delete();
+                    showNotification('Scheduled changeover deleted successfully', 'success');
+                    addFirebaseLog(`Deleted scheduled changeover: ${existingQCORef.id}`, 'success');
+
+                    // Reset selection and UI
+                    existingQCORef = null;
+                    document.getElementById('existingQCOInfo').classList.add('hidden');
+                    const selectEl = document.getElementById('existingQCOSelect');
+                    if (selectEl) selectEl.value = '';
+
+                    const lineSelect = document.getElementById('lineSelect');
+                    if (lineSelect) {
+                        lineSelect.disabled = false;
+                        lineSelect.value = '';
+                        lineSelect.dispatchEvent(new Event('change'));
+                    }
+
+                    loadExistingQCOs();
+                    if (typeof refreshChangeoverData === 'function') refreshChangeoverData();
+
+                } catch (e) {
+                    Swal.fire('Error', 'Failed to delete: ' + e.message, 'error');
+                }
             }
         }
 
@@ -6545,6 +6613,89 @@ Shantanu & Sampreeti`;
             }
         }
 
+        // =====================================================
+        //  OB STYLE VALIDATION AGAINST QCO REFERENCE
+        // =====================================================
+
+        /**
+         * Extracts the last 3 characters from a style string (case-insensitive).
+         */
+        function getLast3(style) {
+            if (!style || typeof style !== 'string') return '';
+            const clean = style.trim().toUpperCase();
+            return clean.length >= 3 ? clean.slice(-3) : clean;
+        }
+
+        /**
+         * Gets the reference styles from the QCO (from schedule page data).
+         * Works for both existing mode (existingQCORef) and new mode (QCO number parsing).
+         * Returns { currentRef: string, upcomingRef: string }
+         */
+        function getQCOReferenceStyles() {
+            if (creationMode === 'existing' && existingQCORef) {
+                return {
+                    currentRef: existingQCORef.currentStyle || '',
+                    upcomingRef: existingQCORef.upcomingStyle || ''
+                };
+            }
+            return { currentRef: '', upcomingRef: '' };
+        }
+
+        /**
+         * Validates each parsed OB style against the QCO reference.
+         * Returns { mismatches: [{ label, parsedStyle, parsedLast3, refStyle, refLast3 }] }
+         */
+        function validateOBStyles(currentParsedStyle, upcomingParsedStyle) {
+            const refs = getQCOReferenceStyles();
+            const mismatches = [];
+
+            if (refs.currentRef) {
+                const refLast3 = getLast3(refs.currentRef);
+                const parsedLast3 = getLast3(currentParsedStyle);
+                if (refLast3 && parsedLast3 && refLast3 !== parsedLast3) {
+                    mismatches.push({
+                        label: 'Current (Running) OB',
+                        parsedStyle: currentParsedStyle,
+                        parsedLast3,
+                        refStyle: refs.currentRef,
+                        refLast3
+                    });
+                }
+            }
+
+            if (refs.upcomingRef) {
+                const refLast3 = getLast3(refs.upcomingRef);
+                const parsedLast3 = getLast3(upcomingParsedStyle);
+                if (refLast3 && parsedLast3 && refLast3 !== parsedLast3) {
+                    mismatches.push({
+                        label: 'Upcoming OB',
+                        parsedStyle: upcomingParsedStyle,
+                        parsedLast3,
+                        refStyle: refs.upcomingRef,
+                        refLast3
+                    });
+                }
+            }
+
+            return { mismatches };
+        }
+
+        /**
+         * Updates the visual badge on a file info card.
+         */
+        function updateOBBadge(badgeId, isMatch, parsedLast3, refLast3) {
+            const badge = document.getElementById(badgeId);
+            if (!badge) return;
+            badge.classList.remove('hidden');
+            if (isMatch) {
+                badge.textContent = '✓ Match';
+                badge.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200';
+            } else {
+                badge.textContent = `⚠ ${parsedLast3} ≠ ${refLast3}`;
+                badge.className = 'text-xs font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700 border border-red-200';
+            }
+        }
+
         async function processFiles() {
             // Log activity
             logActivity(`${currentUser.name} started processing OB files`, 'analysis');
@@ -6570,6 +6721,64 @@ Shantanu & Sampreeti`;
             }).then(async data => {
                 upcomingOBData = data;
                 updateProgress(70, 'Processing upcoming style...');
+
+                // ─── OB STYLE VALIDATION ───
+                const refs = getQCOReferenceStyles();
+                const hasRefs = refs.currentRef || refs.upcomingRef;
+
+                if (hasRefs) {
+                    const validation = validateOBStyles(currentOBData.style, upcomingOBData.style);
+
+                    // Update visual badges
+                    if (refs.currentRef) {
+                        const curMatch = !validation.mismatches.find(m => m.label.includes('Current'));
+                        updateOBBadge('currentOBBadge', curMatch, getLast3(currentOBData.style), getLast3(refs.currentRef));
+                    }
+                    if (refs.upcomingRef) {
+                        const upMatch = !validation.mismatches.find(m => m.label.includes('Upcoming'));
+                        updateOBBadge('upcomingOBBadge', upMatch, getLast3(upcomingOBData.style), getLast3(refs.upcomingRef));
+                    }
+
+                    if (validation.mismatches.length > 0) {
+                        showLoading(false);
+                        document.getElementById('progressContainer').classList.add('hidden');
+
+                        const mismatchHTML = validation.mismatches.map(m =>
+                            `<div style="text-align:left;padding:8px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;margin-bottom:8px;">
+                                <strong style="color:#dc2626;">⚠ ${m.label}</strong><br>
+                                <span style="font-size:13px;">Uploaded OB style: <strong>${m.parsedStyle}</strong> (last 3: <code style="background:#fee2e2;padding:2px 6px;border-radius:4px;">${m.parsedLast3}</code>)</span><br>
+                                <span style="font-size:13px;">QCO expects: <strong>${m.refStyle}</strong> (last 3: <code style="background:#dcfce7;padding:2px 6px;border-radius:4px;">${m.refLast3}</code>)</span>
+                            </div>`
+                        ).join('');
+
+                        const result = await Swal.fire({
+                            icon: 'warning',
+                            title: 'OB Style Mismatch Detected',
+                            html: `
+                                <p style="margin-bottom:12px;color:#64748b;">The uploaded OB file(s) do not match the QCO reference styles:</p>
+                                ${mismatchHTML}
+                                <p style="margin-top:12px;font-size:13px;color:#94a3b8;">Please upload the correct OB file(s) for this changeover, or continue at your own risk.</p>
+                            `,
+                            showCancelButton: true,
+                            confirmButtonText: 'Continue Anyway',
+                            cancelButtonText: 'Cancel & Re-upload',
+                            confirmButtonColor: '#f59e0b',
+                            cancelButtonColor: '#64748b',
+                            reverseButtons: true
+                        });
+
+                        if (!result.isConfirmed) {
+                            addFirebaseLog('OB processing cancelled due to style mismatch', 'warning');
+                            return; // Abort processing
+                        }
+
+                        addFirebaseLog(`User overrode style mismatch warning for ${validation.mismatches.map(m => m.label).join(', ')}`, 'warning');
+                        showLoading(true);
+                        document.getElementById('progressContainer').classList.remove('hidden');
+                        updateProgress(70, 'Continuing with style override...');
+                    }
+                }
+                // ─── END OB STYLE VALIDATION ───
 
                 // Generate or reuse QCO Number
                 if (creationMode === 'existing' && existingQCORef) {
