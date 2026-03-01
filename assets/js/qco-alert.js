@@ -79,16 +79,41 @@
             icon: 'error',
             title: 'Discarded Changeover',
             html: `<p>You are viewing a discarded QCO <b>(${discardedQco})</b>. This record is no longer active.</p>${redirectHtml}`,
-            confirmButtonText: 'I Understand',
-            confirmButtonColor: '#ef4444',
+            confirmButtonText: newQco ? 'Go to New QCO' : 'I Understand',
+            confirmButtonColor: newQco ? '#2563eb' : '#ef4444',
             allowOutsideClick: false,
             backdrop: `
                 rgba(0,0,123,0.4)
                 left top
                 no-repeat
             `
-        }).then(() => {
+        }).then((result) => {
             currentlyAlertingQCO = null;
+            if (result.isConfirmed && newQco) {
+                if (typeof window.handleExistingQCOSelect === 'function') {
+                    // creation.html
+                    const selectEl = document.getElementById('existingQCOSelect');
+                    if (selectEl) selectEl.value = newQco;
+                    window.handleExistingQCOSelect(newQco);
+                } else if (typeof window.handleQCOChange === 'function') {
+                    // schedule.html
+                    const selectEl = document.getElementById('qcoSelector');
+                    if (selectEl) selectEl.value = newQco;
+                    window.handleQCOChange(newQco, true);
+                } else {
+                    // URL-based pages like checklist, style, instant
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.has('qco')) urlParams.set('qco', newQco);
+                    if (urlParams.has('id')) urlParams.set('id', newQco);
+                    if (urlParams.has('qco') || urlParams.has('id')) {
+                        window.location.search = urlParams.toString();
+                    } else {
+                        // If no params, try to set local storage and reload
+                        localStorage.setItem('currentQCO', newQco);
+                        window.location.reload();
+                    }
+                }
+            }
         });
     }
 
