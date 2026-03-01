@@ -780,7 +780,10 @@
                                 </span>
                             </div>
                             <p class="text-slate-500 text-lg">QCO: <span id="activeQCOName"
-                                    class="font-bold text-slate-900">Select a Changeover...</span></p>
+                                    class="font-bold text-slate-900">Select a Changeover...</span>
+                                <span id="activeQCOStatus"
+                                    class="ml-2 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider hidden border"></span>
+                            </p>
                         </div>
 
                         <div class="flex gap-3 mb-2" id="headerActions">
@@ -795,6 +798,23 @@
                                 class="hidden items-center gap-2 px-4 py-3 bg-white/60 rounded-2xl border border-white/60 text-slate-600 font-semibold shadow-sm transition-all whitespace-nowrap">
                                 <i data-lucide="package" class="w-4 h-4 text-blue-500"></i>
                                 <span id="poNumberText">--</span>
+                            </div>
+
+                            <!-- Category Display -->
+                            <div id="categoryContainer"
+                                class="hidden items-center gap-2 px-4 py-3 bg-white/60 rounded-2xl border border-white/60 text-slate-600 font-semibold shadow-sm transition-all whitespace-nowrap">
+                                <i data-lucide="tag" class="w-4 h-4 text-violet-500"></i>
+                                <span id="categoryText">--</span>
+                            </div>
+
+                            <!-- Email Sent Tracking info -->
+                            <div id="emailInfoContainer"
+                                class="hidden items-center gap-2 px-4 py-3 bg-white/60 rounded-2xl border border-white/60 text-slate-600 font-semibold shadow-sm transition-all whitespace-nowrap">
+                                <i data-lucide="mail-check" class="w-4 h-4 text-emerald-500"></i>
+                                <div class="flex flex-col leading-none">
+                                    <span id="emailSentText" class="text-xs font-bold">No Email Sent</span>
+                                    <span id="emailSentDate" class="text-[10px] text-slate-400 mt-0.5"></span>
+                                </div>
                             </div>
 
                             <!-- Countdown Display -->
@@ -1727,6 +1747,19 @@
             await loadData();
         }
 
+        // Helper to derive status consistent with dashboard
+        function deriveGlobalQCOStatus(data) {
+            const status = data.status || 'pending';
+            if (status === 'completed') return 'completed';
+
+            const timings = data.operationTimings || {};
+            const hasStarted = Object.values(timings).some(t => t.start);
+            if (hasStarted) return 'in-progress';
+
+            if (data.hasSchedule || data.scheduledDate) return 'scheduled';
+            return 'pending';
+        }
+
         // Update the loadData function to properly handle missing data:
         async function loadData() {
             if (!currentQCOId || !db) return;
@@ -1737,6 +1770,25 @@
                 if (doc.exists) {
                     const data = doc.data();
                     currentQCOData = data;
+
+                    // Update Global Status Badge
+                    const statusBadge = document.getElementById('activeQCOStatus');
+                    const globalStatus = deriveGlobalQCOStatus(data);
+
+                    statusBadge.classList.remove('hidden');
+                    if (globalStatus === 'completed') {
+                        statusBadge.textContent = 'Completed';
+                        statusBadge.className = 'ml-2 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 border-emerald-200';
+                    } else if (globalStatus === 'in-progress') {
+                        statusBadge.textContent = 'In Progress';
+                        statusBadge.className = 'ml-2 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700 border-amber-200';
+                    } else if (globalStatus === 'scheduled') {
+                        statusBadge.textContent = 'Scheduled';
+                        statusBadge.className = 'ml-2 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-violet-100 text-violet-700 border-violet-200';
+                    } else {
+                        statusBadge.textContent = 'Pending';
+                        statusBadge.className = 'ml-2 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 border-slate-200';
+                    }
 
                     console.log("Loading QCO:", currentQCOId, "Data:", data.departments ? "Has department data" : "No department data");
 
@@ -1768,6 +1820,38 @@
                     } else {
                         poEl.classList.remove('flex');
                         poEl.classList.add('hidden');
+                    }
+
+                    // Update Category Display
+                    const catEl = document.getElementById('categoryContainer');
+                    const catText = document.getElementById('categoryText');
+                    if (data.changeoverCategory && data.changeoverCategory.trim()) {
+                        catText.textContent = `Cat: ${data.changeoverCategory}`;
+                        catEl.classList.remove('hidden');
+                        catEl.classList.add('flex');
+                    } else {
+                        catEl.classList.remove('flex');
+                        catEl.classList.add('hidden');
+                    }
+
+                    // Update Email Info Display
+                    const emailEl = document.getElementById('emailInfoContainer');
+                    const emailText = document.getElementById('emailSentText');
+                    const emailDate = document.getElementById('emailSentDate');
+                    if (data.emailSentCount && data.emailSentCount > 0) {
+                        emailText.textContent = `Emails Sent: ${data.emailSentCount}`;
+                        if (data.emailSentAt) {
+                            const d = new Date(data.emailSentAt.toDate?.() || data.emailSentAt);
+                            emailDate.textContent = d.toLocaleString('en-US', {
+                                month: 'short', day: 'numeric',
+                                hour: 'numeric', minute: '2-digit', hour12: true
+                            });
+                        }
+                        emailEl.classList.remove('hidden');
+                        emailEl.classList.add('flex');
+                    } else {
+                        emailEl.classList.remove('flex');
+                        emailEl.classList.add('hidden');
                     }
 
                     // Always merge with template, even if we have saved data

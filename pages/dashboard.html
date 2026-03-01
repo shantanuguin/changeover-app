@@ -1244,6 +1244,7 @@
                         <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide" id="filterChips">
                             <button class="filter-chip active" onclick="filterData('all')">All Changeovers</button>
                             <button class="filter-chip" onclick="filterData('live')">Live</button>
+                            <button class="filter-chip" onclick="filterData('scheduled')">Scheduled</button>
                             <button class="filter-chip" onclick="filterData('completed')">Completed</button>
                             <button class="filter-chip" onclick="filterData('pending')">Pending</button>
                         </div>
@@ -1938,13 +1939,21 @@
 
                     const statusColors = {
                         'completed': 'bg-green-100 text-green-700',
+                        'scheduled': 'bg-purple-100 text-purple-700',
                         'in-progress': 'bg-blue-100 text-blue-700',
                         'pending': 'bg-amber-100 text-amber-700',
                         'cancelled': 'bg-red-100 text-red-700'
                     };
 
-                    const status = qco.status || 'pending';
-                    const date = qco.createdAt ? new Date(qco.createdAt.toDate?.() || qco.createdAt).toLocaleDateString() : '-';
+                    const status = deriveQCOStatus(qco);
+                    let dateDisplay = '-';
+                    if (qco.scheduledDate) {
+                        const sDate = new Date(qco.scheduledDate);
+                        dateDisplay = `<span class="text-purple-600 font-bold"><i class="far fa-calendar-alt mr-1"></i>${sDate.toLocaleDateString()}</span>`;
+                    } else if (qco.createdAt) {
+                        const cDate = new Date(qco.createdAt.toDate?.() || qco.createdAt);
+                        dateDisplay = cDate.toLocaleDateString();
+                    }
 
                     // Use helpers if raw values are missing
                     const actual = qco.actualCOPT || calculateActualCOPT(qco);
@@ -1972,7 +1981,7 @@
                         <span class="text-sm font-semibold text-slate-700">${efficiency}%</span>
                     </div>
                 </td>
-                <td class="text-slate-600">${date}</td>
+                <td class="text-slate-600">${dateDisplay}</td>
                 <td>
                     <div class="flex gap-2">
                         <button onclick="event.stopPropagation(); showDetails('${qco.id}')" class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 flex items-center justify-center transition-colors">
@@ -2701,6 +2710,7 @@
                 function getStatusColor(status) {
                     const colors = {
                         'completed': 'bg-green-100 text-green-700',
+                        'scheduled': 'bg-purple-100 text-purple-700',
                         'in-progress': 'bg-blue-100 text-blue-700',
                         'pending': 'bg-amber-100 text-amber-700'
                     };
@@ -3233,7 +3243,10 @@
                         if (startedOps.length > 0) return 'in-progress';
                     }
 
-                    // 3. Fallback to existing status or pending
+                    // 3. Check if scheduled
+                    if (qco.hasSchedule || qco.scheduledDate) return 'scheduled';
+
+                    // 4. Fallback to existing status or pending
                     return qco.status === 'in-progress' ? 'in-progress' : 'pending';
                 }
 

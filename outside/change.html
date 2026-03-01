@@ -393,6 +393,10 @@
                             <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                         </span>
                         <p class="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Live</p>
+                        <div id="headerPONumber"
+                            class="hidden ml-2 px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-lg border border-blue-100">
+                            PO: --
+                        </div>
                     </div>
                 </div>
             </div>
@@ -477,6 +481,12 @@
                                     <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Line</p>
                                     <p class="text-sm font-bold text-slate-800 bg-white/60 px-2 py-0.5 rounded-lg border border-white/50"
                                         id="lineIdLabel">-</p>
+                                </div>
+                                <div class="text-left hidden" id="scheduledDateSection">
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Scheduled
+                                    </p>
+                                    <p class="text-[10px] font-bold text-violet-600 bg-violet-50 px-2 py-0.5 rounded-lg border border-violet-100 whitespace-nowrap"
+                                        id="scheduledDateText">-</p>
                                 </div>
                             </div>
                         </div>
@@ -858,6 +868,21 @@
             lucide.createIcons();
         }
 
+        function deriveQCOStatus(data) {
+            const status = data.status || 'pending';
+            if (status === 'completed') return 'completed';
+
+            // Check operations
+            const timings = data.operationTimings || {};
+            const hasStarted = Object.values(timings).some(t => t.start);
+            if (hasStarted) return 'in-progress';
+
+            // Check if scheduled
+            if (data.hasSchedule || data.scheduledDate) return 'scheduled';
+
+            return 'pending';
+        }
+
         // =====================================================
         //  TARGET COPT
         // =====================================================
@@ -873,6 +898,29 @@
 
             const section = document.getElementById('targetCOPTSection');
             section.classList.toggle('opacity-50', targetCOPT <= 0);
+
+            // PO Number
+            const poEl = document.getElementById('headerPONumber');
+            if (data.poNumber && data.poNumber.trim()) {
+                poEl.textContent = `PO: ${data.poNumber}`;
+                poEl.classList.remove('hidden');
+            } else {
+                poEl.classList.add('hidden');
+            }
+
+            // Scheduled Date
+            const schedSection = document.getElementById('scheduledDateSection');
+            const schedText = document.getElementById('scheduledDateText');
+            if (data.scheduledDate) {
+                const d = new Date(data.scheduledDate);
+                schedText.textContent = d.toLocaleString('en-US', {
+                    month: 'short', day: 'numeric',
+                    hour: 'numeric', minute: '2-digit', hour12: true
+                });
+                schedSection.classList.remove('hidden');
+            } else {
+                schedSection.classList.add('hidden');
+            }
         }
 
         function getTargetCOPT(data) {
@@ -1177,18 +1225,22 @@
             document.getElementById('progressBar').style.width = `${pct}%`;
 
             // Status
-            const status = data.status || 'pending';
+            const qcoStatus = deriveQCOStatus(data);
             const statusIndicator = document.getElementById('statusIndicator');
             const statusText = document.getElementById('statusText');
 
-            if (status === 'completed') {
+            if (qcoStatus === 'completed') {
                 statusIndicator.querySelector('div').className = 'w-2 h-2 rounded-full bg-emerald-500';
                 statusText.textContent = 'Completed';
                 statusText.className = 'text-xs font-bold text-emerald-700 uppercase tracking-wider';
-            } else if (status === 'in-progress' || completed > 0) {
+            } else if (qcoStatus === 'in-progress') {
                 statusIndicator.querySelector('div').className = 'w-2 h-2 rounded-full bg-amber-500 animate-pulse';
                 statusText.textContent = 'In Progress';
                 statusText.className = 'text-xs font-bold text-amber-700 uppercase tracking-wider';
+            } else if (qcoStatus === 'scheduled') {
+                statusIndicator.querySelector('div').className = 'w-2 h-2 rounded-full bg-violet-500';
+                statusText.textContent = 'Scheduled';
+                statusText.className = 'text-xs font-bold text-violet-700 uppercase tracking-wider';
             } else {
                 statusIndicator.querySelector('div').className = 'w-2 h-2 rounded-full bg-slate-400';
                 statusText.textContent = 'Pending';
