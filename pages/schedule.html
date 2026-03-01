@@ -797,27 +797,78 @@
                                         1</span>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    <div>
-                                        <label class="block text-sm font-bold text-slate-700 mb-2">From Style
-                                            (Current)</label>
-                                        <input type="text" id="fromStyleInput" placeholder="e.g. GH5087"
-                                            class="w-full bg-white border border-slate-200 text-slate-900 font-semibold rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all">
+                                <div class="mb-4">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <label class="block text-sm font-bold text-slate-700">Styles</label>
+                                        <button id="styleEditBtn" onclick="enableStyleEdit()"
+                                            class="hidden text-blue-600 hover:text-blue-800 text-sm font-bold flex items-center gap-1 transition-colors">
+                                            <i class="fas fa-edit"></i> Edit Styles
+                                        </button>
                                     </div>
-                                    <div>
-                                        <label class="block text-sm font-bold text-slate-700 mb-2">To Style
-                                            (Upcoming)</label>
-                                        <input type="text" id="toStyleInput" placeholder="e.g. GH5120"
-                                            class="w-full bg-white border border-slate-200 text-slate-900 font-semibold rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-500 mb-1">From Style
+                                                (Current)</label>
+                                            <input type="text" id="fromStyleInput" placeholder="e.g. GH5087"
+                                                class="w-full bg-white border border-slate-200 text-slate-900 font-semibold rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-500 mb-1">To Style
+                                                (Upcoming)</label>
+                                            <input type="text" id="toStyleInput" placeholder="e.g. GH5120"
+                                                class="w-full bg-white border border-slate-200 text-slate-900 font-semibold rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all">
+                                        </div>
+                                    </div>
+
+                                    <!-- Style Edit Confirmation UI -->
+                                    <div id="styleEditConfirmBox"
+                                        class="hidden mt-3 p-4 bg-orange-50 border border-orange-200 rounded-xl">
+                                        <p class="text-sm font-bold text-orange-800 mb-1"><i
+                                                class="fas fa-exclamation-triangle mr-1"></i> Changing Styles</p>
+                                        <p class="text-xs text-orange-700 mb-3">If you change the styles, a new
+                                            Changeover
+                                            Number will be generated and the current one will be discarded. All saved
+                                            data
+                                            will be transferred.</p>
+                                        <div class="flex gap-2">
+                                            <button onclick="confirmStyleEdit()"
+                                                class="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold py-2 rounded-lg transition-colors">Confirm
+                                                Change</button>
+                                            <button onclick="cancelStyleEdit()"
+                                                class="flex-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-bold py-2 rounded-lg transition-colors">Cancel</button>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <div class="mb-4">
-                                    <label class="block text-sm font-bold text-slate-700 mb-2">Line Number</label>
+                                    <div class="flex justify-between items-center mb-2">
+                                        <label class="block text-sm font-bold text-slate-700">Line Number</label>
+                                        <button id="lineEditBtn" onclick="enableLineEdit()"
+                                            class="hidden text-blue-600 hover:text-blue-800 text-sm font-bold flex items-center gap-1 transition-colors">
+                                            <i class="fas fa-edit"></i> Edit Line
+                                        </button>
+                                    </div>
                                     <select id="lineSelect"
                                         class="w-full bg-white border border-slate-200 text-slate-900 font-semibold rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all appearance-none cursor-pointer">
                                         <option value="">Choose a line...</option>
                                     </select>
+
+                                    <!-- Line Edit Confirmation UI -->
+                                    <div id="lineEditConfirmBox"
+                                        class="hidden mt-3 p-4 bg-orange-50 border border-orange-200 rounded-xl">
+                                        <p class="text-sm font-bold text-orange-800 mb-1"><i
+                                                class="fas fa-exclamation-triangle mr-1"></i> Changing Line Number</p>
+                                        <p class="text-xs text-orange-700 mb-3">If you change the line, a new Changeover
+                                            Number will be generated and the current one will be deleted. All saved data
+                                            will be transferred.</p>
+                                        <div class="flex gap-2">
+                                            <button onclick="confirmLineEdit()"
+                                                class="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold py-2 rounded-lg transition-colors">Confirm
+                                                Change</button>
+                                            <button onclick="cancelLineEdit()"
+                                                class="flex-1 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-bold py-2 rounded-lg transition-colors">Cancel</button>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div id="stylesSaveArea"
@@ -1549,6 +1600,8 @@
                 document.getElementById('fromStyleInput').readOnly = true;
                 document.getElementById('toStyleInput').readOnly = true;
                 document.getElementById('lineSelect').disabled = true;
+                document.getElementById('lineEditBtn').classList.remove('hidden');
+                document.getElementById('styleEditBtn').classList.remove('hidden');
 
                 // Show remaining sections
                 showAllSections();
@@ -1823,6 +1876,8 @@
                 const savedId = localStorage.getItem('scheduleQCOId');
                 snapshot.forEach(doc => {
                     const data = doc.data();
+                    if (data.status === 'discarded') return; // Hide discarded QCOs from the list
+
                     const opt = document.createElement('option');
                     opt.value = doc.id;
                     const qcoNum = data.qcoNumber || doc.id.substring(0, 8);
@@ -1871,6 +1926,8 @@
             }
             lineSelect.disabled = true;
             document.getElementById('stylesSaveArea').classList.add('hidden');
+            document.getElementById('lineEditBtn').classList.remove('hidden');
+            document.getElementById('styleEditBtn').classList.remove('hidden');
 
             // QCO Info card
             document.getElementById('displayQCONumber').textContent = qco.qcoNumber || qcoId;
@@ -2416,6 +2473,267 @@ Sidney Apparels QCO Portal`;
             } catch (e) { console.error("Progression Error:", e); }
         }
 
+        // ==========================================
+        //  LINE NUMBER EDITING LOGIC
+        // ==========================================
+        let originalLineBeforeEdit = '';
+
+        function enableLineEdit() {
+            const lineSelect = document.getElementById('lineSelect');
+            originalLineBeforeEdit = lineSelect.value;
+            lineSelect.disabled = false;
+            document.getElementById('lineEditBtn').classList.add('hidden');
+            document.getElementById('lineEditConfirmBox').classList.remove('hidden');
+            // Give visual focus
+            lineSelect.focus();
+        }
+
+        function cancelLineEdit() {
+            const lineSelect = document.getElementById('lineSelect');
+            lineSelect.value = originalLineBeforeEdit;
+            lineSelect.disabled = true;
+            document.getElementById('lineEditConfirmBox').classList.add('hidden');
+            document.getElementById('lineEditBtn').classList.remove('hidden');
+        }
+
+        async function confirmLineEdit() {
+            const lineSelect = document.getElementById('lineSelect');
+            const newLine = lineSelect.value;
+
+            if (!newLine) {
+                Swal.fire({ icon: 'warning', title: 'Line Required', text: 'Please select a line number', confirmButtonColor: '#7c3aed' });
+                return;
+            }
+
+            if (newLine === originalLineBeforeEdit) {
+                // No actual change, just cancel
+                cancelLineEdit();
+                return;
+            }
+
+            if (!currentQCOId || !currentQCOData) return;
+
+            // Show loading overlay during migration
+            Swal.fire({
+                title: 'Updating Line Number...',
+                text: 'Generating new QCO and transferring data',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                const oldQcoId = currentQCOId;
+                const fromStyle = currentQCOData.currentStyle;
+                const toStyle = currentQCOData.upcomingStyle;
+
+                // 1. Generate new QCO Number
+                const newQcoId = await getNextQCONumber(newLine, fromStyle, toStyle);
+
+                // 2. Clone data and update fields
+                const newData = {
+                    ...currentQCOData,
+                    qcoNumber: newQcoId,
+                    lineNumber: newLine,
+                    updatedAt: new Date().toISOString()
+                };
+
+                // 3. Save new document
+                if (isFirebaseConnected) {
+                    await db.collection('changeovers').doc(newQcoId).set(newData);
+                    // 4. Mark old document as discarded
+                    await db.collection('changeovers').doc(oldQcoId).update({
+                        status: 'discarded',
+                        movedTo: newQcoId,
+                        discardedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } else {
+                    let localChangeovers = JSON.parse(localStorage.getItem('changeovers') || '[]');
+
+                    // Mark old as discarded
+                    const oldIndex = localChangeovers.findIndex(co => co.qcoNumber === oldQcoId || co.id === oldQcoId);
+                    if (oldIndex !== -1) {
+                        localChangeovers[oldIndex].status = 'discarded';
+                        localChangeovers[oldIndex].movedTo = newQcoId;
+                        localChangeovers[oldIndex].discardedAt = new Date().toISOString();
+                    }
+
+                    // Add new
+                    localChangeovers.push(newData);
+                    localStorage.setItem('changeovers', JSON.stringify(localChangeovers));
+                }
+
+                // 5. Update local state
+                currentQCOId = newQcoId;
+                currentQCOData = newData;
+                localStorage.setItem('scheduleQCOId', newQcoId);
+
+                // 6. Update UI
+                document.getElementById('displayQCONumber').textContent = newQcoId;
+                document.getElementById('lineEditConfirmBox').classList.add('hidden');
+                document.getElementById('lineEditBtn').classList.remove('hidden');
+                lineSelect.disabled = true;
+                originalLineBeforeEdit = newLine;
+
+                // 7. Refresh dropdown if in Existing mode
+                if (document.getElementById('modeExisting').checked) {
+                    await loadChangeovers();
+                    const selector = document.getElementById('qcoSelector');
+                    if (selector) selector.value = newQcoId;
+
+                    // Trigger handleQCOChange to fully refresh the UI sections with new data (like references to ID)
+                    currentQCOId = null; // force reload bypass
+                    await handleQCOChange(newQcoId, true);
+                } else {
+                    // Update allChangeovers list for New mode
+                    allChangeovers = allChangeovers.filter(co => co.qcoNumber !== oldQcoId);
+                    allChangeovers.push({ id: newQcoId, ...newData });
+                    // Keep New mode but ensure memory is updated
+                }
+
+                Swal.fire({ icon: 'success', title: 'Line Updated', text: `New QCO Number: ${newQcoId}`, timer: 3000, showConfirmButton: false, position: 'top-end', toast: true });
+
+            } catch (error) {
+                console.error("Error migrating line:", error);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update line number: ' + error.message });
+                cancelLineEdit();
+            }
+        }
+
+        // ==========================================
+        //  STYLE NUMBER EDITING LOGIC
+        // ==========================================
+        let originalFromStyle = '';
+        let originalToStyle = '';
+
+        function enableStyleEdit() {
+            const fromInput = document.getElementById('fromStyleInput');
+            const toInput = document.getElementById('toStyleInput');
+
+            originalFromStyle = fromInput.value;
+            originalToStyle = toInput.value;
+
+            fromInput.readOnly = false;
+            toInput.readOnly = false;
+
+            document.getElementById('styleEditBtn').classList.add('hidden');
+            document.getElementById('styleEditConfirmBox').classList.remove('hidden');
+            fromInput.focus();
+        }
+
+        function cancelStyleEdit() {
+            const fromInput = document.getElementById('fromStyleInput');
+            const toInput = document.getElementById('toStyleInput');
+
+            fromInput.value = originalFromStyle;
+            toInput.value = originalToStyle;
+
+            fromInput.readOnly = true;
+            toInput.readOnly = true;
+
+            document.getElementById('styleEditConfirmBox').classList.add('hidden');
+            document.getElementById('styleEditBtn').classList.remove('hidden');
+        }
+
+        async function confirmStyleEdit() {
+            const fromInput = document.getElementById('fromStyleInput').value.trim();
+            const toInput = document.getElementById('toStyleInput').value.trim();
+
+            if (!fromInput || !toInput) {
+                Swal.fire({ icon: 'warning', title: 'Styles Required', text: 'Please enter both From Style and To Style', confirmButtonColor: '#7c3aed' });
+                return;
+            }
+
+            if (fromInput === originalFromStyle && toInput === originalToStyle) {
+                // No change
+                cancelStyleEdit();
+                return;
+            }
+
+            if (!currentQCOId || !currentQCOData) return;
+
+            // Show loading overlay
+            Swal.fire({
+                title: 'Updating Styles...',
+                text: 'Generating new QCO and transferring data',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                const oldQcoId = currentQCOId;
+                const lineVal = currentQCOData.lineNumber;
+
+                // 1. Generate new QCO Number based on new styles
+                const newQcoId = await getNextQCONumber(lineVal, fromInput, toInput);
+
+                // 2. Clone data and update style fields
+                const newData = {
+                    ...currentQCOData,
+                    qcoNumber: newQcoId,
+                    currentStyle: fromInput,
+                    upcomingStyle: toInput,
+                    updatedAt: new Date().toISOString()
+                };
+
+                // 3. Save new document and process old document
+                if (isFirebaseConnected) {
+                    await db.collection('changeovers').doc(newQcoId).set(newData);
+                    // Mark old as discarded
+                    await db.collection('changeovers').doc(oldQcoId).update({
+                        status: 'discarded',
+                        movedTo: newQcoId,
+                        discardedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } else {
+                    let localChangeovers = JSON.parse(localStorage.getItem('changeovers') || '[]');
+                    const oldIndex = localChangeovers.findIndex(co => co.qcoNumber === oldQcoId || co.id === oldQcoId);
+                    if (oldIndex !== -1) {
+                        localChangeovers[oldIndex].status = 'discarded';
+                        localChangeovers[oldIndex].movedTo = newQcoId;
+                        localChangeovers[oldIndex].discardedAt = new Date().toISOString();
+                    }
+                    localChangeovers.push(newData);
+                    localStorage.setItem('changeovers', JSON.stringify(localChangeovers));
+                }
+
+                // 4. Update local state
+                currentQCOId = newQcoId;
+                currentQCOData = newData;
+                localStorage.setItem('scheduleQCOId', newQcoId);
+
+                // 5. Update UI
+                document.getElementById('displayQCONumber').textContent = newQcoId;
+                document.getElementById('styleEditConfirmBox').classList.add('hidden');
+                document.getElementById('styleEditBtn').classList.remove('hidden');
+                document.getElementById('fromStyleInput').readOnly = true;
+                document.getElementById('toStyleInput').readOnly = true;
+
+                originalFromStyle = fromInput;
+                originalToStyle = toInput;
+
+                // 6. Refresh dropdown if in Existing mode
+                if (document.getElementById('modeExisting').checked) {
+                    await loadChangeovers();
+                    const selector = document.getElementById('qcoSelector');
+                    if (selector) selector.value = newQcoId;
+
+                    // Force a local UI sync on the new ID
+                    currentQCOId = null;
+                    await handleQCOChange(newQcoId, true);
+                } else {
+                    // Update lists internally
+                    allChangeovers = allChangeovers.filter(co => co.qcoNumber !== oldQcoId);
+                    allChangeovers.push({ id: newQcoId, ...newData });
+                }
+
+                Swal.fire({ icon: 'success', title: 'Styles Updated', text: `New QCO Number: ${newQcoId}`, timer: 3000, showConfirmButton: false, position: 'top-end', toast: true });
+
+            } catch (error) {
+                console.error("Error migrating styles:", error);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update styles: ' + error.message });
+                cancelStyleEdit();
+            }
+        }
     </script>
     <!-- Email Modal -->
     <div id="emailModal" class="fixed inset-0 z-[9999] hidden" aria-labelledby="modal-title" role="dialog"
@@ -2510,6 +2828,8 @@ Sidney Apparels QCO Portal`;
             </div>
         </div>
     </div>
+
+    <script src="../assets/js/qco-alert.js"></script>
 </body>
 
 </html>
