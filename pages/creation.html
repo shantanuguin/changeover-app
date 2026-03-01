@@ -1903,8 +1903,48 @@
             </div>
         </div>
 
+        <!-- Mode Toggle: New Changeover vs Existing Changeover -->
+        <div class="mb-6">
+            <div class="bg-white/60 backdrop-blur-md rounded-2xl p-2 flex gap-2 border border-gray-200 shadow-md lg:max-w-[calc(33.333%-1rem)]"
+                id="creationModeToggle">
+                <button id="creationModeNewBtn" onclick="switchCreationMode('new')"
+                    class="flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all bg-blue-600 text-white shadow-lg">
+                    <i class="fas fa-plus-circle"></i> New Changeover
+                </button>
+                <button id="creationModeExistingBtn" onclick="switchCreationMode('existing')"
+                    class="flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all text-slate-500 hover:bg-slate-100">
+                    <i class="fas fa-folder-open"></i> Existing Changeover
+                </button>
+            </div>
+
+            <!-- Existing QCO Selector (hidden by default) -->
+            <div id="existingQCOSelector" class="hidden mt-4 lg:max-w-[calc(33.333%-1rem)]">
+                <div class="bg-white/70 backdrop-blur-md rounded-2xl p-5 border border-gray-200 shadow-md">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fas fa-search text-blue-500"></i>
+                        <h3 class="font-bold text-gray-800">Select Scheduled Changeover</h3>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-3">Choose a QCO created from the Schedule page to add OB
+                        analysis.</p>
+                    <select id="existingQCOSelect"
+                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        onchange="handleExistingQCOSelect(this.value)">
+                        <option value="">Select a scheduled changeover...</option>
+                    </select>
+                    <div id="existingQCOInfo" class="hidden mt-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div><span class="text-gray-500">QCO:</span> <strong id="existingQCONumber">—</strong></div>
+                            <div><span class="text-gray-500">Line:</span> <strong id="existingQCOLine">—</strong></div>
+                            <div><span class="text-gray-500">From:</span> <strong id="existingQCOFrom">—</strong></div>
+                            <div><span class="text-gray-500">To:</span> <strong id="existingQCOTo">—</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Main Content -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="mainContentGrid">
             <!-- Left Sidebar -->
             <div class="lg:col-span-1 space-y-6">
                 <!-- File Upload Section -->
@@ -2591,6 +2631,114 @@
         let currentQCONumber = null;
         let currentChangeoverId = null;
         let allChangeovers = [];
+        let creationMode = 'new'; // 'new' or 'existing'
+        let existingQCORef = null; // Stores the selected existing QCO data
+
+        // ==========================================
+        // CREATION MODE TOGGLE
+        // ==========================================
+        function switchCreationMode(mode) {
+            creationMode = mode;
+            const newBtn = document.getElementById('creationModeNewBtn');
+            const existBtn = document.getElementById('creationModeExistingBtn');
+            const existSelector = document.getElementById('existingQCOSelector');
+
+            if (mode === 'new') {
+                newBtn.className = 'flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all bg-blue-600 text-white shadow-lg';
+                existBtn.className = 'flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all text-slate-500 hover:bg-slate-100';
+                existSelector.classList.add('hidden');
+                existingQCORef = null;
+
+                // Re-enable line select
+                const lineSelect = document.getElementById('lineSelect');
+                if (lineSelect) lineSelect.disabled = false;
+
+                // Reset existing QCO info
+                document.getElementById('existingQCOInfo').classList.add('hidden');
+                document.getElementById('existingQCOSelect').value = '';
+            } else {
+                existBtn.className = 'flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all bg-blue-600 text-white shadow-lg';
+                newBtn.className = 'flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all text-slate-500 hover:bg-slate-100';
+                existSelector.classList.remove('hidden');
+                loadExistingQCOs();
+            }
+        }
+
+        async function loadExistingQCOs() {
+            const selector = document.getElementById('existingQCOSelect');
+            if (!selector || !db) return;
+
+            // Clear existing options except the placeholder
+            while (selector.options.length > 1) selector.remove(1);
+
+            try {
+                // Load QCOs created from schedule page (or any with source field)
+                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(50).get();
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const opt = document.createElement('option');
+                    opt.value = doc.id;
+                    const qcoNum = data.qcoNumber || doc.id;
+                    const fromS = data.currentStyle || '???';
+                    const toS = data.upcomingStyle || '???';
+                    const line = data.lineNumber || '?';
+                    opt.textContent = `${qcoNum} — Line ${line} (${fromS} → ${toS})`;
+                    selector.appendChild(opt);
+                });
+            } catch (error) {
+                console.error('Error loading existing QCOs:', error);
+                addFirebaseLog('Error loading existing QCOs: ' + error.message, 'error');
+            }
+        }
+
+        async function handleExistingQCOSelect(qcoId) {
+            if (!qcoId) {
+                document.getElementById('existingQCOInfo').classList.add('hidden');
+                existingQCORef = null;
+                const lineSelect = document.getElementById('lineSelect');
+                if (lineSelect) lineSelect.disabled = false;
+                return;
+            }
+
+            try {
+                const doc = await db.collection('changeovers').doc(qcoId).get();
+                if (!doc.exists) {
+                    Swal.fire({ icon: 'warning', title: 'Not Found', text: 'This changeover no longer exists', confirmButtonColor: '#2563eb' });
+                    return;
+                }
+
+                const data = doc.data();
+                existingQCORef = { id: qcoId, ...data };
+
+                // Show info card
+                document.getElementById('existingQCONumber').textContent = data.qcoNumber || qcoId;
+                document.getElementById('existingQCOLine').textContent = data.lineNumber || '—';
+                document.getElementById('existingQCOFrom').textContent = data.currentStyle || '—';
+                document.getElementById('existingQCOTo').textContent = data.upcomingStyle || '—';
+                document.getElementById('existingQCOInfo').classList.remove('hidden');
+
+                // Auto-set the line select and make it read-only
+                const lineSelect = document.getElementById('lineSelect');
+                if (lineSelect && data.lineNumber) {
+                    lineSelect.value = data.lineNumber;
+                    if (!lineSelect.value) {
+                        // Try finding combined key like "6+17"
+                        const foundKey = Object.keys(personnelData || {}).find(key =>
+                            key.split(/[\+\/]/).map(p => p.trim()).includes(data.lineNumber));
+                        if (foundKey) lineSelect.value = foundKey;
+                    }
+                    lineSelect.disabled = true;
+                    // Trigger the line change handler if it exists
+                    lineSelect.dispatchEvent(new Event('change'));
+                }
+
+                addFirebaseLog(`Selected existing QCO: ${data.qcoNumber}`, 'success');
+            } catch (error) {
+                console.error('Error loading QCO:', error);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load changeover: ' + error.message });
+            }
+        }
 
         // Firebase log system
         const firebaseLogs = [];
@@ -6423,13 +6571,20 @@ Shantanu & Sampreeti`;
                 upcomingOBData = data;
                 updateProgress(70, 'Processing upcoming style...');
 
-                // Generate QCO Number NOW (after styles are known)
-                currentQCONumber = await getNextQCONumber(selectedLine, currentOBData.style, upcomingOBData.style);
+                // Generate or reuse QCO Number
+                if (creationMode === 'existing' && existingQCORef) {
+                    // Reuse existing QCO number from schedule page
+                    currentQCONumber = existingQCORef.qcoNumber || existingQCORef.id;
+                    addFirebaseLog(`Using existing QCO number: ${currentQCONumber}`, 'info');
+                } else {
+                    // Generate new QCO Number (after styles are known)
+                    currentQCONumber = await getNextQCONumber(selectedLine, currentOBData.style, upcomingOBData.style);
+                }
 
                 renderResults();
                 updateProgress(90, 'Generating reports...');
 
-                // Save changeover to Firebase
+                // Build changeover data (OB analysis fields)
                 const changeoverData = {
                     qcoNumber: currentQCONumber,
                     lineNumber: selectedLine,
@@ -6439,8 +6594,8 @@ Shantanu & Sampreeti`;
                     upcomingStyle: upcomingOBData.style,
                     upcomingSMV: upcomingOBData.smv,
                     upcomingTarget: upcomingOBData.target,
-                    allotedWP: upcomingOBData.allotedWP || 0, // Add manpower from Column J
-                    operationsList: upcomingOBData.operations || [], // Save extracted operations
+                    allotedWP: upcomingOBData.allotedWP || 0,
+                    operationsList: upcomingOBData.operations || [],
                     machineSummary: comparisonResults ? comparisonResults.map(r => ({
                         machine: r.machine,
                         current: r.current,
@@ -6454,7 +6609,15 @@ Shantanu & Sampreeti`;
                     emailSent: null
                 };
 
-                await saveChangeoverToFirebase(changeoverData);
+                if (creationMode === 'existing' && existingQCORef) {
+                    // Update existing document (merge to preserve schedule fields)
+                    changeoverData.obAnalysisAdded = true;
+                    changeoverData.obAnalysisDate = new Date().toISOString();
+                    await db.collection('changeovers').doc(existingQCORef.id).set(changeoverData, { merge: true });
+                    addFirebaseLog(`Updated existing changeover ${currentQCONumber} with OB analysis`, 'success');
+                } else {
+                    await saveChangeoverToFirebase(changeoverData);
+                }
 
                 setTimeout(() => {
                     showLoading(false);

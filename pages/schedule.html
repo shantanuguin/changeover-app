@@ -686,7 +686,7 @@
         <!-- Scrollable Content Area -->
         <div id="appContent" class="flex-1 relative overflow-y-auto">
             <div id="mainApp" class="min-h-full flex flex-col pt-8 pb-32 px-6 md:px-8 opacity-0">
-                <div class="max-w-3xl mx-auto">
+                <div class="max-w-3xl mx-auto w-full">
 
                     <!-- Header Section -->
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4">
@@ -696,252 +696,399 @@
                             </h1>
                             <p class="text-slate-500 text-lg">Plan and manage QCO execution timelines</p>
                         </div>
+                    </div>
 
-                        <div class="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-                            <div class="relative flex-1 md:flex-none">
-                                <i data-lucide="search"
-                                    class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
-                                <input type="text" id="qcoSearch" onkeyup="handleSearch(event)"
-                                    placeholder="Search QCO..."
-                                    class="pl-10 pr-10 py-3 rounded-xl bg-white/80 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 w-full md:w-64 transition-all">
-                                <button onclick="clearSearch()" id="clearSearchBtn"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors hidden">
-                                    <i data-lucide="x" class="w-3 h-3"></i>
-                                </button>
-                                <p id="searchStatus"
-                                    class="absolute top-full right-0 mt-1 text-xs text-slate-500 hidden z-10 bg-white/90 p-1 rounded shadow-sm">
-                                </p>
+                    <!-- ========== MODE TOGGLE ========== -->
+                    <div class="glass-card p-2 mb-8 flex rounded-2xl">
+                        <button id="modeNewBtn" onclick="switchMode('new')"
+                            class="flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all bg-violet-600 text-white shadow-lg">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                            New Changeover
+                        </button>
+                        <button id="modeExistingBtn" onclick="switchMode('existing')"
+                            class="flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all text-slate-500 hover:bg-slate-100">
+                            <i data-lucide="folder-open" class="w-4 h-4"></i>
+                            Existing Changeover
+                        </button>
+                    </div>
+
+                    <!-- ========== EXISTING MODE: Selector ========== -->
+                    <div id="existingSelector" class="hidden mb-6">
+                        <div class="glass-card p-6">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div
+                                    class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                    <i data-lucide="search" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-heading font-bold text-slate-900">Select Changeover</h3>
+                                    <p class="text-sm text-slate-500">Choose an existing QCO to schedule</p>
+                                </div>
                             </div>
-                            <div class="relative flex-1 md:flex-none">
-                                <select id="qcoSelector" onchange="handleQCOChange(this.value)"
-                                    class="appearance-none w-full bg-white/80 border border-slate-200 text-slate-700 font-semibold py-3 pl-4 pr-10 rounded-xl hover:border-violet-400 transition-all focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer shadow-sm min-w-[280px]">
-                                    <option value="">Select Changeover...</option>
-                                </select>
-                                <i data-lucide="chevron-down"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-3 h-3 pointer-events-none"></i>
+                            <div class="flex flex-col md:flex-row gap-3">
+                                <div class="relative flex-1">
+                                    <i data-lucide="search"
+                                        class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                                    <input type="text" id="qcoSearch" onkeyup="handleSearch(event)"
+                                        placeholder="Search by QCO number or style..."
+                                        class="pl-10 pr-10 py-3 rounded-xl bg-white/80 border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 w-full transition-all">
+                                    <button onclick="clearSearch()" id="clearSearchBtn"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors hidden">
+                                        <i data-lucide="x" class="w-3 h-3"></i>
+                                    </button>
+                                </div>
+                                <div class="relative flex-1">
+                                    <select id="qcoSelector" onchange="handleQCOChange(this.value)"
+                                        class="appearance-none w-full bg-white/80 border border-slate-200 text-slate-700 font-semibold py-3 pl-4 pr-10 rounded-xl hover:border-violet-400 transition-all focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer shadow-sm">
+                                        <option value="">Select Changeover...</option>
+                                    </select>
+                                    <i data-lucide="chevron-down"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-3 h-3 pointer-events-none"></i>
+                                </div>
                             </div>
+                            <p id="searchStatus" class="mt-2 text-xs text-slate-500 hidden"></p>
                         </div>
                     </div>
 
-                    <!-- Content Area -->
-                    <div id="contentArea" class="relative">
+                    <!-- ========== CONTENT AREA ========== -->
+                    <div id="contentArea" class="relative space-y-6">
 
-                        <!-- Empty State -->
-                        <div id="emptyState" class="glass-card p-12 text-center animate-fade-in">
-                            <div
-                                class="w-20 h-20 bg-violet-100 rounded-full flex items-center justify-center mx-auto mb-6 text-violet-500 text-3xl">
-                                <i data-lucide="calendar" class="w-10 h-10"></i>
+                        <!-- QCO Info Card (shown after generate/select) -->
+                        <div id="qcoInfoCard"
+                            class="hidden glass-card p-6 bg-gradient-to-br from-white/90 to-violet-50/50 border-l-4 border-violet-500">
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="w-12 h-12 rounded-xl bg-violet-500 text-white flex items-center justify-center shadow-lg">
+                                    <i data-lucide="hash" class="w-6 h-6"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-xs font-bold text-violet-600 uppercase tracking-wider mb-0.5">QCO
+                                        Reference</p>
+                                    <h2 class="text-2xl font-heading font-bold text-slate-900" id="displayQCONumber">-
+                                    </h2>
+                                </div>
+                                <div id="qcoWarningBadge" class="hidden">
+                                    <span
+                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">
+                                        <i data-lucide="alert-triangle" class="w-3 h-3"></i> Modified
+                                    </span>
+                                </div>
                             </div>
-                            <h3 class="text-xl font-semibold text-slate-800 mb-2">Select a Changeover</h3>
-                            <p class="text-slate-500 max-w-md mx-auto">Choose a QCO number from the dropdown to view or
-                                edit its
-                                schedule. The selected date will be visible to all departments.</p>
                         </div>
 
-                        <!-- Schedule Form -->
-                        <div id="scheduleForm" class="hidden space-y-6">
-                            <!-- QCO Info Card -->
+                        <!-- ===== SECTION I: Style & Line ===== -->
+                        <div id="sectionStyles" class="glass-card p-8 relative overflow-hidden">
                             <div
-                                class="glass-card p-6 bg-gradient-to-br from-white/90 to-violet-50/50 border-l-4 border-violet-500">
-                                <div class="flex items-center gap-4">
+                                class="absolute top-0 right-0 w-64 h-64 bg-violet-500/5 rounded-bl-full -mr-16 -mt-16 pointer-events-none">
+                            </div>
+                            <div class="relative z-10">
+                                <div class="flex items-center gap-3 mb-6">
                                     <div
-                                        class="w-12 h-12 rounded-xl bg-violet-500 text-white flex items-center justify-center shadow-lg">
-                                        <i data-lucide="hash" class="w-6 h-6"></i>
+                                        class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                                        <i data-lucide="git-branch" class="w-5 h-5"></i>
                                     </div>
                                     <div>
-                                        <p class="text-xs font-bold text-violet-600 uppercase tracking-wider mb-0.5">
-                                            Selected
-                                            QCO</p>
-                                        <h2 class="text-2xl font-heading font-bold text-slate-900"
-                                            id="displayQCONumber">-</h2>
-                                        <p class="text-sm text-slate-500" id="displayStyleName">-</p>
+                                        <h3 class="font-heading font-bold text-slate-900 text-lg">Style & Line</h3>
+                                        <p class="text-sm text-slate-500">Define the changeover styles and production
+                                            line</p>
+                                    </div>
+                                    <span
+                                        class="ml-auto text-xs font-bold px-2 py-1 rounded-full bg-blue-100 text-blue-700">Section
+                                        1</span>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 mb-2">From Style
+                                            (Current)</label>
+                                        <input type="text" id="fromStyleInput" placeholder="e.g. GH5087"
+                                            class="w-full bg-white border border-slate-200 text-slate-900 font-semibold rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 mb-2">To Style
+                                            (Upcoming)</label>
+                                        <input type="text" id="toStyleInput" placeholder="e.g. GH5120"
+                                            class="w-full bg-white border border-slate-200 text-slate-900 font-semibold rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all">
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Line Number</label>
+                                    <select id="lineSelect"
+                                        class="w-full bg-white border border-slate-200 text-slate-900 font-semibold rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm transition-all appearance-none cursor-pointer">
+                                        <option value="">Choose a line...</option>
+                                    </select>
+                                </div>
+
+                                <div id="stylesSaveArea"
+                                    class="flex justify-end mt-4 pt-4 border-t border-slate-200/60">
+                                    <button onclick="saveStylesAndGenerateQCO()" id="generateQCOBtn"
+                                        class="px-6 py-3 rounded-xl btn-primary text-white font-bold shadow-lg flex items-center gap-2">
+                                        <i data-lucide="zap" class="w-4 h-4"></i>
+                                        Save & Generate QCO Number
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ===== SECTION II: Changeover Date ===== -->
+                        <div id="sectionDate" class="glass-card p-8 relative overflow-hidden hidden">
+                            <div class="relative z-10">
+                                <div class="flex items-center gap-3 mb-6">
+                                    <div
+                                        class="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600">
+                                        <i data-lucide="clock" class="w-5 h-5"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-heading font-bold text-slate-900 text-lg">Changeover Date & Time
+                                        </h3>
+                                        <p class="text-sm text-slate-500">Set the planned execution date</p>
+                                    </div>
+                                    <span
+                                        class="ml-auto text-xs font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-700">Section
+                                        2</span>
+                                </div>
+
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 mb-2">Expected Changeover
+                                            Date & Time</label>
+                                        <input type="datetime-local" id="scheduleDate"
+                                            class="w-full bg-white border border-slate-200 text-slate-900 font-semibold rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent shadow-sm transition-all text-lg">
+                                        <p class="text-xs text-slate-400 mt-2 ml-1 flex items-center gap-1">
+                                            <i data-lucide="info" class="w-3 h-3"></i>
+                                            Visible on Dashboard and Checklist pages
+                                        </p>
+                                    </div>
+
+                                    <div id="dateChangeInfo"
+                                        class="hidden bg-blue-50/80 border border-blue-100 rounded-xl p-4 flex items-center gap-3">
+                                        <i data-lucide="repeat" class="w-5 h-5 text-blue-500"></i>
+                                        <div>
+                                            <span class="text-sm font-bold text-blue-800">Date Changes: </span>
+                                            <span id="dateChangeCountDisplay"
+                                                class="text-sm font-bold text-blue-600">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col sm:flex-row gap-3 mt-6 pt-4 border-t border-slate-200/60">
+                                    <button onclick="clearScheduleDate()"
+                                        class="px-6 py-3 rounded-xl text-red-600 font-semibold hover:bg-red-50 border border-transparent hover:border-red-200 transition-all flex items-center justify-center gap-2">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i> Clear Date
+                                    </button>
+                                    <button onclick="saveScheduleDate()" id="saveDateBtn"
+                                        class="flex-1 px-6 py-3 rounded-xl btn-primary text-white font-bold shadow-lg flex items-center justify-center gap-2">
+                                        <i data-lucide="save" class="w-4 h-4"></i> Save Date
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ===== SECTION III: PO & Category (Auto-save) ===== -->
+                        <div id="sectionPOCategory" class="glass-card p-8 relative overflow-hidden hidden">
+                            <div class="relative z-10">
+                                <div class="flex items-center gap-3 mb-6">
+                                    <div
+                                        class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600">
+                                        <i data-lucide="clipboard-list" class="w-5 h-5"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-heading font-bold text-slate-900 text-lg">PO & Category</h3>
+                                        <p class="text-sm text-slate-500">Auto-saved on change</p>
+                                    </div>
+                                    <span
+                                        class="ml-auto text-xs font-bold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">Section
+                                        3</span>
+                                    <span id="autoSaveIndicator"
+                                        class="hidden text-xs font-semibold text-emerald-600 flex items-center gap-1">
+                                        <i data-lucide="check-circle" class="w-3 h-3"></i> Saved
+                                    </span>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 mb-2">PO Number</label>
+                                        <input type="text" id="poNumber" placeholder="e.g. PO-12345 (optional)"
+                                            class="w-full bg-white border border-slate-200 text-slate-900 font-semibold rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent shadow-sm transition-all">
+                                        <p class="text-xs text-slate-400 mt-1 ml-1">Optional — can be updated later</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 mb-2">Changeover
+                                            Category</label>
+                                        <div class="relative">
+                                            <select id="changeoverCategory"
+                                                class="w-full bg-white border border-slate-200 text-slate-900 font-semibold rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent shadow-sm transition-all appearance-none cursor-pointer">
+                                                <option value="C">Category C (Low - 3x SMV)</option>
+                                                <option value="B">Category B (Medium - 5x SMV)</option>
+                                                <option value="A">Category A (High - 7x SMV)</option>
+                                            </select>
+                                            <i data-lucide="chevron-down"
+                                                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- Main Schedule Card -->
-                            <div class="glass-card p-8 relative overflow-hidden">
-                                <div
-                                    class="absolute top-0 right-0 w-64 h-64 bg-violet-500/5 rounded-bl-full -mr-16 -mt-16 pointer-events-none">
-                                </div>
-
-                                <div class="relative z-10">
-                                    <div class="flex items-center gap-3 mb-6">
-                                        <div
-                                            class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
-                                            <i data-lucide="clock" class="w-5 h-5"></i>
-                                        </div>
-                                        <div>
-                                            <h3 class="font-heading font-bold text-slate-900 text-lg">Execution Schedule
-                                            </h3>
-                                            <p class="text-sm text-slate-500">Set the planned changeover date and time
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div class="space-y-6">
-                                        <div>
-                                            <label class="block text-sm font-bold text-slate-700 mb-2">Changeover Date &
-                                                Time</label>
-                                            <div class="relative">
-                                                <input type="datetime-local" id="scheduleDate"
-                                                    class="w-full bg-white border border-slate-200 text-slate-900 font-semibold rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent shadow-sm transition-all text-lg">
-                                            </div>
-                                            <p class="text-xs text-slate-400 mt-2 ml-1 flex items-center gap-1">
-                                                <i data-lucide="info" class="w-3 h-3"></i>
-                                                This will be visible on the Dashboard and Checklist pages
-                                            </p>
-                                        </div>
-
-                                        <!-- Changeover Category -->
-                                        <div>
-                                            <label class="block text-sm font-bold text-slate-700 mb-2">Changeover
-                                                Category</label>
-                                            <div class="relative">
-                                                <select id="changeoverCategory"
-                                                    class="w-full bg-white border border-slate-200 text-slate-900 font-semibold rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent shadow-sm transition-all text-lg appearance-none cursor-pointer">
-                                                    <option value="C">Category C (Low Complexity - 3x SMV)</option>
-                                                    <option value="B">Category B (Medium Complexity - 5x SMV)</option>
-                                                    <option value="A">Category A (High Complexity - 7x SMV)</option>
-                                                </select>
-                                                <i data-lucide="chevron-down"
-                                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
-                                            </div>
-                                            <p class="text-xs text-slate-400 mt-2 ml-1 flex items-center gap-1">
-                                                <i data-lucide="info" class="w-3 h-3"></i>
-                                                Category determines Target COPT multiplier
-                                            </p>
-                                        </div>
-
-                                        <!-- PO Number Field -->
-                                        <div>
-                                            <label class="block text-sm font-bold text-slate-700 mb-2">PO Number</label>
-                                            <div class="relative">
-                                                <input type="text" id="poNumber"
-                                                    placeholder="Enter PO number (e.g. PO-12345)"
-                                                    class="w-full bg-white border border-slate-200 text-slate-900 font-semibold rounded-xl px-4 py-4 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent shadow-sm transition-all text-lg">
-                                            </div>
-                                            <p class="text-xs text-slate-400 mt-2 ml-1 flex items-center gap-1">
-                                                <i data-lucide="info" class="w-3 h-3"></i>
-                                                Optional alphanumeric PO reference
-                                            </p>
-                                        </div>
-
-                                        <div class="bg-amber-50/80 border border-amber-100 rounded-xl p-4 flex gap-3">
-                                            <i data-lucide="lightbulb" class="w-5 h-5 text-amber-500 mt-0.5"></i>
-                                            <div>
-                                                <h4 class="font-semibold text-amber-800 text-sm mb-1">Scheduling Tip
-                                                </h4>
-                                                <p class="text-sm text-amber-700 leading-relaxed">
-                                                    Ensure all departments have completed their pre-checks before the
-                                                    scheduled
-                                                    time.
-                                                    The system will track actual vs planned start times.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex flex-col sm:flex-row gap-3 mt-8 pt-6 border-t border-slate-200/60">
-                                        <button onclick="clearSchedule()"
-                                            class="px-6 py-3 rounded-xl text-red-600 font-semibold hover:bg-red-50 border border-transparent hover:border-red-200 transition-all flex items-center justify-center gap-2 order-2 sm:order-1">
-                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                            Clear Date
-                                        </button>
-                                        <button onclick="saveSchedule()" id="saveBtn"
-                                            class="flex-1 px-6 py-3 rounded-xl btn-primary text-white font-bold shadow-lg flex items-center justify-center gap-2 order-1 sm:order-2">
-                                            <i data-lucide="save" class="w-4 h-4"></i>
-                                            Save Schedule
-                                        </button>
-                                        <!-- Save Status Toast -->
-                                        <div id="saveStatus"
-                                            class="hidden items-center gap-2 px-4 py-2 rounded-xl bg-emerald-100 text-emerald-700 text-sm font-semibold absolute -bottom-12 left-1/2 -translate-x-1/2 whitespace-nowrap shadow-lg">
-                                            <i data-lucide="check-circle" class="w-4 h-4"></i>
-                                            <span>Saved successfully!</span>
-                                        </div>
-                                        <button onclick="openEmailModal()" id="emailBtn"
-                                            class="px-6 py-3 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold hover:border-violet-400 hover:text-violet-600 shadow-sm transition-all flex items-center justify-center gap-2 order-3">
-                                            <i data-lucide="mail" class="w-4 h-4"></i>
-                                            Send Invite
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Quick Stats -->
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="glass-card p-4 flex items-center gap-3">
+                        <!-- ===== SECTION IV: Email ===== -->
+                        <div id="sectionEmail" class="glass-card p-8 relative overflow-hidden hidden">
+                            <div class="relative z-10">
+                                <div class="flex items-center gap-3 mb-6">
                                     <div
-                                        class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                                        <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+                                        class="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                        <i data-lucide="mail" class="w-5 h-5"></i>
                                     </div>
                                     <div>
+                                        <h3 class="font-heading font-bold text-slate-900 text-lg">Email Invite</h3>
+                                        <p class="text-sm text-slate-500">Send pre-meeting invitation to the team</p>
+                                    </div>
+                                    <span
+                                        class="ml-auto text-xs font-bold px-2 py-1 rounded-full bg-indigo-100 text-indigo-700">Section
+                                        4</span>
+                                </div>
+
+                                <!-- Template Selection (shown when dateChangeCount > 1) -->
+                                <div id="templateSelector"
+                                    class="hidden mb-6 bg-indigo-50/80 border border-indigo-100 rounded-xl p-4">
+                                    <p class="text-sm font-bold text-indigo-800 mb-3">
+                                        <i data-lucide="info" class="w-4 h-4 inline-block mr-1"></i>
+                                        Date has been updated. Choose email template:
+                                    </p>
+                                    <div class="flex gap-3">
+                                        <label class="flex-1 cursor-pointer">
+                                            <input type="radio" name="emailTemplate" value="initial"
+                                                class="sr-only peer" checked>
+                                            <div
+                                                class="peer-checked:border-indigo-500 peer-checked:bg-indigo-50 border-2 border-slate-200 rounded-xl p-3 text-center transition-all hover:border-indigo-300">
+                                                <i data-lucide="mail" class="w-5 h-5 mx-auto mb-1 text-indigo-500"></i>
+                                                <p class="text-xs font-bold text-slate-700">Initial Invite</p>
+                                            </div>
+                                        </label>
+                                        <label class="flex-1 cursor-pointer">
+                                            <input type="radio" name="emailTemplate" value="updated"
+                                                class="sr-only peer">
+                                            <div
+                                                class="peer-checked:border-indigo-500 peer-checked:bg-indigo-50 border-2 border-slate-200 rounded-xl p-3 text-center transition-all hover:border-indigo-300">
+                                                <i data-lucide="calendar-clock"
+                                                    class="w-5 h-5 mx-auto mb-1 text-amber-500"></i>
+                                                <p class="text-xs font-bold text-slate-700">Updated Date</p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="bg-amber-50/80 border border-amber-100 rounded-xl p-4 flex gap-3 mb-4">
+                                    <i data-lucide="lightbulb" class="w-5 h-5 text-amber-500 mt-0.5"></i>
+                                    <div>
+                                        <h4 class="font-semibold text-amber-800 text-sm mb-1">Scheduling Tip</h4>
+                                        <p class="text-sm text-amber-700 leading-relaxed">
+                                            Ensure all departments have completed their pre-checks before the scheduled
+                                            time.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Email Sent Tracking Info -->
+                                <div id="emailSentInfo"
+                                    class="hidden mb-4 bg-emerald-50/80 border border-emerald-100 rounded-xl p-4 flex items-center gap-3">
+                                    <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i>
+                                    <div class="flex-1">
+                                        <span class="text-sm font-bold text-emerald-800">Emails Sent: </span>
+                                        <span id="emailSentCountDisplay"
+                                            class="text-sm font-bold text-emerald-600">0</span>
+                                        <p class="text-xs text-emerald-600 mt-0.5">Last sent: <span
+                                                id="lastEmailSentDate">Never</span></p>
+                                    </div>
+                                </div>
+
+                                <button onclick="openEmailModal()" id="emailBtn"
+                                    class="w-full px-6 py-3 rounded-xl bg-indigo-600 text-white font-bold shadow-lg hover:bg-indigo-500 transition-all flex items-center justify-center gap-2">
+                                    <i data-lucide="send" class="w-4 h-4"></i>
+                                    Compose & Send Invite
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ===== SECTION V: Status & Backend ===== -->
+                        <div id="sectionStatus" class="glass-card p-8 relative overflow-hidden hidden">
+                            <div class="relative z-10">
+                                <div class="flex items-center gap-3 mb-6">
+                                    <div
+                                        class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
+                                        <i data-lucide="activity" class="w-5 h-5"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-heading font-bold text-slate-900 text-lg">Status & Details</h3>
+                                        <p class="text-sm text-slate-500">Current schedule status overview</p>
+                                    </div>
+                                    <span
+                                        class="ml-auto text-xs font-bold px-2 py-1 rounded-full bg-slate-100 text-slate-700">Section
+                                        5</span>
+                                </div>
+
+                                <!-- Quick Stats -->
+                                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+                                    <div class="bg-white/80 rounded-xl p-4 border border-slate-200">
                                         <p class="text-xs text-slate-500 font-medium uppercase">Status</p>
-                                        <p class="font-bold text-slate-900" id="statusText">Not Scheduled</p>
+                                        <p class="font-bold text-slate-900 text-lg" id="statusText">Not Scheduled</p>
                                     </div>
-                                </div>
-                                <div class="glass-card p-4 flex items-center gap-3">
-                                    <div
-                                        class="w-10 h-10 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center">
-                                        <i data-lucide="history" class="w-5 h-5"></i>
-                                    </div>
-                                    <div>
+                                    <div class="bg-white/80 rounded-xl p-4 border border-slate-200">
                                         <p class="text-xs text-slate-500 font-medium uppercase">Last Updated</p>
                                         <p class="font-bold text-slate-900" id="lastUpdatedText">Never</p>
                                     </div>
-                                </div>
-                            </div>
-
-                            <!-- Backend Status Card -->
-                            <div class="glass-card p-6 mt-6">
-                                <div class="flex items-center justify-between mb-4">
-                                    <div class="flex items-center gap-3">
-                                        <div
-                                            class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                                            <i data-lucide="server" class="w-5 h-5"></i>
-                                        </div>
-                                        <div>
-                                            <h3 class="font-heading font-bold text-slate-900 text-lg">Backend Status
-                                            </h3>
-                                            <p class="text-xs text-slate-500 font-medium flex items-center gap-2">
-                                                Connection: <span id="backendStatus"
-                                                    class="font-bold text-slate-400">Checking...</span>
-                                            </p>
-                                        </div>
+                                    <div class="bg-white/80 rounded-xl p-4 border border-slate-200">
+                                        <p class="text-xs text-slate-500 font-medium uppercase">Date Changes</p>
+                                        <p class="font-bold text-slate-900 text-lg" id="dateChangesDisplay">0</p>
                                     </div>
-                                    <button onclick="testBackendConnection()"
-                                        class="px-4 py-2 rounded-lg bg-indigo-50 text-indigo-700 text-sm font-semibold hover:bg-indigo-100 transition-colors">
-                                        Test Connection
-                                    </button>
                                 </div>
 
-                                <div id="smtpTestResult"
-                                    class="hidden p-3 rounded-lg bg-slate-50 text-sm mb-4 border border-slate-200">
-                                </div>
-
-                                <!-- Admin Only API Settings -->
-                                <div id="adminApiSettings" class="hidden mt-4 pt-4 border-t border-slate-200">
-                                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Backend API URL
-                                        (Admin
-                                        Only)</label>
-                                    <div class="flex gap-2">
-                                        <input type="text" id="apiUrlInput" placeholder="https://..."
-                                            class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                        <button onclick="saveApiUrl()"
-                                            class="px-3 py-2 rounded-lg bg-slate-800 text-white text-xs font-bold hover:bg-slate-700 transition-colors">
-                                            Update
+                                <!-- Backend Status -->
+                                <div class="bg-white/80 rounded-xl p-4 border border-slate-200">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center gap-2">
+                                            <i data-lucide="server" class="w-4 h-4 text-indigo-500"></i>
+                                            <span class="text-sm font-bold text-slate-700">Backend:</span>
+                                            <span id="backendStatus"
+                                                class="text-sm font-bold text-slate-400">Checking...</span>
+                                        </div>
+                                        <button onclick="testBackendConnection()"
+                                            class="px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-semibold hover:bg-indigo-100 transition-colors">
+                                            Test
                                         </button>
+                                    </div>
+                                    <div id="smtpTestResult"
+                                        class="hidden p-2 rounded-lg bg-slate-50 text-sm border border-slate-200"></div>
+
+                                    <!-- Admin Only -->
+                                    <div id="adminApiSettings" class="hidden mt-3 pt-3 border-t border-slate-200">
+                                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">API URL
+                                            (Admin)</label>
+                                        <div class="flex gap-2">
+                                            <input type="text" id="apiUrlInput" placeholder="https://..."
+                                                class="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                            <button onclick="saveApiUrl()"
+                                                class="px-3 py-2 rounded-lg bg-slate-800 text-white text-xs font-bold hover:bg-slate-700 transition-colors">
+                                                Update
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
 
+                        <!-- Save Status Toast -->
+                        <div id="saveStatus"
+                            class="hidden items-center gap-2 px-4 py-2 rounded-xl bg-emerald-100 text-emerald-700 text-sm font-semibold fixed bottom-8 left-1/2 -translate-x-1/2 whitespace-nowrap shadow-lg z-50">
+                            <i data-lucide="check-circle" class="w-4 h-4"></i>
+                            <span>Saved successfully!</span>
+                        </div>
 
+                    </div> <!-- /contentArea -->
+                </div> <!-- /max-w-3xl -->
+            </div> <!-- /mainApp -->
 
-            <!-- Simplified Footer -->
+            <!-- Footer -->
             <footer
                 class="mt-auto py-8 px-8 border-t border-slate-200/30 relative z-10 bg-white/30 backdrop-blur-md -mx-8 -mb-32">
                 <div class="max-w-3xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
@@ -963,14 +1110,73 @@
     </div>
 
     <script>
-        // --- Navigation System ---
+        // ==========================================
+        // GLOBAL STATE
+        // ==========================================
+        let db, auth;
+        let isFirebaseConnected = false;
+        let currentQCOId = null;
+        let currentQCOData = null;
+        let allChangeovers = [];
+        let currentMode = 'new'; // 'new' or 'existing'
+        let hasUnsavedChanges = false;
+        let autoSaveTimeout = null;
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAdWYiRQFGsmPWbQ_AOm2aGvf1GDHjsqiY",
+            authDomain: "sidneymailer.firebaseapp.com",
+            projectId: "sidneymailer",
+            storageBucket: "sidneymailer.appspot.com",
+            messagingSenderId: "867498417076",
+            appId: "1:867498417076:web:54da9eb9eb5f2d44e24bbb"
+        };
+
+        // ==========================================
+        // PERSONNEL DATA (synced with creation.html)
+        // ==========================================
+        const personnelData = {
+            "1": { supervisor: "WASANA", rqc: "SANGIB", ie: "LAKSHA", lineIncharge: "MOHAMAD", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "SAMINATHAN" },
+            "1A": { supervisor: "WASANA", rqc: "MIYARAJ", ie: "LAKSHA", lineIncharge: "MOHAMAD", qam: "ANIL/SUJAN", mechIncharge: "MOTHIN", technical: "SAMINATHAN" },
+            "2": { supervisor: "SOHORAB", rqc: "SHERAJ", ie: "BUDDIKA", lineIncharge: "VARMA", qam: "JANAKA", mechIncharge: "MOTHIN", technical: "KOUSAR" },
+            "3": { supervisor: "SOHEL", rqc: "RIPON", ie: "SHANAKA", lineIncharge: "TARAJUL", qam: "", mechIncharge: "SAKIB", technical: "SAMINATHAN" },
+            "6+17": { supervisor: "SHAKIL/MUSUM", rqc: "NURADAM/KHOKUN", ie: "SHANAKA", lineIncharge: "TARAJUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
+            "7": { supervisor: "NAGENDER", rqc: "SHAMIM", ie: "BUDDIKA", lineIncharge: "VARMA", qam: "ANIL/SUJAN", mechIncharge: "MOTHIN", technical: "KOUSAR" },
+            "7A": { supervisor: "KAMAL", rqc: "LABO", ie: "BUDDIKA", lineIncharge: "VARMA", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "KOUSAR" },
+            "8+5": { supervisor: "BALISTER/FARUK", rqc: "SABOZ/NAIME", ie: "SHANAKA", lineIncharge: "SAKIR", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "SAMINATHAN" },
+            "9": { supervisor: "SUMI", rqc: "HELAL", ie: "SHANAKA", lineIncharge: "FARIDUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "RASHID" },
+            "10": { supervisor: "RAJ KUMAR", rqc: "RAM KUMAR", ie: "TANVEER", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "11+15": { supervisor: "KAMAL/MUNSAF", rqc: "ANWER/ARIFUL", ie: "BUDDIKA", lineIncharge: "TARAJUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "SAMINATHAN" },
+            "12": { supervisor: "DHARAMEDER", rqc: "JAHEDUL", ie: "BUDDIKA", lineIncharge: "VARMA", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "RASHID" },
+            "13/21": { supervisor: "SUMON/DEVRAJ", rqc: "ABU KASAM/ABHAY", ie: "TANVEER", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "14": { supervisor: "SHARIF", rqc: "GUDDU", ie: "LAKSHA", lineIncharge: "MOHAMAD", qam: "ANIL/SUJAN", mechIncharge: "SAKIB", technical: "KOUSAR" },
+            "16": { supervisor: "RAHMAN", rqc: "JAHURUL", ie: "TANVEER", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "16A": { supervisor: "RHANIA", rqc: "VIJAY", ie: "TANVEER", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "18": { supervisor: "JAKIR", rqc: "RASHMI", ie: "TANVEER", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "19": { supervisor: "ALAMGIR", rqc: "ASLAM", ie: "SHANAKA", lineIncharge: "TARAJUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
+            "20": { supervisor: "GAYANI", rqc: "TUHIN", ie: "SHANAKA", lineIncharge: "FARIDUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
+            "22": { supervisor: "ASHRAFUL", rqc: "FOKRUL", ie: "LAKSHA", lineIncharge: "MOHAMAD", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "KOUSAR" },
+            "23": { supervisor: "RUMA", rqc: "SAMANMALI", ie: "LAKSHA", lineIncharge: "FARIDUL", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "24": { supervisor: "NASIR", rqc: "SOBUJ", ie: "SHANAKA", lineIncharge: "MOHAMAD", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
+            "25": { supervisor: "AKBAR", rqc: "SAKIB", ie: "BUDDIKA", lineIncharge: "SAKIR", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "RASHID" },
+            "26/4": { supervisor: "HIMAYIT/AHMAD", rqc: "BELAYET/ASHISH", ie: "TANVEER", lineIncharge: "VARMA", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
+            "28": { supervisor: "RUPNANAYAN", rqc: "NASRUL", ie: "BUDDIKA", lineIncharge: "SAKIR", qam: "ANIL/SUJAN", mechIncharge: "MOTHIN", technical: "RASHID" },
+            "29": { supervisor: "SUBA", rqc: "FATEMA", ie: "LAKSHA", lineIncharge: "FARIDUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "RASHID" },
+            "30": { supervisor: "RAZIB", rqc: "ZAHIDUL", ie: "LAKSHA", lineIncharge: "MOHAMAD", qam: "ANIL/SUJAN", mechIncharge: "MOTHIN", technical: "KOUSAR" },
+            "31": { supervisor: "AKESH", rqc: "MONJURY", ie: "LAKSHA", lineIncharge: "FARIDUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
+            "32": { supervisor: "KALU", rqc: "MUSTAK", ie: "TANVEER", lineIncharge: "FARIDUL", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" }
+        };
+
+        let emailData = {};
+
+        // ==========================================
+        // NAVIGATION SYSTEM
+        // ==========================================
         class NavigationSystem {
             constructor() {
                 this.sidebar = document.getElementById('appSidebar');
                 this.toggleBtn = document.getElementById('navToggle');
                 this.backdrop = document.getElementById('navBackdrop');
                 this.isOpen = false;
-
                 this.init();
             }
 
@@ -1036,127 +1242,509 @@
             }
         }
 
-        // --- Firebase Configuration ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyCayfWGQP1t3oBU9eFj-3Ww0uu7nSl3Q4g",
-            authDomain: "sidneymailer.firebaseapp.com",
-            projectId: "sidneymailer",
-            storageBucket: "sidneymailer.firebasestorage.app",
-            messagingSenderId: "911316068119",
-            appId: "1:911316068119:web:ce23dbe663dc385a81f952",
-            measurementId: "G-NJ0QH6DEXG"
-        };
 
-        // --- Global State ---
-        let db, auth;
-        let currentQCOId = null;
-        let currentQCOData = null;
-        let allChangeovers = [];
-        let isFirebaseConnected = false;
+        // --- Mobile Behavior ---
+        function initMobileBehavior() {
+            const isMobile = window.innerWidth <= 768;
+            if (isMobile) { /* Mobile specific adjustments */ }
+        }
 
-        // --- Initialization ---
+        // ==========================================
+        // INITIALIZATION
+        // ==========================================
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. Instant Reveal for structure
             gsap.to("#mainApp", { opacity: 1, duration: 0.4, ease: "power2.out" });
 
-            // 2. Navigation System Initialization
             if (typeof NavigationSystem !== 'undefined' && !window.navSystem) {
                 window.navSystem = new NavigationSystem();
             }
-
-            // 3. Mobile / Icon Initialization
             if (typeof initMobileBehavior !== 'undefined') {
                 initMobileBehavior();
                 window.addEventListener('resize', initMobileBehavior);
             }
             if (typeof lucide !== 'undefined') lucide.createIcons();
 
-            // 4. Background Data Loading & Security
             const initSequence = async () => {
                 try {
                     initFirebase();
                     checkAuth();
-
-                    // Auth Check
                     const user = JSON.parse(localStorage.getItem('qcoCurrentUser'));
-                    if (!user) {
-                        window.location.href = '../index.html';
-                        return;
-                    }
+                    if (!user) { window.location.href = '../index.html'; return; }
 
                     initLenis();
+                    populateLineDropdown();
                     await loadChangeoverList();
                     if (typeof lucide !== 'undefined') lucide.createIcons();
-
-                    // Specific schedule logic
                     setTimeout(initBackendControls, 1000);
 
-                    // Parse URL parameters for direct search integration
+                    // Restore mode from session
+                    const savedMode = sessionStorage.getItem('scheduleMode') || 'new';
+                    switchMode(savedMode, true);
+
+                    // Setup auto-save listeners
+                    setupAutoSave();
+
+                    // URL params
                     const urlParams = new URLSearchParams(window.location.search);
                     const query = urlParams.get('q');
                     if (query) {
+                        switchMode('existing', true);
                         const searchInput = document.getElementById('qcoSearch');
-                        if (searchInput) {
-                            searchInput.value = query;
-                            handleSearch({ target: { value: query } });
-                        }
+                        if (searchInput) { searchInput.value = query; handleSearch({ target: { value: query } }); }
                     }
-                } catch (e) {
-                    console.error("Delayed data error:", e);
-                }
+                } catch (e) { console.error("Init error:", e); }
             };
-
             initSequence();
         });
 
+        // ==========================================
+        // LINE DROPDOWN (from personnelData)
+        // ==========================================
+        function populateLineDropdown() {
+            const sel = document.getElementById('lineSelect');
+            if (!sel) return;
+            while (sel.options.length > 1) sel.remove(1);
+
+            const sortedKeys = Object.keys(personnelData).sort((a, b) => {
+                const numA = parseInt(a.replace(/[^0-9]/g, '')) || 999;
+                const numB = parseInt(b.replace(/[^0-9]/g, '')) || 999;
+                return numA - numB;
+            });
+
+            sortedKeys.forEach(key => {
+                const pd = personnelData[key];
+                const opt = document.createElement('option');
+                opt.value = key;
+                // For combined lines like "6+17", show each sub-line
+                const parts = key.split(/[\+\/]/);
+                if (parts.length > 1) {
+                    opt.textContent = `Lines ${parts.join(' & ')} — ${pd.supervisor}`;
+                } else {
+                    opt.textContent = `Line ${key} — ${pd.supervisor}`;
+                }
+                sel.appendChild(opt);
+            });
+        }
+
+        // ==========================================
+        // MODE TOGGLE
+        // ==========================================
+        function switchMode(mode, skipWarning = false) {
+            if (!skipWarning && hasUnsavedChanges && mode !== currentMode) {
+                Swal.fire({
+                    title: 'Unsaved Changes',
+                    text: 'You have unsaved changes. Switch mode anyway?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#7c3aed',
+                    confirmButtonText: 'Yes, switch',
+                    cancelButtonText: 'Cancel'
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        hasUnsavedChanges = false;
+                        switchMode(mode, true);
+                    }
+                });
+                return;
+            }
+
+            currentMode = mode;
+            sessionStorage.setItem('scheduleMode', mode);
+
+            const newBtn = document.getElementById('modeNewBtn');
+            const existBtn = document.getElementById('modeExistingBtn');
+            const existSelector = document.getElementById('existingSelector');
+
+            if (mode === 'new') {
+                newBtn.className = 'flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all bg-violet-600 text-white shadow-lg';
+                existBtn.className = 'flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all text-slate-500 hover:bg-slate-100';
+                existSelector.classList.add('hidden');
+                resetFormForNewMode();
+            } else {
+                existBtn.className = 'flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all bg-violet-600 text-white shadow-lg';
+                newBtn.className = 'flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all text-slate-500 hover:bg-slate-100';
+                existSelector.classList.remove('hidden');
+                resetFormForExistingMode();
+            }
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function resetFormForNewMode() {
+            currentQCOId = null;
+            currentQCOData = null;
+
+            // Show Section I, hide others
+            document.getElementById('sectionStyles').classList.remove('hidden');
+            document.getElementById('sectionDate').classList.add('hidden');
+            document.getElementById('sectionPOCategory').classList.add('hidden');
+            document.getElementById('sectionEmail').classList.add('hidden');
+            document.getElementById('sectionStatus').classList.add('hidden');
+            document.getElementById('qcoInfoCard').classList.add('hidden');
+
+            // Enable style inputs
+            document.getElementById('fromStyleInput').value = '';
+            document.getElementById('fromStyleInput').readOnly = false;
+            document.getElementById('toStyleInput').value = '';
+            document.getElementById('toStyleInput').readOnly = false;
+            document.getElementById('lineSelect').disabled = false;
+            document.getElementById('lineSelect').value = '';
+
+            // Show generate button
+            document.getElementById('stylesSaveArea').classList.remove('hidden');
+
+            // Reset other fields
+            document.getElementById('scheduleDate').value = '';
+            document.getElementById('poNumber').value = '';
+            document.getElementById('changeoverCategory').value = 'C';
+            updateStatusText('New');
+        }
+
+        function resetFormForExistingMode() {
+            currentQCOId = null;
+            currentQCOData = null;
+            // Hide all content sections until a QCO is selected
+            document.getElementById('sectionStyles').classList.add('hidden');
+            document.getElementById('sectionDate').classList.add('hidden');
+            document.getElementById('sectionPOCategory').classList.add('hidden');
+            document.getElementById('sectionEmail').classList.add('hidden');
+            document.getElementById('sectionStatus').classList.add('hidden');
+            document.getElementById('qcoInfoCard').classList.add('hidden');
+        }
+
+        // ==========================================
+        // AUTO-SAVE (Section III: PO & Category)
+        // ==========================================
+        function setupAutoSave() {
+            const poInput = document.getElementById('poNumber');
+            const catInput = document.getElementById('changeoverCategory');
+
+            if (poInput) poInput.addEventListener('input', debounceAutoSave);
+            if (catInput) catInput.addEventListener('change', debounceAutoSave);
+        }
+
+        function debounceAutoSave() {
+            if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(() => autoSavePOCategory(), 1000);
+        }
+
+        async function autoSavePOCategory() {
+            if (!currentQCOId || !db) return;
+            try {
+                await db.collection('changeovers').doc(currentQCOId).set({
+                    poNumber: document.getElementById('poNumber').value.trim(),
+                    changeoverCategory: document.getElementById('changeoverCategory').value,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                const indicator = document.getElementById('autoSaveIndicator');
+                indicator.classList.remove('hidden');
+                setTimeout(() => indicator.classList.add('hidden'), 2000);
+            } catch (e) { console.error('Auto-save error:', e); }
+        }
+
+        // ==========================================
+        // QCO NUMBER GENERATION (same as creation.html)
+        // ==========================================
+        async function getNextQCONumber(lineNumber, currentStyle, upcomingStyle) {
+            const cleanLine = lineNumber ? lineNumber.toString().replace(/[^0-9A-Z]/gi, '') : "0";
+            const curLast3 = currentStyle ? (currentStyle.length > 3 ? currentStyle.slice(-3) : currentStyle.padStart(3, '0')) : "000";
+            const nextLast3 = upcomingStyle ? (upcomingStyle.length > 3 ? upcomingStyle.slice(-3) : upcomingStyle.padStart(3, '0')) : "000";
+            const prefix = `S-${cleanLine}-${curLast3}-${nextLast3}-`;
+
+            if (isFirebaseConnected) {
+                try {
+                    const endPrefix = prefix + '\uf8ff';
+                    const snapshot = await db.collection('changeovers')
+                        .where(firebase.firestore.FieldPath.documentId(), '>=', prefix)
+                        .where(firebase.firestore.FieldPath.documentId(), '<=', endPrefix)
+                        .get();
+
+                    const existingSeqs = [];
+                    snapshot.forEach(doc => {
+                        const id = doc.id;
+                        const parts = id.split('-');
+                        const seqPart = parts[parts.length - 1];
+                        const seq = parseInt(seqPart);
+                        if (!isNaN(seq)) existingSeqs.push(seq);
+                    });
+
+                    existingSeqs.sort((a, b) => a - b);
+                    let nextSeq = 1;
+                    for (let i = 0; i < existingSeqs.length; i++) {
+                        if (existingSeqs[i] === nextSeq) nextSeq++;
+                        else if (existingSeqs[i] > nextSeq) break;
+                    }
+
+                    return `${prefix}${nextSeq.toString().padStart(2, '0')}`;
+                } catch (error) {
+                    console.error('QCO gen error:', error);
+                    return `${prefix}01`;
+                }
+            } else {
+                const localChangeovers = JSON.parse(localStorage.getItem('changeovers') || '[]');
+                const existingSeqs = localChangeovers
+                    .filter(qco => qco.qcoNumber && qco.qcoNumber.startsWith(prefix))
+                    .map(qco => parseInt(qco.qcoNumber.split('-').pop()))
+                    .filter(seq => !isNaN(seq))
+                    .sort((a, b) => a - b);
+
+                let nextSeq = 1;
+                for (let i = 0; i < existingSeqs.length; i++) {
+                    if (existingSeqs[i] === nextSeq) nextSeq++;
+                    else if (existingSeqs[i] > nextSeq) break;
+                }
+                return `${prefix}${nextSeq.toString().padStart(2, '0')}`;
+            }
+        }
+
+        // ==========================================
+        // SECTION I: SAVE STYLES & GENERATE QCO
+        // ==========================================
+        async function saveStylesAndGenerateQCO() {
+            const fromStyle = document.getElementById('fromStyleInput').value.trim();
+            const toStyle = document.getElementById('toStyleInput').value.trim();
+            const lineVal = document.getElementById('lineSelect').value;
+
+            if (!fromStyle || !toStyle) {
+                Swal.fire({ icon: 'warning', title: 'Styles Required', text: 'Please enter both From Style and To Style', confirmButtonColor: '#7c3aed' });
+                return;
+            }
+            if (!lineVal) {
+                Swal.fire({ icon: 'warning', title: 'Line Required', text: 'Please select a production line', confirmButtonColor: '#7c3aed' });
+                return;
+            }
+
+            // Show loading
+            const btn = document.getElementById('generateQCOBtn');
+            const origHTML = btn.innerHTML;
+            btn.innerHTML = '<div class="spinner border-white border-t-transparent w-5 h-5 mr-2"></div> Generating...';
+            btn.disabled = true;
+
+            try {
+                const qcoNumber = await getNextQCONumber(lineVal, fromStyle, toStyle);
+                currentQCOId = qcoNumber;
+
+                const changeoverData = {
+                    qcoNumber: qcoNumber,
+                    lineNumber: lineVal,
+                    currentStyle: fromStyle,
+                    upcomingStyle: toStyle,
+                    source: 'schedule',
+                    hasSchedule: false,
+                    dateChangeCount: 0,
+                    createdAt: new Date().toISOString(),
+                    createdBy: (JSON.parse(localStorage.getItem('qcoCurrentUser')) || {}).name || 'Schedule System'
+                };
+
+                await db.collection('changeovers').doc(qcoNumber).set(changeoverData);
+                currentQCOData = changeoverData;
+
+                // Update UI
+                document.getElementById('displayQCONumber').textContent = qcoNumber;
+                document.getElementById('qcoInfoCard').classList.remove('hidden');
+
+                // Hide save button, make inputs read-only
+                document.getElementById('stylesSaveArea').classList.add('hidden');
+                document.getElementById('fromStyleInput').readOnly = true;
+                document.getElementById('toStyleInput').readOnly = true;
+                document.getElementById('lineSelect').disabled = true;
+
+                // Show remaining sections
+                showAllSections();
+
+                // Also add to allChangeovers list
+                allChangeovers.push({ id: qcoNumber, ...changeoverData });
+
+                Swal.fire({ icon: 'success', title: 'QCO Generated!', text: qcoNumber, timer: 2000, showConfirmButton: false, position: 'top-end', toast: true });
+            } catch (error) {
+                console.error('Generate QCO error:', error);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to generate QCO: ' + error.message, confirmButtonColor: '#7c3aed' });
+            } finally {
+                btn.innerHTML = origHTML;
+                btn.disabled = false;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        }
+
+        function showAllSections() {
+            document.getElementById('sectionDate').classList.remove('hidden');
+            document.getElementById('sectionPOCategory').classList.remove('hidden');
+            document.getElementById('sectionEmail').classList.remove('hidden');
+            document.getElementById('sectionStatus').classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+
+            // Show template selector if dateChangeCount > 1
+            updateTemplateSelectorVisibility();
+        }
+
+        function updateTemplateSelectorVisibility() {
+            const count = (currentQCOData && currentQCOData.dateChangeCount) || 0;
+            const emailCount = (currentQCOData && currentQCOData.emailSentCount) || 0;
+            const selector = document.getElementById('templateSelector');
+
+            // Show template selector if either date changed OR email already sent
+            if ((count > 0 || emailCount > 0) && selector) {
+                selector.classList.remove('hidden');
+                // If email has been sent before, auto-select 'updated' template
+                if (emailCount > 0) {
+                    const updatedRadio = document.querySelector('input[name="emailTemplate"][value="updated"]');
+                    if (updatedRadio) updatedRadio.checked = true;
+                }
+            } else if (selector) {
+                selector.classList.add('hidden');
+                // Reset to initial template when hidden
+                const initialRadio = document.querySelector('input[name="emailTemplate"][value="initial"]');
+                if (initialRadio) initialRadio.checked = true;
+            }
+
+            // Update dateChangeCount display
+            const dci = document.getElementById('dateChangeInfo');
+            if (dci) {
+                if (count > 0) {
+                    dci.classList.remove('hidden');
+                    document.getElementById('dateChangeCountDisplay').textContent = count;
+                } else {
+                    dci.classList.add('hidden');
+                    document.getElementById('dateChangeCountDisplay').textContent = '0';
+                }
+            }
+            const dcd = document.getElementById('dateChangesDisplay');
+            if (dcd) dcd.textContent = count;
+
+            // Update email sent indicator if present
+            const emailInfo = document.getElementById('emailSentInfo');
+            if (emailInfo) {
+                if (emailCount > 0) {
+                    emailInfo.classList.remove('hidden');
+                    const emailCountEl = document.getElementById('emailSentCountDisplay');
+                    if (emailCountEl) emailCountEl.textContent = emailCount;
+                    const emailDateEl = document.getElementById('lastEmailSentDate');
+                    if (emailDateEl && currentQCOData && currentQCOData.emailSentAt) {
+                        const d = currentQCOData.emailSentAt.toDate ? currentQCOData.emailSentAt.toDate() : new Date(currentQCOData.emailSentAt);
+                        emailDateEl.textContent = d.toLocaleString();
+                    }
+                } else {
+                    emailInfo.classList.add('hidden');
+                }
+            }
+        }
+
+        // ==========================================
+        // SECTION II: SAVE DATE
+        // ==========================================
+        async function saveScheduleDate() {
+            if (!currentQCOId) {
+                Swal.fire({ icon: 'warning', title: 'No QCO', text: 'Generate or select a changeover first', confirmButtonColor: '#7c3aed' });
+                return;
+            }
+            const dateVal = document.getElementById('scheduleDate').value;
+            if (!dateVal) {
+                Swal.fire({ icon: 'warning', title: 'Date Required', text: 'Please select a date and time', confirmButtonColor: '#7c3aed' });
+                return;
+            }
+
+            const btn = document.getElementById('saveDateBtn');
+            const origHTML = btn.innerHTML;
+            btn.innerHTML = '<div class="spinner border-white border-t-transparent w-5 h-5 mr-2"></div> Saving...';
+            btn.disabled = true;
+
+            try {
+                const updateData = {
+                    scheduledDate: dateVal,
+                    hasSchedule: true,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedBy: 'schedule_system'
+                };
+
+                // Track date changes
+                const currentCount = (currentQCOData && currentQCOData.dateChangeCount) || 0;
+                if (currentQCOData && currentQCOData.scheduledDate && currentQCOData.scheduledDate !== dateVal) {
+                    updateData.previousScheduledDate = currentQCOData.scheduledDate;
+                    updateData.dateChangeCount = currentCount + 1;
+                } else if (!currentQCOData || !currentQCOData.scheduledDate) {
+                    updateData.dateChangeCount = currentCount > 0 ? currentCount : 1;
+                }
+
+                await db.collection('changeovers').doc(currentQCOId).set(updateData, { merge: true });
+
+                // Update local state
+                if (currentQCOData) {
+                    Object.assign(currentQCOData, updateData);
+                    currentQCOData.dateChangeCount = updateData.dateChangeCount || currentCount;
+                }
+
+                updateStatusText('Scheduled');
+                document.getElementById('lastUpdatedText').textContent = new Date().toLocaleString();
+                updateTemplateSelectorVisibility();
+                showSaveStatus();
+
+                if (typeof updateStyleProgression === 'function') updateStyleProgression();
+
+                Swal.fire({ icon: 'success', title: 'Date Saved!', text: 'Changeover date has been updated', timer: 2000, showConfirmButton: false, position: 'top-end', toast: true });
+            } catch (error) {
+                console.error('Save date error:', error);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to save date: ' + error.message, confirmButtonColor: '#7c3aed' });
+            } finally {
+                btn.innerHTML = origHTML;
+                btn.disabled = false;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        }
+
+        async function clearScheduleDate() {
+            if (!currentQCOId) return;
+            const result = await Swal.fire({
+                title: 'Clear Schedule?', text: "This will remove the planned date", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#64748b',
+                confirmButtonText: 'Yes, clear it', cancelButtonText: 'Cancel'
+            });
+            if (result.isConfirmed) {
+                try {
+                    await db.collection('changeovers').doc(currentQCOId).update({
+                        scheduledDate: firebase.firestore.FieldValue.delete(),
+                        hasSchedule: false,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    document.getElementById('scheduleDate').value = '';
+                    updateStatusText('Not Scheduled');
+                    Swal.fire({ icon: 'success', title: 'Cleared', timer: 1500, showConfirmButton: false, position: 'top-end', toast: true });
+                } catch (error) {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to clear', confirmButtonColor: '#7c3aed' });
+                }
+            }
+        }
+
+        // ==========================================
+        // FIREBASE / AUTH / LENIS
+        // ==========================================
         function initLenis() {
             const container = document.getElementById('appContent');
             if (!container) return;
-
             window.lenis = new Lenis({
-                wrapper: container,
-                content: container.querySelector('#mainApp'),
-                duration: 1.2,
-                easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-                smoothWheel: true,
-                smoothTouch: false,
-                touchMultiplier: 1.5,
+                wrapper: container, content: container.querySelector('#mainApp'),
+                duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+                smoothWheel: true, smoothTouch: false, touchMultiplier: 1.5,
             });
-
-            function raf(time) {
-                window.lenis.raf(time);
-                requestAnimationFrame(raf);
-            }
+            function raf(time) { window.lenis.raf(time); requestAnimationFrame(raf); }
             requestAnimationFrame(raf);
-
-            // Scroll State
             let isScrolling;
             container.addEventListener('scroll', () => {
                 document.body.classList.add('is-scrolling');
                 clearTimeout(isScrolling);
-                isScrolling = setTimeout(() => {
-                    document.body.classList.remove('is-scrolling');
-                }, 150);
+                isScrolling = setTimeout(() => document.body.classList.remove('is-scrolling'), 150);
             }, { passive: true });
         }
 
         function initFirebase() {
             try {
-                if (!firebase.apps.length) {
-                    firebase.initializeApp(firebaseConfig);
-                }
+                if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
                 db = firebase.firestore();
                 auth = firebase.auth();
                 isFirebaseConnected = true;
-                console.log("Firebase initialized successfully");
             } catch (error) {
-                console.error("Firebase initialization error:", error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Connection Error',
-                    text: 'Failed to connect to database. Please check your internet connection.',
-                    confirmButtonColor: '#7c3aed'
-                });
+                console.error("Firebase init error:", error);
+                Swal.fire({ icon: 'error', title: 'Connection Error', text: 'Failed to connect to database.', confirmButtonColor: '#7c3aed' });
             }
         }
 
@@ -1165,16 +1753,13 @@
                 if (user) {
                     const existing = JSON.parse(localStorage.getItem('qcoCurrentUser') || '{}');
                     localStorage.setItem('qcoCurrentUser', JSON.stringify({
-                        ...existing,
-                        uid: user.uid,
+                        ...existing, uid: user.uid,
                         name: user.displayName || existing.name || 'User',
                         email: user.email || existing.email,
                         role: existing.role || 'Member'
                     }));
                 } else {
-                    if (!localStorage.getItem('qcoCurrentUser')) {
-                        window.location.href = '../index.html';
-                    }
+                    if (!localStorage.getItem('qcoCurrentUser')) window.location.href = '../index.html';
                 }
                 updateUserUI();
             });
@@ -1182,16 +1767,11 @@
 
         function updateUserUI() {
             let user = {};
-            try {
-                user = JSON.parse(localStorage.getItem('qcoCurrentUser')) || {};
-            } catch (e) {
-                console.warn('User parse error', e);
-            }
+            try { user = JSON.parse(localStorage.getItem('qcoCurrentUser')) || {}; } catch (e) { }
             const name = user.displayName || user.name || 'User';
             const role = user.role || 'Member';
             const email = user.email || '';
             const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-
             document.querySelectorAll('.user-initials-display').forEach(el => el.textContent = initials);
             document.querySelectorAll('.user-name-display').forEach(el => el.textContent = name);
             document.querySelectorAll('.user-role-display').forEach(el => el.textContent = role);
@@ -1203,391 +1783,179 @@
                 localStorage.removeItem('qcoCurrentUser');
                 localStorage.removeItem('qcoSessionActive');
                 window.location.href = '../index.html';
-            }).catch(() => {
-                window.location.href = '../index.html';
-            });
+            }).catch(() => window.location.href = '../index.html');
         }
-
-        // --- Logout Handler ---
         document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);
 
-        // --- Data Loading ---
+        function updateStatusText(status) {
+            const el = document.getElementById('statusText');
+            if (!el) return;
+            el.textContent = status;
+            if (status === 'Scheduled') el.className = 'font-bold text-emerald-600 text-lg';
+            else if (status === 'Not Scheduled') el.className = 'font-bold text-slate-400 text-lg';
+            else el.className = 'font-bold text-blue-600 text-lg';
+        }
 
+        function showSaveStatus() {
+            const status = document.getElementById('saveStatus');
+            status.classList.remove('hidden');
+            status.classList.add('flex');
+            setTimeout(() => { status.classList.add('hidden'); status.classList.remove('flex'); }, 2000);
+        }
+
+        // ==========================================
+        // DATA LOADING (existing changeovers)
+        // ==========================================
         async function loadChangeoverList() {
             const selector = document.getElementById('qcoSelector');
-
-            if (!db) {
-                console.error("Database not initialized");
-                return;
-            }
-
+            if (!db || !selector) return;
             try {
-                const snapshot = await db.collection('changeovers')
-                    .orderBy('createdAt', 'desc')
-                    .limit(50)
-                    .get();
-
-                // Clear existing options except first
-                while (selector.options.length > 1) {
-                    selector.remove(1);
-                }
+                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(50).get();
+                while (selector.options.length > 1) selector.remove(1);
+                allChangeovers = [];
 
                 if (snapshot.empty) {
-                    const option = document.createElement('option');
-                    option.text = "No changeovers found";
-                    option.disabled = true;
-                    selector.add(option);
-                    return;
+                    const opt = document.createElement('option');
+                    opt.text = "No changeovers found"; opt.disabled = true;
+                    selector.add(opt); return;
                 }
 
                 const savedId = localStorage.getItem('scheduleQCOId');
-
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    const option = document.createElement('option');
-                    option.value = doc.id;
-
-                    const qcoNum = data.qcoNumber || data.qcoId || doc.id.substring(0, 8);
-                    const upcomingStyle = data.upcomingStyle || 'Unknown';
-                    const last4Digits = upcomingStyle.length >= 4 ? upcomingStyle.slice(-4) : upcomingStyle;
-
-                    option.textContent = `${qcoNum} - ${last4Digits}`;
-                    option.dataset.qcoNumber = qcoNum;
-                    option.dataset.style = last4Digits;
-
-                    if (doc.id === savedId) {
-                        option.selected = true;
-                    }
-
-                    selector.appendChild(option);
+                    const opt = document.createElement('option');
+                    opt.value = doc.id;
+                    const qcoNum = data.qcoNumber || doc.id.substring(0, 8);
+                    const upStyle = data.upcomingStyle || 'Unknown';
+                    const last4 = upStyle.length >= 4 ? upStyle.slice(-4) : upStyle;
+                    opt.textContent = `${qcoNum} - ${last4}`;
+                    opt.dataset.qcoNumber = qcoNum;
+                    opt.dataset.style = last4;
+                    if (doc.id === savedId) opt.selected = true;
+                    selector.appendChild(opt);
                     allChangeovers.push({ id: doc.id, ...data });
                 });
 
-                // Auto-select if saved
-                if (savedId) {
+                if (savedId && currentMode === 'existing') {
                     await handleQCOChange(savedId, false);
                 }
-
             } catch (error) {
                 console.error("Error loading changeovers:", error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Load Error',
-                    text: 'Failed to load changeover list',
-                    confirmButtonColor: '#7c3aed'
-                });
             }
         }
 
         async function handleQCOChange(qcoId, saveToStorage = true) {
-            if (!qcoId) {
-                currentQCOId = null;
-                currentQCOData = null;
-                showEmptyState();
-                return;
-            }
-
-            if (saveToStorage) {
-                localStorage.setItem('scheduleQCOId', qcoId);
-            }
-
+            if (!qcoId) { resetFormForExistingMode(); return; }
+            if (saveToStorage) localStorage.setItem('scheduleQCOId', qcoId);
             currentQCOId = qcoId;
-
-            // Get selected option data
-            const selector = document.getElementById('qcoSelector');
-            const option = selector.options[selector.selectedIndex];
-
-            // Update display
-            document.getElementById('displayQCONumber').textContent = option.dataset.qcoNumber || qcoId.substring(0, 8);
-            document.getElementById('displayStyleName').textContent = option.dataset.style || 'Unknown Style';
-
-            // Show loading state
-            document.getElementById('emptyState').classList.add('hidden');
-            document.getElementById('scheduleForm').classList.add('hidden');
-
-            // Create loading skeleton
-            const loadingDiv = document.createElement('div');
-            loadingDiv.id = 'tempLoading';
-            loadingDiv.className = 'glass-card p-8 flex flex-col items-center justify-center py-20';
-            loadingDiv.innerHTML = `
-                <div class="spinner mb-4"></div>
-                <p class="text-slate-500 font-medium">Loading schedule data...</p>
-            `;
-            document.getElementById('contentArea').appendChild(loadingDiv);
-
             await loadScheduleData(qcoId);
 
-            // Remove loading
-            const tempLoading = document.getElementById('tempLoading');
-            if (tempLoading) tempLoading.remove();
+            // Populate all sections with loaded data
+            const qco = currentQCOData || {};
 
-            showScheduleForm();
+            // Section I: Style & Line (read-only in existing mode)
+            document.getElementById('fromStyleInput').value = qco.currentStyle || '';
+            document.getElementById('fromStyleInput').readOnly = true;
+            document.getElementById('toStyleInput').value = qco.upcomingStyle || '';
+            document.getElementById('toStyleInput').readOnly = true;
+
+            // Set line select
+            const lineVal = qco.lineNumber || '';
+            const lineSelect = document.getElementById('lineSelect');
+            lineSelect.value = lineVal;
+            if (!lineSelect.value && lineVal) {
+                // Try finding combined key
+                const foundKey = Object.keys(personnelData).find(key =>
+                    key.split(/[\+\/]/).map(p => p.trim()).includes(lineVal));
+                if (foundKey) lineSelect.value = foundKey;
+            }
+            lineSelect.disabled = true;
+            document.getElementById('stylesSaveArea').classList.add('hidden');
+
+            // QCO Info card
+            document.getElementById('displayQCONumber').textContent = qco.qcoNumber || qcoId;
+            document.getElementById('qcoInfoCard').classList.remove('hidden');
+
+            // Section II: Date
+            const dateInput = document.getElementById('scheduleDate');
+            if (qco.scheduledDate) {
+                let dateValue;
+                if (qco.scheduledDate.toDate) {
+                    dateValue = qco.scheduledDate.toDate();
+                    const pad = (n) => n < 10 ? '0' + n : n;
+                    dateInput.value = `${dateValue.getFullYear()}-${pad(dateValue.getMonth() + 1)}-${pad(dateValue.getDate())}T${pad(dateValue.getHours())}:${pad(dateValue.getMinutes())}`;
+                } else {
+                    dateInput.value = qco.scheduledDate;
+                }
+                updateStatusText('Scheduled');
+            } else {
+                dateInput.value = '';
+                updateStatusText('Not Scheduled');
+            }
+
+            // Section III: PO & Category
+            document.getElementById('changeoverCategory').value = qco.changeoverCategory || 'C';
+            document.getElementById('poNumber').value = qco.poNumber || '';
+
+            // Last updated
+            if (qco.updatedAt) {
+                const date = qco.updatedAt.toDate ? qco.updatedAt.toDate() : new Date(qco.updatedAt);
+                document.getElementById('lastUpdatedText').textContent = date.toLocaleString();
+            } else {
+                document.getElementById('lastUpdatedText').textContent = 'Never';
+            }
+
+            // Show all sections
+            document.getElementById('sectionStyles').classList.remove('hidden');
+            showAllSections();
+
+            // Dynamically update template selector and dateChangeCount display
+            updateTemplateSelectorVisibility();
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         async function loadScheduleData(qcoId) {
             try {
                 const doc = await db.collection('changeovers').doc(qcoId).get();
-
                 if (doc.exists) {
                     currentQCOData = doc.data();
-
-                    // Set date if exists
-                    const dateInput = document.getElementById('scheduleDate');
-                    if (currentQCOData.scheduledDate) {
-                        // Handle both Firestore timestamps and ISO strings
-                        let dateValue;
-                        if (currentQCOData.scheduledDate.toDate) {
-                            // It's a Firestore Timestamp
-                            dateValue = currentQCOData.scheduledDate.toDate();
-                            // Format for datetime-local input: YYYY-MM-DDTHH:mm
-                            const pad = (n) => n < 10 ? '0' + n : n;
-                            dateInput.value = `${dateValue.getFullYear()}-${pad(dateValue.getMonth() + 1)}-${pad(dateValue.getDate())}T${pad(dateValue.getHours())}:${pad(dateValue.getMinutes())}`;
-                        } else {
-                            // It's already a string (ISO format)
-                            dateInput.value = currentQCOData.scheduledDate;
-                        }
-                        updateStatusText('Scheduled');
-                    } else {
-                        dateInput.value = '';
-                        updateStatusText('Not Scheduled');
-                    }
-
-                    // Set category if exists (default to C)
-                    const categoryInput = document.getElementById('changeoverCategory');
-                    categoryInput.value = currentQCOData.changeoverCategory || 'C';
-
-                    // Set PO number if exists
-                    document.getElementById('poNumber').value = currentQCOData.poNumber || '';
-
-                    // Update last updated
-                    if (currentQCOData.updatedAt) {
-                        const date = currentQCOData.updatedAt.toDate ? currentQCOData.updatedAt.toDate() : new Date(currentQCOData.updatedAt);
-                        document.getElementById('lastUpdatedText').textContent = date.toLocaleString();
-                    } else {
-                        document.getElementById('lastUpdatedText').textContent = 'Never';
-                    }
                 } else {
-                    // New document
-                    document.getElementById('scheduleDate').value = '';
-                    document.getElementById('changeoverCategory').value = 'C'; // Default to Category C
-                    document.getElementById('poNumber').value = ''; // Clear PO number
-                    updateStatusText('New');
-                    document.getElementById('lastUpdatedText').textContent = 'Never';
+                    currentQCOData = {};
                 }
             } catch (error) {
                 console.error("Error loading schedule:", error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Failed to load schedule data',
-                    confirmButtonColor: '#7c3aed'
-                });
+                currentQCOData = {};
             }
         }
 
-        // --- UI Management ---
-
-        function showEmptyState() {
-            document.getElementById('emptyState').classList.remove('hidden');
-            document.getElementById('scheduleForm').classList.add('hidden');
-        }
-
-        function showScheduleForm() {
-            document.getElementById('emptyState').classList.add('hidden');
-            document.getElementById('scheduleForm').classList.remove('hidden');
-
-            // Animate in
-            gsap.fromTo("#scheduleForm",
-                { opacity: 0, y: 20 },
-                { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }
-            );
-        }
-
-        function updateStatusText(status) {
-            const el = document.getElementById('statusText');
-            el.textContent = status;
-
-            // Color coding
-            if (status === 'Scheduled') {
-                el.className = 'font-bold text-emerald-600';
-            } else if (status === 'Not Scheduled') {
-                el.className = 'font-bold text-slate-400';
-            } else {
-                el.className = 'font-bold text-blue-600';
-            }
-        }
-
-        // --- Save / Clear Operations ---
-
-        async function saveSchedule() {
-            if (!currentQCOId) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'No QCO Selected',
-                    text: 'Please select a changeover first',
-                    confirmButtonColor: '#7c3aed'
-                });
-                return;
-            }
-
-            const dateVal = document.getElementById('scheduleDate').value;
-
-            if (!dateVal) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Date Required',
-                    text: 'Please select a date and time',
-                    confirmButtonColor: '#7c3aed'
-                });
-                return;
-            }
-
-            // Show loading on button
-            const btn = document.getElementById('saveBtn');
-            const originalContent = btn.innerHTML;
-            btn.innerHTML = '<div class="spinner border-white border-t-transparent w-5 h-5 mr-2"></div> Saving...';
-            btn.disabled = true;
-
-            try {
-                const categoryVal = document.getElementById('changeoverCategory').value;
-                const poNumber = document.getElementById('poNumber').value.trim();
-
-                await db.collection('changeovers').doc(currentQCOId).set({
-                    scheduledDate: dateVal, // Save as ISO string
-                    changeoverCategory: categoryVal, // Save category (A, B, or C)
-                    poNumber: poNumber, // Save PO number
-                    hasSchedule: true,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    updatedBy: 'schedule_system'
-                }, { merge: true });
-
-                // Update UI
-                updateStatusText('Scheduled');
-                document.getElementById('lastUpdatedText').textContent = new Date().toLocaleString();
-
-                showSaveStatus();
-
-                // Trigger Style Progression Logic
-                if (typeof updateStyleProgression === 'function') {
-                    updateStyleProgression();
-                }
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Schedule Saved!',
-                    text: 'The changeover date has been updated',
-                    timer: 2000,
-                    showConfirmButton: false,
-                    position: 'top-end',
-                    toast: true
-                });
-
-            } catch (error) {
-                document.getElementById('saveBtn').innerHTML = `<i data-lucide="save" class="w-4 h-4 mr-2"></i> Save Schedule`;
-                document.getElementById('saveBtn').disabled = false;
-                console.error("Error saving schedule:", error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An error occurred while saving: ' + error.message,
-                    confirmButtonColor: '#7c3aed'
-                });
-            } finally {
-                btn.innerHTML = originalContent;
-                btn.disabled = false;
-            }
-        }
-
-        async function clearSchedule() {
-            if (!currentQCOId) return;
-
-            const result = await Swal.fire({
-                title: 'Clear Schedule?',
-                text: "This will remove the planned date for this changeover",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: 'Yes, clear it',
-                cancelButtonText: 'Cancel'
-            });
-
-            if (result.isConfirmed) {
-                try {
-                    await db.collection('changeovers').doc(currentQCOId).update({
-                        scheduledDate: firebase.firestore.FieldValue.delete(),
-                        hasSchedule: false,
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-
-                    document.getElementById('scheduleDate').value = '';
-                    document.getElementById('changeoverCategory').value = 'C'; // Reset to default
-                    updateStatusText('Not Scheduled');
-                    lucide.createIcons();
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Cleared',
-                        text: 'Schedule has been removed',
-                        timer: 1500,
-                        showConfirmButton: false,
-                        position: 'top-end',
-                        toast: true
-                    });
-
-                } catch (error) {
-                    console.error("Clear error:", error);
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Failed to clear schedule',
-                        confirmButtonColor: '#7c3aed'
-                    });
-                }
-            }
-        }
-
+        // ==========================================
+        // SEARCH
+        // ==========================================
         let searchTimeout = null;
-
         function handleSearch(event) {
             const searchTerm = event.target.value.trim().toUpperCase();
             const statusEl = document.getElementById('searchStatus');
             const clearBtn = document.getElementById('clearSearchBtn');
-
-            if (searchTerm) {
-                clearBtn.classList.remove('hidden');
-            } else {
-                clearBtn.classList.add('hidden');
-            }
-
+            if (searchTerm) clearBtn.classList.remove('hidden');
+            else clearBtn.classList.add('hidden');
             if (searchTimeout) clearTimeout(searchTimeout);
-
-            if (!searchTerm) {
-                statusEl.classList.add('hidden');
-                return;
-            }
+            if (!searchTerm) { statusEl.classList.add('hidden'); return; }
 
             searchTimeout = setTimeout(() => {
-                const matchedQCO = allChangeovers.find(q => {
-                    const qcoNumber = (q.qcoNumber || '').toUpperCase();
-                    const upcomingStyle = (q.upcomingStyle || '').toUpperCase();
-                    return qcoNumber === searchTerm ||
-                        upcomingStyle === searchTerm ||
-                        qcoNumber.includes(searchTerm) ||
-                        upcomingStyle.includes(searchTerm);
+                const matched = allChangeovers.find(q => {
+                    const qn = (q.qcoNumber || '').toUpperCase();
+                    const us = (q.upcomingStyle || '').toUpperCase();
+                    return qn === searchTerm || us === searchTerm || qn.includes(searchTerm) || us.includes(searchTerm);
                 });
-
-                if (matchedQCO) {
-                    statusEl.textContent = `Found: ${matchedQCO.qcoNumber || 'QCO'} - ${matchedQCO.upcomingStyle}`;
+                if (matched) {
+                    statusEl.textContent = `Found: ${matched.qcoNumber || 'QCO'} - ${matched.upcomingStyle}`;
                     statusEl.classList.remove('hidden', 'text-red-500');
                     statusEl.classList.add('text-emerald-600');
-
-                    const selector = document.getElementById('qcoSelector');
-                    let optionExists = Array.from(selector.options).some(opt => opt.value === matchedQCO.id);
-
-                    if (optionExists) {
-                        selector.value = matchedQCO.id;
-                        handleQCOChange(matchedQCO.id);
+                    const sel = document.getElementById('qcoSelector');
+                    if (Array.from(sel.options).some(o => o.value === matched.id)) {
+                        sel.value = matched.id;
+                        handleQCOChange(matched.id);
                     }
                 } else {
                     statusEl.textContent = `No QCO found matching "${searchTerm}"`;
@@ -1602,78 +1970,24 @@
             document.getElementById('searchStatus').classList.add('hidden');
             document.getElementById('clearSearchBtn').classList.add('hidden');
         }
-        function showSaveStatus() {
-            const status = document.getElementById('saveStatus');
-            status.classList.remove('hidden');
-            status.classList.add('flex');
-
-            setTimeout(() => {
-                status.classList.add('hidden');
-                status.classList.remove('flex');
-            }, 2000);
-        }
 
         // ==========================================
-        // EMAIL & BACKEND LOGIC (NEW)
+        // EMAIL & BACKEND LOGIC
         // ==========================================
-
-        const personnelData = {
-            "1": { supervisor: "WASANA", rqc: "SANGIB", ie: "LAKSHA", lineIncharge: "MOHAMAD", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "SAMINATHAN" },
-            "1A": { supervisor: "WASANA", rqc: "MIYARAJ", ie: "LAKSHA", lineIncharge: "MOHAMAD", qam: "ANIL/SUJAN", mechIncharge: "MOTHIN", technical: "SAMINATHAN" },
-            "2": { supervisor: "SOHORAB", rqc: "SHERAJ", ie: "BUDDIKA", lineIncharge: "VARMA", qam: "JANAKA", mechIncharge: "MOTHIN", technical: "KOUSAR" },
-            "3": { supervisor: "SOHEL", rqc: "RIPON", ie: "SHANAKA", lineIncharge: "TARAJUL", qam: "", mechIncharge: "SAKIB", technical: "SAMINATHAN" },
-            "6+17": { supervisor: "SHAKIL/MUSUM", rqc: "NURADAM/KHOKUN", ie: "SHANAKA", lineIncharge: "TARAJUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
-            "7": { supervisor: "NAGENDER", rqc: "SHAMIM", ie: "BUDDIKA", lineIncharge: "VARMA", qam: "ANIL/SUJAN", mechIncharge: "MOTHIN", technical: "KOUSAR" },
-            "7A": { supervisor: "KAMAL", rqc: "LABO", ie: "BUDDIKA", lineIncharge: "VARMA", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "KOUSAR" },
-            "8+5": { supervisor: "BALISTER/FARUK", rqc: "SABOZ/NAIME", ie: "SHANAKA", lineIncharge: "SAKIR", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "SAMINATHAN" },
-            "9": { supervisor: "SUMI", rqc: "HELAL", ie: "SHANAKA", lineIncharge: "FARIDUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "RASHID" },
-            "10": { supervisor: "RAJ KUMAR", rqc: "RAM KUMAR", ie: "TANVEER", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
-            "11+15": { supervisor: "KAMAL/MUNSAF", rqc: "ANWER/ARIFUL", ie: "BUDDIKA", lineIncharge: "TARAJUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "SAMINATHAN" },
-            "12": { supervisor: "DHARAMEDER", rqc: "JAHEDUL", ie: "BUDDIKA", lineIncharge: "VARMA", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "RASHID" },
-            "13/21": { supervisor: "SUMON/DEVRAJ", rqc: "ABU KASAM/ABHAY", ie: "TANVEER", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
-            "14": { supervisor: "SHARIF", rqc: "GUDDU", ie: "LAKSHA", lineIncharge: "MOHAMAD", qam: "ANIL/SUJAN", mechIncharge: "SAKIB", technical: "KOUSAR" },
-            "16": { supervisor: "RAHMAN", rqc: "JAHURUL", ie: "TANVEER", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
-            "16A": { supervisor: "RHANIA", rqc: "VIJAY", ie: "TANVEER", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
-            "18": { supervisor: "JAKIR", rqc: "RASHMI", ie: "TANVEER", lineIncharge: "SADDAM", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
-            "19": { supervisor: "ALAMGIR", rqc: "ASLAM", ie: "SHANAKA", lineIncharge: "TARAJUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
-            "20": { supervisor: "GAYANI", rqc: "TUHIN", ie: "SHANAKA", lineIncharge: "FARIDUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
-            "22": { supervisor: "ASHRAFUL", rqc: "FOKRUL", ie: "LAKSHA", lineIncharge: "MOHAMAD", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "KOUSAR" },
-            "23": { supervisor: "RUMA", rqc: "SAMANMALI", ie: "LAKSHA", lineIncharge: "FARIDUL", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
-            "24": { supervisor: "NASIR", rqc: "SOBUJ", ie: "SHANAKA", lineIncharge: "MOHAMAD", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
-            "25": { supervisor: "AKBAR", rqc: "SAKIB", ie: "BUDDIKA", lineIncharge: "SAKIR", qam: "MONIR/RAJESH", mechIncharge: "MOTHIN", technical: "RASHID" },
-            "26/4": { supervisor: "HIMAYIT/AHMAD", rqc: "BELAYET/ASHISH", ie: "TANVEER", lineIncharge: "VARMA", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" },
-            "28": { supervisor: "RUPNANAYAN", rqc: "NASRUL", ie: "BUDDIKA", lineIncharge: "SAKIR", qam: "ANIL/SUJAN", mechIncharge: "MOTHIN", technical: "RASHID" },
-            "29": { supervisor: "SUBA", rqc: "FATEMA", ie: "LAKSHA", lineIncharge: "FARIDUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "RASHID" },
-            "30": { supervisor: "RAZIB", rqc: "ZAHIDUL", ie: "LAKSHA", lineIncharge: "MOHAMAD", qam: "ANIL/SUJAN", mechIncharge: "MOTHIN", technical: "KOUSAR" },
-            "31": { supervisor: "AKESH", rqc: "MONJURY", ie: "LAKSHA", lineIncharge: "FARIDUL", qam: "MONIR/RAJESH", mechIncharge: "SAKIB", technical: "ROHANA/SHAFIK" },
-            "32": { supervisor: "KALU", rqc: "MUSTAK", ie: "TANVEER", lineIncharge: "FARIDUL", qam: "JANAKA/RAKESH", mechIncharge: "NASIR", technical: "TUHIN" }
-        };
-
-        let emailData = {};
-
-        // Load Email Data
         async function loadEmailData() {
             if (isFirebaseConnected) {
                 try {
                     const doc = await db.collection('emailData').doc('lines').get();
-                    if (doc.exists) {
-                        emailData = doc.data();
-                        localStorage.setItem('emailData', JSON.stringify(emailData));
-                    }
-                } catch (e) {
-                    console.error("Error loading email data:", e);
-                }
+                    if (doc.exists) { emailData = doc.data(); localStorage.setItem('emailData', JSON.stringify(emailData)); }
+                } catch (e) { console.error("Error loading email data:", e); }
             } else {
                 const saved = localStorage.getItem('emailData');
                 if (saved) emailData = JSON.parse(saved);
             }
         }
 
-        // Initialize Backend Logic
         const defaultBackendUrl = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-            ? "http://localhost:3000"
-            : window.location.origin;
-
+            ? "http://localhost:3000" : window.location.origin;
         const appSettings = JSON.parse(localStorage.getItem('appSettings')) || {};
         let backendUrl = appSettings.backendUrl || localStorage.getItem('backendUrl') || defaultBackendUrl;
 
@@ -1687,239 +2001,155 @@
                 }
             }
             checkBackendStatus();
-            loadEmailData(); // Also load email data here
+            loadEmailData();
         }
 
         function saveApiUrl() {
             const url = document.getElementById('apiUrlInput').value.trim();
             if (url) {
-                backendUrl = url.replace(/\/$/, ''); // Remove trailing slash
+                backendUrl = url.replace(/\/$/, '');
                 localStorage.setItem('backendUrl', backendUrl);
-
-                // Also update global appSettings for consistency with other pages
                 const settings = JSON.parse(localStorage.getItem('appSettings')) || {};
-                settings.backendUrl = backendUrl;
-                settings.lastUpdated = new Date().toISOString();
+                settings.backendUrl = backendUrl; settings.lastUpdated = new Date().toISOString();
                 localStorage.setItem('appSettings', JSON.stringify(settings));
-
-                checkBackendStatus();
-                // Swal.fire('Saved', 'Backend URL updated', 'success');
-                showSaveStatus(); // Reuse existing toaster
+                checkBackendStatus(); showSaveStatus();
             }
         }
 
         async function checkBackendStatus() {
             const statusEl = document.getElementById('backendStatus');
-            statusEl.textContent = 'Checking...';
-            statusEl.className = 'font-bold text-slate-400';
-
+            statusEl.textContent = 'Checking...'; statusEl.className = 'text-sm font-bold text-slate-400';
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-                const response = await fetch(`${backendUrl}/api/health`, {
-                    method: 'GET',
-                    signal: controller.signal
-                });
+                const response = await fetch(`${backendUrl}/api/health`, { method: 'GET', signal: controller.signal });
                 clearTimeout(timeoutId);
-
-                if (response.ok) {
-                    statusEl.textContent = 'Connected';
-                    statusEl.className = 'font-bold text-emerald-500';
-                } else {
-                    throw new Error('Status not OK');
-                }
-            } catch (error) {
-                statusEl.textContent = 'Disconnected';
-                statusEl.className = 'font-bold text-red-500';
-            }
+                if (response.ok) { statusEl.textContent = 'Connected'; statusEl.className = 'text-sm font-bold text-emerald-500'; }
+                else throw new Error('Not OK');
+            } catch (e) { statusEl.textContent = 'Disconnected'; statusEl.className = 'text-sm font-bold text-red-500'; }
         }
 
         async function testBackendConnection() {
             const resultEl = document.getElementById('smtpTestResult');
-            resultEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing connection...';
+            resultEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing...';
             resultEl.classList.remove('hidden', 'text-red-600', 'text-emerald-600');
             resultEl.classList.add('text-slate-600');
-
             try {
                 const response = await fetch(`${backendUrl}/api/health`);
                 if (response.ok) {
-                    resultEl.innerHTML = '<i class="fas fa-check-circle"></i> Connection Successful! Backend is online.';
-                    resultEl.classList.remove('text-slate-600');
-                    resultEl.classList.add('text-emerald-600');
-                } else {
-                    throw new Error('Server returned ' + response.status);
-                }
+                    resultEl.innerHTML = '<i class="fas fa-check-circle"></i> Connection Successful!';
+                    resultEl.classList.remove('text-slate-600'); resultEl.classList.add('text-emerald-600');
+                } else throw new Error('Server returned ' + response.status);
             } catch (error) {
-                resultEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> Connection Failed: ${error.message}`;
-                resultEl.classList.remove('text-slate-600');
-                resultEl.classList.add('text-red-600');
+                resultEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> Failed: ${error.message}`;
+                resultEl.classList.remove('text-slate-600'); resultEl.classList.add('text-red-600');
             }
         }
 
         // ==========================================
-        // EMAIL MODAL FUNCTIONS
+        // EMAIL MODAL
         // ==========================================
-
         let currentEmailBodyHtml = '';
         let currentEmailBodyText = '';
 
         function closeEmailModal() {
             document.getElementById('emailModal').classList.add('hidden');
-            if (window.lenis) {
-                window.lenis.start();
-            }
+            if (window.lenis) window.lenis.start();
         }
 
         async function openEmailModal() {
-            console.log("openEmailModal called. CurrentQCOId:", currentQCOId);
-
             try {
-                if (!currentQCOId) {
-                    console.warn("No QCO ID selected.");
-                    Swal.fire('Error', 'No QCO Selected', 'error');
-                    return;
-                }
-
-                // Merge data from list and loaded doc
+                if (!currentQCOId) { Swal.fire('Error', 'No QCO Selected', 'error'); return; }
                 const qcoListItem = allChangeovers.find(q => q.id === currentQCOId) || {};
-                const qcoFullData = currentQCOData || {}; // Loaded by loadScheduleData
-
+                const qcoFullData = currentQCOData || {};
                 const qco = { ...qcoListItem, ...qcoFullData };
 
-                // 1. Determine Line and Personnel
-                // Check all possible field names for line number
                 let rawLine = qco.lineNumber || qco.line_number || qco.line || '';
-
-                // Fallback: Parse from QCO ID (e.g., L15... -> 15)
-                if (!rawLine && currentQCOId && currentQCOId.startsWith('L')) {
-                    const match = currentQCOId.match(/^L(\d+)/);
+                if (!rawLine && currentQCOId.startsWith('S-')) {
+                    const match = currentQCOId.match(/^S-(\w+)-/);
                     if (match) rawLine = match[1];
                 }
-
-                // This is the specific line for the changeover (e.g., "15")
                 const line = (rawLine !== null && rawLine !== undefined) ? String(rawLine).trim() : 'Unknown';
-
-                // Determine lookup key for personnel (handling "11+15", "6+17" etc.)
                 let lookupLine = line.replace(/^Line\s*/i, '');
 
-                // If direct match fails, search for combined keys
                 if (!personnelData[lookupLine]) {
-                    // Try to find a key that contains the line (e.g. key "11+15" contains "15")
-                    const foundKey = Object.keys(personnelData).find(key => {
-                        const parts = key.split(/[\+\/]/).map(p => p.trim());
-                        return parts.includes(lookupLine);
-                    });
-
-                    if (foundKey) {
-                        console.log(`Mapped Line ${lookupLine} to Personnel Key ${foundKey}`);
-                        lookupLine = foundKey;
-                    }
+                    const foundKey = Object.keys(personnelData).find(key =>
+                        key.split(/[\+\/]/).map(p => p.trim()).includes(lookupLine));
+                    if (foundKey) lookupLine = foundKey;
                 }
-
-                console.log("Final Lookup Line:", lookupLine);
 
                 const linePsnl = personnelData[lookupLine] || {
                     supervisor: "TBD", rqc: "TBD", ie: "TBD", lineIncharge: "TBD",
                     qam: "TBD", mechIncharge: "TBD", technical: "TBD"
                 };
-
                 const lineEmails = emailData[lookupLine] || {};
 
-                // 2. Determine Dates (Meeting = 1 Day Prior to Changeover)
-                let meetDateStr = "TBD";
-                let changeoverDateStr = "TBD";
+                // Dates
+                let meetDateStr = "TBD", changeoverDateStr = "TBD", prevDateStr = "TBD";
+                const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
                 if (qco.scheduledDate) {
                     try {
-                        const execDate = (qco.scheduledDate && typeof qco.scheduledDate.toDate === 'function')
-                            ? qco.scheduledDate.toDate()
-                            : new Date(qco.scheduledDate);
-
-                        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-                        // Changeover Date
+                        const execDate = (typeof qco.scheduledDate.toDate === 'function') ? qco.scheduledDate.toDate() : new Date(qco.scheduledDate);
                         changeoverDateStr = `${execDate.getDate().toString().padStart(2, '0')}-${months[execDate.getMonth()]}-${execDate.getFullYear()}`;
-
-                        // Meeting Date (1 day prior, but skip Friday)
                         const meetDate = new Date(execDate);
                         meetDate.setDate(execDate.getDate() - 1);
-                        if (meetDate.getDay() === 5) { // If Friday, move to Thursday
-                            meetDate.setDate(meetDate.getDate() - 1);
-                        }
+                        if (meetDate.getDay() === 5) meetDate.setDate(meetDate.getDate() - 1);
                         meetDateStr = `${meetDate.getDate().toString().padStart(2, '0')}-${months[meetDate.getMonth()]}-${meetDate.getFullYear()}`;
+                    } catch (e) { console.error("Date parse error", e); }
+                }
 
-                    } catch (e) {
-                        console.error("Date parse error", e);
-                    }
+                if (qco.previousScheduledDate) {
+                    try {
+                        const prevDate = new Date(qco.previousScheduledDate);
+                        prevDateStr = `${prevDate.getDate().toString().padStart(2, '0')}-${months[prevDate.getMonth()]}-${prevDate.getFullYear()}`;
+                    } catch (e) { }
                 }
 
                 const category = qco.changeoverCategory || 'C';
+                const style = qco.upcomingStyle || '???';
 
-                // 3. Construct Attendees List
+                // Determine template
+                const selectedTemplate = document.querySelector('input[name="emailTemplate"]:checked');
+                const templateType = selectedTemplate ? selectedTemplate.value : 'initial';
+
+                // Recipients
                 const recipients = [];
-                const addRecip = (email) => {
-                    if (email && typeof email === 'string' && email.includes('@')) recipients.push(email.trim());
-                };
-
-                // Standard roles from emailData
+                const addRecip = (email) => { if (email && typeof email === 'string' && email.includes('@')) recipients.push(email.trim()); };
                 ['supervisor', 'rqc', 'ie', 'lineIncharge', 'qam', 'mechIncharge', 'technical', 'planning', 'production', 'fabric', 'cutting', 'maintenance'].forEach(role => {
                     if (lineEmails[role]) addRecip(lineEmails[role]);
                 });
-
-                // Add Default CCs (Synced with creation.html)
                 const defaultCC = "tharun.raj@sidneyapparels.com, Mubashir.Ali@SIDNEYAPPARELS.COM, shantanu.guin281203@gmail.com, sampreeti6404@gmail.com, IE.SA@SIDNEYAPPARELS.COM, IEexecutive.SA@SIDNEYAPPARELS.COM, Yash.Mhetre@SIDNEYAPPARELS.COM, Rawan.mazen@SIDNEYAPPARELS.COM, Sam.Nishith@SIDNEYAPPARELS.COM, Planner.SA@SIDNEYAPPARELS.COM, Srinivasan.Perumal@SIDNEYAPPARELS.COM, Sherin.Samuel@SIDNEYAPPARELS.COM";
                 defaultCC.split(',').forEach(email => addRecip(email));
 
-                // 4. Generate Content
                 const templateData = {
-                    qcoNumber: qco.qcoNumber || 'QCO-???',
-                    line: line, // Display the specific line (e.g. "15"), not the lookup key ("11+15")
-                    style: qco.upcomingStyle || '???',
-                    meetDate: meetDateStr,
-                    changeoverDate: changeoverDateStr,
-                    category: category,
-                    location: "Conference Room",
-                    personnel: linePsnl,
-                    emails: lineEmails,
-                    checklistLink: "https://changeover-app.vercel.app/outside/outlist.html"
+                    qcoNumber: qco.qcoNumber || 'QCO-???', line, style, meetDate: meetDateStr,
+                    changeoverDate: changeoverDateStr, category, location: "Conference Room",
+                    personnel: linePsnl, emails: lineEmails,
+                    checklistLink: "https://changeover-app.vercel.app/outside/outlist.html",
+                    templateType, prevDate: prevDateStr,
+                    dateChangeCount: qco.dateChangeCount || 0
                 };
 
                 const { html, text } = generateMeetingEmail(templateData);
-                currentEmailBodyHtml = html;
-                currentEmailBodyText = text;
+                currentEmailBodyHtml = html; currentEmailBodyText = text;
 
-                // 5. Populate Modal
                 document.getElementById('modalRecipients').value = recipients.join(', ');
-
-                // Professional Subject Line: [Date] | Line [X] | Style [Y] | Category [Z]
-                document.getElementById('modalSubject').value = `Pre-Meeting Invite: Line ${templateData.line} - Style ${templateData.style} (Cat: ${templateData.category})`;
-
-                // Render Preview
+                const subjectPrefix = templateType === 'updated' ? 'UPDATED: ' : '';
+                document.getElementById('modalSubject').value = `${subjectPrefix}Pre-Meeting Invite: Line ${line} - Style ${style} (Cat: ${category})`;
                 document.getElementById('htmlPreview').innerHTML = html;
                 document.getElementById('textPreview').value = text;
-
-                // Re-render UI
                 togglePreview('html');
+
                 const statusEl = document.getElementById('emailSendStatus');
                 if (statusEl) statusEl.classList.add('hidden');
-
                 const btn = document.getElementById('confirmSendBtn');
                 if (btn) btn.disabled = false;
-
-                if (window.lenis) {
-                    window.lenis.stop();
-                }
+                if (window.lenis) window.lenis.stop();
                 document.getElementById('emailModal').classList.remove('hidden');
-
             } catch (error) {
-                console.error("Critical error in openEmailModal:", error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'System Error',
-                    text: 'Failed to open email modal: ' + error.message,
-                    confirmButtonColor: '#ef4444'
-                });
+                console.error("Email modal error:", error);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to open email: ' + error.message });
             }
         }
 
@@ -1928,45 +2158,31 @@
             const tabText = document.getElementById('tabText');
             const htmlView = document.getElementById('htmlPreview');
             const textView = document.getElementById('textPreview');
-
             if (type === 'html') {
-                tabHtml.classList.add('border-indigo-500', 'text-indigo-600');
-                tabHtml.classList.remove('border-transparent', 'text-slate-500');
-
-                tabText.classList.remove('border-slate-300', 'text-slate-700');
-                tabText.classList.add('border-transparent', 'text-slate-500');
-
-                htmlView.classList.remove('hidden');
-                textView.classList.add('hidden');
+                tabHtml.classList.add('border-indigo-500', 'text-indigo-600'); tabHtml.classList.remove('border-transparent', 'text-slate-500');
+                tabText.classList.remove('border-slate-300', 'text-slate-700'); tabText.classList.add('border-transparent', 'text-slate-500');
+                htmlView.classList.remove('hidden'); textView.classList.add('hidden');
             } else {
-                tabText.classList.add('border-indigo-500', 'text-indigo-600');
-                tabText.classList.remove('border-transparent', 'text-slate-500');
-
-                tabHtml.classList.remove('border-indigo-500', 'text-indigo-600');
-                tabHtml.classList.add('border-transparent', 'text-slate-500');
-
-                htmlView.classList.add('hidden');
-                textView.classList.remove('hidden');
+                tabText.classList.add('border-indigo-500', 'text-indigo-600'); tabText.classList.remove('border-transparent', 'text-slate-500');
+                tabHtml.classList.remove('border-indigo-500', 'text-indigo-600'); tabHtml.classList.add('border-transparent', 'text-slate-500');
+                htmlView.classList.add('hidden'); textView.classList.remove('hidden');
             }
         }
 
+        // ==========================================
+        // EMAIL TEMPLATE GENERATOR (initial + updated)
+        // ==========================================
         function generateMeetingEmail(data) {
-            const { qcoNumber, line, style, meetDate, changeoverDate, category, location, personnel, emails, checklistLink } = data;
+            const { qcoNumber, line, style, meetDate, changeoverDate, category, location, personnel, checklistLink, templateType, prevDate, dateChangeCount } = data;
 
-            // Dynamic Footer Logic
             let footerName = "Planning Department";
             try {
                 const userStr = localStorage.getItem('qcoCurrentUser');
                 if (userStr) {
-                    const currentUser = JSON.parse(userStr);
-                    // If role is NOT planning, use the user's name
-                    if (currentUser.role && currentUser.role.toLowerCase() !== 'planning') {
-                        footerName = currentUser.name || "Planning Team";
-                    }
+                    const cu = JSON.parse(userStr);
+                    if (cu.role && cu.role.toLowerCase() !== 'planning') footerName = cu.name || "Planning Team";
                 }
-            } catch (e) {
-                console.error("Error determining email footer:", e);
-            }
+            } catch (e) { }
 
             const attendeesHtml = `
                 <ul style="margin: 0 0 20px 0; padding-left: 20px;">
@@ -1982,8 +2198,7 @@
                     <li><strong>Maintenance:</strong> ${personnel.mechIncharge}</li>
                     <li><strong>Technical:</strong> ${personnel.technical}</li>
                     <li><strong>IE Manager:</strong> Sathvik Bhat</li>
-                </ul>
-             `;
+                </ul>`;
 
             const attendeesText = `
     - Supervisor: ${personnel.supervisor}
@@ -1997,94 +2212,78 @@
     - Maintenance: Abdul Nasar
     - Maintenance: ${personnel.mechIncharge}
     - Technical: ${personnel.technical}
-    - IE Manager : Sathvik Bhat
-             `;
+    - IE Manager: Sathvik Bhat`;
+
+            // Updated date notice (only for 'updated' template)
+            let dateUpdateNotice = '';
+            let dateUpdateNoticeText = '';
+            if (templateType === 'updated' && prevDate && prevDate !== 'TBD') {
+                dateUpdateNotice = `
+                    <div style="background-color: #fef3c7; padding: 16px; border-left: 4px solid #f59e0b; margin: 24px 0; border-radius: 0 8px 8px 0;">
+                        <h3 style="margin-top: 0; color: #92400e; font-size: 14px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">⚠️ Date Change Notice</h3>
+                        <p style="margin: 0; color: #78350f;">The changeover date has been <strong>updated</strong>.</p>
+                        <table style="margin-top: 8px;">
+                            <tr><td style="color: #92400e; padding-right: 12px;">Previous Date:</td><td style="font-weight: 600; text-decoration: line-through; color: #b91c1c;">${prevDate}</td></tr>
+                            <tr><td style="color: #92400e; padding-right: 12px;">New Date:</td><td style="font-weight: 600; color: #065f46;">${changeoverDate}</td></tr>
+                        </table>
+                        <p style="margin: 8px 0 0 0; font-size: 12px; color: #92400e;">This date has been changed ${dateChangeCount} time(s).</p>
+                    </div>`;
+                dateUpdateNoticeText = `
+⚠️ DATE CHANGE NOTICE
+Previous Date: ${prevDate}
+New Date:      ${changeoverDate}
+(Changed ${dateChangeCount} time(s))
+`;
+            }
+
+            const headerTitle = templateType === 'updated' ? 'UPDATED: QCO Pre-Meeting Invite' : 'QCO Pre-Meeting Invite';
 
             const html = `
                 <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 800px; color: #333; line-height: 1.6;">
-                    <div style="background-color: #1e3a8a; color: white; padding: 24px; text-align: left; border-radius: 8px 8px 0 0;">
-                        <h2 style="margin: 0; font-size: 22px; font-weight: 600;">QCO Pre-Meeting Invite</h2>
+                    <div style="background-color: ${templateType === 'updated' ? '#92400e' : '#1e3a8a'}; color: white; padding: 24px; text-align: left; border-radius: 8px 8px 0 0;">
+                        <h2 style="margin: 0; font-size: 22px; font-weight: 600;">${headerTitle}</h2>
                         <p style="margin: 4px 0 0 0; font-size: 14px; opacity: 0.9;">Ref: ${qcoNumber}</p>
                     </div>
-                    
                     <div style="padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px; background-color: #ffffff;">
                         <p>Dear Team,</p>
                         <p>This is to confirm the Pre-Meeting for the upcoming Style Changeover on <strong>Line ${line}</strong>.</p>
-                        
+                        ${dateUpdateNotice}
                         <div style="background-color: #f8fafc; padding: 20px; border-left: 4px solid #3b82f6; margin: 24px 0;">
                             <h3 style="margin-top: 0; color: #1e3a8a; font-size: 16px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">Meeting Details</h3>
                             <table style="width: 100%; border-collapse: collapse;">
-                                <tr>
-                                    <td style="padding: 5px 0; color: #64748b; width: 140px;">Meeting Date:</td>
-                                    <td style="padding: 5px 0; font-weight: 600; color: #0f172a;">${meetDate}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 5px 0; color: #64748b;">Time:</td>
-                                    <td style="padding: 5px 0; font-weight: 600; color: #0f172a;">4:00 PM</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 5px 0; color: #64748b;">Location:</td>
-                                    <td style="padding: 5px 0; font-weight: 600; color: #0f172a;">${location}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 15px 0 5px 0; colspan: 2;">
-                                        <a href="${checklistLink}" style="color: #2563eb; text-decoration: underline; font-weight: 500;">
-                                            View Changeover Checklist
-                                        </a>
-                                    </td>
-                                </tr>
+                                <tr><td style="padding: 5px 0; color: #64748b; width: 140px;">Meeting Date:</td><td style="padding: 5px 0; font-weight: 600; color: #0f172a;">${meetDate}</td></tr>
+                                <tr><td style="padding: 5px 0; color: #64748b;">Time:</td><td style="padding: 5px 0; font-weight: 600; color: #0f172a;">4:00 PM</td></tr>
+                                <tr><td style="padding: 5px 0; color: #64748b;">Location:</td><td style="padding: 5px 0; font-weight: 600; color: #0f172a;">${location}</td></tr>
+                                <tr><td style="padding: 15px 0 5px 0;"><a href="${checklistLink}" style="color: #2563eb; text-decoration: underline;">View Changeover Checklist</a></td></tr>
                             </table>
                         </div>
-
-                         <div style="background-color: #fff7ed; padding: 20px; border-left: 4px solid #f97316; margin: 24px 0;">
+                        <div style="background-color: #fff7ed; padding: 20px; border-left: 4px solid #f97316; margin: 24px 0;">
                             <h3 style="margin-top: 0; color: #9a3412; font-size: 16px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">Changeover Context</h3>
                             <table style="width: 100%; border-collapse: collapse;">
-                                <tr>
-                                    <td style="padding: 5px 0; color: #7c2d12; width: 140px;">Execution Date:</td>
-                                    <td style="padding: 5px 0; font-weight: 600; color: #431407;">${changeoverDate}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 5px 0; color: #7c2d12;">Upcoming Style:</td>
-                                    <td style="padding: 5px 0; font-weight: 600; color: #431407;">${style}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 5px 0; color: #7c2d12;">Category:</td>
-                                    <td style="padding: 5px 0; font-weight: 600; color: #431407;">${category}</td>
-                                </tr>
+                                <tr><td style="padding: 5px 0; color: #7c2d12; width: 140px;">Execution Date:</td><td style="padding: 5px 0; font-weight: 600; color: #431407;">${changeoverDate}</td></tr>
+                                <tr><td style="padding: 5px 0; color: #7c2d12;">Upcoming Style:</td><td style="padding: 5px 0; font-weight: 600; color: #431407;">${style}</td></tr>
+                                <tr><td style="padding: 5px 0; color: #7c2d12;">Category:</td><td style="padding: 5px 0; font-weight: 600; color: #431407;">${category}</td></tr>
                             </table>
                         </div>
-
                         <h3 style="color: #1e3a8a; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-top: 32px; font-size: 16px;">Mandatory Attendees</h3>
                         ${attendeesHtml}
-                        
-                        <p style="margin-top: 30px; font-size: 14px; color: #334155;">
-                            Regards,<br>
-                            <strong>${footerName}</strong><br>
-                            Sidney Apparels
-                        </p>
-
-                        <p style="margin-top: 40px; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-                            Sidney Apparels QCO Portal | Automated System Message
-                        </p>
+                        <p style="margin-top: 30px; font-size: 14px; color: #334155;">Regards,<br><strong>${footerName}</strong><br>Sidney Apparels</p>
+                        <p style="margin-top: 40px; font-size: 12px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 10px;">Sidney Apparels QCO Portal | Automated System Message</p>
                     </div>
-                </div>
-             `;
+                </div>`;
 
             const text = `
-QCO PRE-MEETING INVITE
+${templateType === 'updated' ? 'UPDATED: ' : ''}QCO PRE-MEETING INVITE
 Ref: ${qcoNumber}
 ================================================
-
 Dear Team,
-
 This is to confirm the Pre-Meeting for the upcoming Style Changeover on Line ${line}.
-
+${dateUpdateNoticeText}
 MEETING DETAILS
 ------------------------------------------------
 Date:     ${meetDate}
 Time:     4:00 PM
 Location: ${location}
-
 >> Checklist: ${checklistLink}
 
 CHANGEOVER CONTEXT
@@ -2100,69 +2299,69 @@ ${attendeesText}
 Regards,
 ${footerName}
 Sidney Apparels
-
 ------------------------------------------------
-Sidney Apparels QCO Portal
-             `;
+Sidney Apparels QCO Portal`;
 
             return { html, text };
         }
 
+        // ==========================================
+        // SEND EMAIL
+        // ==========================================
         async function sendEmail() {
             const recipients = document.getElementById('modalRecipients').value;
             const subject = document.getElementById('modalSubject').value;
             const sender = document.getElementById('modalSender').value;
             const statusDiv = document.getElementById('emailSendStatus');
             const sendBtn = document.getElementById('confirmSendBtn');
-
-            if (!recipients) {
-                Swal.fire('Error', 'Please enter at least one recipient', 'warning');
-                return;
-            }
+            if (!recipients) { Swal.fire('Error', 'Enter at least one recipient', 'warning'); return; }
 
             statusDiv.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'bg-green-50', 'text-green-700');
             statusDiv.classList.add('bg-blue-50', 'text-blue-700');
-            statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending email via Backend...';
+            statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
             statusDiv.classList.remove('hidden');
             sendBtn.disabled = true;
 
             try {
-                const payload = {
-                    from: sender,
-                    to: recipients.split(',').map(e => e.trim()),
-                    subject: subject,
-                    text: currentEmailBodyText,
-                    html: currentEmailBodyHtml
-                };
-
-                const response = await fetch(`${backendUrl}/api/send-email`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
+                const payload = { from: sender, to: recipients.split(',').map(e => e.trim()), subject, text: currentEmailBodyText, html: currentEmailBodyHtml };
+                const response = await fetch(`${backendUrl}/api/send-email`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 const data = await response.json();
-
                 if (response.ok) {
                     statusDiv.classList.remove('bg-blue-50', 'text-blue-700');
                     statusDiv.classList.add('bg-green-50', 'text-green-700');
-                    statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Email sent successfully!';
+                    statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Email sent!';
 
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Sent!',
-                        text: 'Meeting invite has been sent successfully.',
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
+                    // Record email send in Firebase
+                    if (currentQCOId && db) {
+                        try {
+                            const prevCount = (currentQCOData && currentQCOData.emailSentCount) || 0;
+                            const emailTrackData = {
+                                emailSentAt: firebase.firestore.FieldValue.serverTimestamp(),
+                                emailSentCount: prevCount + 1,
+                                lastEmailSubject: subject,
+                                lastEmailType: document.querySelector('input[name="emailTemplate"]:checked')?.value || 'initial',
+                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                            };
+                            await db.collection('changeovers').doc(currentQCOId).set(emailTrackData, { merge: true });
+                            // Update local state
+                            if (currentQCOData) {
+                                currentQCOData.emailSentCount = prevCount + 1;
+                                currentQCOData.emailSentAt = new Date().toISOString();
+                            }
+                            console.log(`Email send recorded: count=${prevCount + 1}`);
+                        } catch (emailTrackErr) {
+                            console.error('Failed to record email send:', emailTrackErr);
+                        }
+                    }
 
-                    setTimeout(() => closeEmailModal(), 2000);
-                } else {
-                    throw new Error(data.message || data.error || 'Unknown error');
-                }
-
+                    Swal.fire({ icon: 'success', title: 'Sent!', text: 'Meeting invite sent.', timer: 2000, showConfirmButton: false });
+                    setTimeout(() => {
+                        closeEmailModal();
+                        sessionStorage.setItem('scheduleMode', currentMode);
+                        window.location.reload();
+                    }, 2000);
+                } else throw new Error(data.message || data.error || 'Unknown error');
             } catch (error) {
-                console.error("Email send error:", error);
                 statusDiv.classList.remove('bg-blue-50', 'text-blue-700');
                 statusDiv.classList.add('bg-red-50', 'text-red-700');
                 statusDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> Failed: ${error.message}`;
@@ -2174,203 +2373,48 @@ Sidney Apparels QCO Portal
             const statusDiv = document.getElementById('emailSendStatus');
             statusDiv.classList.remove('hidden', 'bg-red-50', 'text-red-700', 'bg-green-50', 'text-green-700', 'bg-blue-50', 'text-blue-700');
             statusDiv.classList.add('bg-blue-50', 'text-blue-700');
-            statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing SMTP Configuration...';
+            statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing SMTP...';
             statusDiv.classList.remove('hidden');
-
             try {
                 const response = await fetch(`${backendUrl}/api/test-smtp`);
                 const data = await response.json();
-
                 if (response.ok && data.success) {
-                    statusDiv.classList.remove('bg-blue-50', 'text-blue-700');
-                    statusDiv.classList.add('bg-green-50', 'text-green-700');
-                    statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> SMTP Connection Successful! Server is ready to send.';
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Connected',
-                        text: 'SMTP Server is configured correctly.',
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-                } else {
-                    let errorMsg = data.message || 'Unknown Error';
-                    if (data.error && data.error.includes('environment variables')) {
-                        errorMsg = 'Server Missing Credentials (SMTP_USERNAME/PASSWORD)';
-                    }
-                    throw new Error(errorMsg + (data.error ? `: ${data.error}` : ''));
-                }
+                    statusDiv.classList.remove('bg-blue-50', 'text-blue-700'); statusDiv.classList.add('bg-green-50', 'text-green-700');
+                    statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> SMTP OK!';
+                } else throw new Error(data.message || 'Unknown');
             } catch (error) {
-                console.error("SMTP Test Failed:", error);
-                statusDiv.classList.remove('bg-blue-50', 'text-blue-700');
-                statusDiv.classList.add('bg-red-50', 'text-red-700');
-                statusDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Test Failed: ${error.message}. <br><span class="text-xs">Check Vercel Environment Variables.</span>`;
-
-                Swal.fire({
-                    icon: 'error',
-                    title: 'SMTP Error',
-                    html: `Connection Test Failed.<br><br><b>Reason:</b> ${error.message}<br><br>If on Vercel, ensure Environment Variables are set.`,
-                    confirmButtonColor: '#ef4444'
-                });
+                statusDiv.classList.remove('bg-blue-50', 'text-blue-700'); statusDiv.classList.add('bg-red-50', 'text-red-700');
+                statusDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Failed: ${error.message}`;
             }
         }
 
         // ==========================================
-        // SMART SCHEDULING & PROGRESSION
+        // SMART SCHEDULING
         // ==========================================
-
-        async function checkSupervisorConflicts() {
-            const dateInput = document.getElementById('scheduleDate');
-            if (!dateInput.value || !currentQCOData) return;
-
-            const selectedDate = new Date(dateInput.value);
-            const selectedDateStr = selectedDate.toDateString();
-
-            // Identify Supervisor
-            let line = currentQCOData.lineNumber || '';
-            if (!line && currentQCOId.startsWith('L')) {
-                const match = currentQCOId.match(/^L(\d+)/);
-                if (match) line = match[1];
-            }
-
-            // Find personnel key
-            let supervisorName = null;
-            let lookupLine = line.replace(/^Line\s*/i, '');
-            if (personnelData[lookupLine]) {
-                supervisorName = personnelData[lookupLine].supervisor;
-            } else {
-                const foundKey = Object.keys(personnelData).find(key => {
-                    const parts = key.split(/[\+\/]/).map(p => p.trim());
-                    return parts.includes(lookupLine);
-                });
-                if (foundKey) supervisorName = personnelData[foundKey].supervisor;
-            }
-
-            if (!supervisorName) return;
-
-            const startOfDay = new Date(selectedDate); startOfDay.setHours(0, 0, 0, 0);
-            const endOfDay = new Date(selectedDate); endOfDay.setHours(23, 59, 59, 999);
-
-            try {
-                // Client-side filter on 'allChangeovers'
-                const conflicts = allChangeovers.filter(q => {
-                    if (q.id === currentQCOId) return false;
-                    if (!q.hasSchedule || !q.scheduledDate) return false;
-
-                    const qDate = q.scheduledDate.toDate ? q.scheduledDate.toDate() : new Date(q.scheduledDate);
-                    // Match same day
-                    if (qDate.toDateString() !== selectedDateStr) return false;
-
-                    // Resolve line -> supervisor for that QCO
-                    let qLine = q.lineNumber || '';
-                    if (!qLine && q.id.startsWith('L')) {
-                        const m = q.id.match(/^L(\d+)/);
-                        if (m) qLine = m[1];
-                    }
-                    let qLookup = qLine.replace(/^Line\s*/i, '');
-                    let qSup = null;
-                    if (personnelData[qLookup]) qSup = personnelData[qLookup].supervisor;
-                    else {
-                        const k = Object.keys(personnelData).find(key => key.split(/[\+\/]/).map(p => p.trim()).includes(qLookup));
-                        if (k) qSup = personnelData[k].supervisor;
-                    }
-
-                    return qSup === supervisorName;
-                });
-
-                const tipBox = document.querySelector('.bg-amber-50\\/80');
-                if (tipBox && conflicts.length > 0) {
-                    tipBox.className = 'bg-red-50 border border-red-100 rounded-xl p-4 flex gap-3 animate-pulse transition-all duration-300';
-                    tipBox.innerHTML = `
-                        <i data-lucide="alert-triangle" class="w-5 h-5 text-red-500 mt-0.5"></i>
-                        <div>
-                            <h4 class="font-semibold text-red-800 text-sm mb-1">Schedule Conflict Detected</h4>
-                            <p class="text-sm text-red-700 leading-relaxed">
-                                Supervisor <strong>${supervisorName}</strong> has ${conflicts.length} other changeover(s) on this date (e.g. ${conflicts[0].qcoNumber || 'QCO'}).
-                            </p>
-                        </div>
-                     `;
-                    if (window.lucide) lucide.createIcons();
-                } else if (tipBox) {
-                    // Reset
-                    tipBox.className = 'bg-amber-50/80 border border-amber-100 rounded-xl p-4 flex gap-3';
-                    tipBox.innerHTML = `
-                        <i data-lucide="lightbulb" class="w-5 h-5 text-amber-500 mt-0.5"></i>
-                        <div>
-                            <h4 class="font-semibold text-amber-800 text-sm mb-1">Scheduling Tip</h4>
-                            <p class="text-sm text-amber-700 leading-relaxed">
-                                Ensure all departments have completed their pre-checks before the scheduled time. 
-                                The system will track actual vs planned start times.
-                            </p>
-                        </div>
-                    `;
-                    if (window.lucide) lucide.createIcons();
-                }
-            } catch (e) {
-                console.warn("Conflict check error", e);
-            }
-        }
-
-        // Attach listener safely
-        const dateInputEl = document.getElementById('scheduleDate');
-        if (dateInputEl) {
-            dateInputEl.addEventListener('change', checkSupervisorConflicts);
-        }
-
         async function updateStyleProgression() {
             if (!currentQCOData || !currentQCOId) return;
-
-            // Try to deduce line if missing
             let currentLine = currentQCOData.lineNumber;
-            if (!currentLine && currentQCOId.startsWith('L')) {
-                const match = currentQCOId.match(/^L(\d+)/);
-                if (match) currentLine = match[1];
-            }
-
             const nextStyleName = currentQCOData.upcomingStyle;
-
             if (!currentLine || !nextStyleName) return;
-
-            console.log("Running Style Progression...");
-
             try {
-                // Find next QCO: strictly created AFTER this one
                 let startTimeFilter = new Date(0);
                 if (currentQCOData.createdAt) {
                     startTimeFilter = currentQCOData.createdAt.toDate ? currentQCOData.createdAt.toDate() : new Date(currentQCOData.createdAt);
                 }
-
                 const snapshot = await db.collection('changeovers')
                     .where('lineNumber', '==', currentLine)
                     .orderBy('createdAt', 'asc')
                     .startAfter(startTimeFilter)
-                    .limit(1)
-                    .get();
-
+                    .limit(1).get();
                 if (!snapshot.empty) {
                     const nextQCO = snapshot.docs[0];
-                    console.log(`Updating Next QCO (${nextQCO.id}) Current Style to: ${nextStyleName}`);
-
                     await db.collection('changeovers').doc(nextQCO.id).update({
                         currentRunningStyle: nextStyleName,
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
-
-                    if (window.Swal) {
-                        const Toast = Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 3000 });
-                        Toast.fire({
-                            icon: 'info',
-                            title: 'Chain Updated',
-                            text: `Next changeover style updated automatically`
-                        });
-                    }
                 }
-            } catch (e) {
-                console.error("Progression Error:", e);
-                // Don't block UI if this fails
-            }
+            } catch (e) { console.error("Progression Error:", e); }
         }
-
 
     </script>
     <!-- Email Modal -->
