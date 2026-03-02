@@ -1394,32 +1394,45 @@
 
         <!-- Admin Tabs (Visible only to Admin) -->
         <div id="adminTabs" class="hidden mb-6">
-            <div class="flex space-x-2 border-b border-gray-200 overflow-x-auto">
-                <button
-                    class="admin-tab active px-4 py-2 text-sm font-medium text-gray-700 border-b-2 border-blue-500 whitespace-nowrap"
-                    data-tab="adminSection">
-                    <i class="fas fa-users-cog mr-2"></i> User Management
-                </button>
-                <button
-                    class="admin-tab px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap"
-                    data-tab="emailManagementSection">
-                    <i class="fas fa-at mr-2"></i> Email ID Management
-                </button>
-                <button
-                    class="admin-tab px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap"
-                    data-tab="changeoverManagementSection">
-                    <i class="fas fa-list-ol mr-2"></i> Changeover Records
-                </button>
-                <button
-                    class="admin-tab px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap"
-                    data-tab="activityLogSection">
-                    <i class="fas fa-history mr-2"></i> Activity Log
-                </button>
-                <button
-                    class="admin-tab px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 whitespace-nowrap"
-                    data-tab="settingsSection">
-                    <i class="fas fa-sliders-h mr-2"></i> Settings
-                </button>
+            <div class="bg-white/60 backdrop-blur-md rounded-2xl p-4 border border-gray-200 shadow-md">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-gray-800 flex items-center"><i
+                            class="fas fa-shield-alt text-blue-600 mr-2"></i>Admin Dashboard</h3>
+                    <button onclick="toggleAdminMenu()" id="adminMenuToggleBtn"
+                        class="text-sm text-blue-600 hover:text-blue-800 font-bold px-3 py-1.5 rounded-lg bg-blue-50 transition-colors flex items-center">
+                        <i class="fas fa-chevron-up mr-2"></i> Collapse
+                    </button>
+                </div>
+
+                <div id="adminMenuGrid"
+                    class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 transition-all duration-300">
+                    <button
+                        class="admin-tab active py-3 px-2 rounded-xl text-xs md:text-sm font-bold flex flex-col items-center justify-center gap-1.5 transition-all bg-blue-600 text-white shadow-lg text-center leading-tight"
+                        data-tab="adminSection" onclick="switchToAdminTab('adminSection')">
+                        <i class="fas fa-users-cog text-xl"></i> <span>User<br>Management</span>
+                    </button>
+                    <button
+                        class="admin-tab py-3 px-2 rounded-xl text-xs md:text-sm font-bold flex flex-col items-center justify-center gap-1.5 transition-all text-slate-500 hover:bg-slate-100 text-center leading-tight"
+                        data-tab="emailManagementSection" onclick="switchToAdminTab('emailManagementSection')">
+                        <i class="fas fa-at text-xl"></i> <span>Email ID<br>Management</span>
+                    </button>
+                    <button
+                        class="admin-tab py-3 px-2 rounded-xl text-xs md:text-sm font-bold flex flex-col items-center justify-center gap-1.5 transition-all text-slate-500 hover:bg-slate-100 text-center leading-tight"
+                        data-tab="changeoverManagementSection"
+                        onclick="switchToAdminTab('changeoverManagementSection')">
+                        <i class="fas fa-list-ol text-xl"></i> <span>Changeover<br>Records</span>
+                    </button>
+                    <button
+                        class="admin-tab py-3 px-2 rounded-xl text-xs md:text-sm font-bold flex flex-col items-center justify-center gap-1.5 transition-all text-slate-500 hover:bg-slate-100 text-center leading-tight"
+                        data-tab="activityLogSection" onclick="switchToAdminTab('activityLogSection')">
+                        <i class="fas fa-history text-xl"></i> <span>Activity<br>Log</span>
+                    </button>
+                    <button
+                        class="admin-tab py-3 px-2 rounded-xl text-xs md:text-sm font-bold flex flex-col items-center justify-center gap-1.5 transition-all text-slate-500 hover:bg-slate-100 text-center leading-tight"
+                        data-tab="settingsSection" onclick="switchToAdminTab('settingsSection')">
+                        <i class="fas fa-sliders-h text-xl"></i> <span>App<br>Settings</span>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -1903,53 +1916,58 @@
             </div>
         </div>
 
-        <!-- Mode Toggle: New Changeover vs Existing Changeover -->
-        <div class="mb-6">
-            <div class="bg-white/60 backdrop-blur-md rounded-2xl p-2 flex gap-2 border border-gray-200 shadow-md lg:max-w-[calc(33.333%-1rem)]"
-                id="creationModeToggle">
-                <button id="creationModeNewBtn" onclick="switchCreationMode('new')"
-                    class="flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all bg-blue-600 text-white shadow-lg">
-                    <i class="fas fa-plus-circle"></i> New Changeover
-                </button>
-                <button id="creationModeExistingBtn" onclick="switchCreationMode('existing')"
-                    class="flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all text-slate-500 hover:bg-slate-100">
-                    <i class="fas fa-folder-open"></i> Existing Changeover
-                </button>
-            </div>
-
-            <!-- Existing QCO Selector (hidden by default) -->
-            <div id="existingQCOSelector" class="hidden mt-4 lg:max-w-[calc(33.333%-1rem)]">
-                <div class="bg-white/70 backdrop-blur-md rounded-2xl p-5 border border-gray-200 shadow-md">
-                    <div class="flex items-center gap-2 mb-3">
-                        <i class="fas fa-search text-blue-500"></i>
-                        <h3 class="font-bold text-gray-800">Select Scheduled Changeover</h3>
-                    </div>
-                    <p class="text-xs text-gray-500 mb-3">Choose a QCO created from the Schedule page to add OB
-                        analysis.</p>
-                    <select id="existingQCOSelect"
-                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        onchange="handleExistingQCOSelect(this.value)">
-                        <option value="">Select a scheduled changeover...</option>
-                    </select>
-                    <div id="existingQCOInfo" class="hidden mt-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
-                        <div class="grid grid-cols-2 gap-2 text-sm">
-                            <div><span class="text-gray-500">QCO:</span> <strong id="existingQCONumber">—</strong>
-                            </div>
-                            <div><span class="text-gray-500">Line:</span> <strong id="existingQCOLine">—</strong>
-                            </div>
-                            <div><span class="text-gray-500">From:</span> <strong id="existingQCOFrom">—</strong>
-                            </div>
-                            <div><span class="text-gray-500">To:</span> <strong id="existingQCOTo">—</strong></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- Main Content -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start" id="mainContentGrid">
             <!-- Left Sidebar -->
             <div class="lg:col-span-1 space-y-6">
+                <!-- Mode Toggle: New Changeover vs Existing Changeover -->
+                <div class="mb-2">
+                    <div class="bg-white/60 backdrop-blur-md rounded-2xl p-2 flex gap-2 border border-gray-200 shadow-md w-full"
+                        id="creationModeToggle">
+                        <button id="creationModeNewBtn" onclick="switchCreationMode('new')"
+                            class="flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all bg-blue-600 text-white shadow-lg">
+                            <i class="fas fa-plus-circle"></i> New Changeover
+                        </button>
+                        <button id="creationModeExistingBtn" onclick="switchCreationMode('existing')"
+                            class="flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all text-slate-500 hover:bg-slate-100">
+                            <i class="fas fa-folder-open"></i> Existing Changeover
+                        </button>
+                    </div>
+
+                    <!-- Existing QCO Selector (hidden by default) -->
+                    <div id="existingQCOSelector" class="hidden mt-4 w-full">
+                        <div class="bg-white/70 backdrop-blur-md rounded-2xl p-5 border border-gray-200 shadow-md">
+                            <div class="flex items-center gap-2 mb-3">
+                                <i class="fas fa-search text-blue-500"></i>
+                                <h3 class="font-bold text-gray-800">Select Scheduled Changeover</h3>
+                            </div>
+                            <p class="text-xs text-gray-500 mb-3">Choose a QCO created from the Schedule page to add OB
+                                analysis.</p>
+                            <select id="existingQCOSelect"
+                                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                                onchange="handleExistingQCOSelect(this.value)">
+                                <option value="">Select a scheduled changeover...</option>
+                            </select>
+                            <div id="existingQCOInfo"
+                                class="hidden mt-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                <div class="grid grid-cols-2 gap-2 text-sm">
+                                    <div><span class="text-gray-500">QCO:</span> <strong
+                                            id="existingQCONumber">—</strong>
+                                    </div>
+                                    <div><span class="text-gray-500">Line:</span> <strong
+                                            id="existingQCOLine">—</strong>
+                                    </div>
+                                    <div><span class="text-gray-500">From:</span> <strong
+                                            id="existingQCOFrom">—</strong>
+                                    </div>
+                                    <div><span class="text-gray-500">To:</span> <strong id="existingQCOTo">—</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- File Upload Section -->
                 <div class="glass-panel p-6" id="uploadSection">
                     <h2 class="text-lg font-bold mb-4 flex items-center">
@@ -4069,6 +4087,18 @@
             }
         }
 
+        function toggleAdminMenu() {
+            const grid = document.getElementById('adminMenuGrid');
+            const btn = document.getElementById('adminMenuToggleBtn');
+            if (grid.classList.contains('hidden')) {
+                grid.classList.remove('hidden');
+                btn.innerHTML = '<i class="fas fa-chevron-up mr-2"></i> Collapse';
+            } else {
+                grid.classList.add('hidden');
+                btn.innerHTML = '<i class="fas fa-chevron-down mr-2"></i> Expand Menu';
+            }
+        }
+
         function switchToAdminTab(tabId) {
             // Hide all admin sections
             document.querySelectorAll('.admin-section').forEach(section => {
@@ -4080,15 +4110,23 @@
 
             // Update tab buttons
             document.querySelectorAll('.admin-tab').forEach(tab => {
-                tab.classList.remove('active', 'text-gray-700', 'border-blue-500');
-                tab.classList.add('text-gray-500');
+                tab.classList.remove('active', 'bg-blue-600', 'text-white', 'shadow-lg');
+                tab.classList.add('text-slate-500', 'hover:bg-slate-100');
             });
 
             // Activate clicked tab
             const activeTab = document.querySelector(`.admin-tab[data-tab="${tabId}"]`);
             if (activeTab) {
-                activeTab.classList.add('active', 'text-gray-700', 'border-blue-500');
-                activeTab.classList.remove('text-gray-500');
+                activeTab.classList.remove('text-slate-500', 'hover:bg-slate-100');
+                activeTab.classList.add('active', 'bg-blue-600', 'text-white', 'shadow-lg');
+            }
+
+            // Auto-collapse after clicking on mobile (optional, but good UX)
+            if (window.innerWidth < 768) {
+                const grid = document.getElementById('adminMenuGrid');
+                if (!grid.classList.contains('hidden')) {
+                    toggleAdminMenu();
+                }
             }
 
             // Save active tab for admin
