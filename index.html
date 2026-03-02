@@ -813,8 +813,8 @@
                     <div id="dashboardGrid"
                         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-40 relative z-10">
 
-                        <!-- ROW 1: Dashboard & Monitor | QCO Creation | Operations -->
-                        <!-- Dashboard & Monitor -->
+                        <!-- ROW 1: Dashboard Centre | Schedule | Creation -->
+                        <!-- Dashboard Centre -->
                         <div
                             class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm overflow-hidden block h-full">
                             <div
@@ -828,7 +828,7 @@
                                     class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-blue-600 mb-4 shadow-sm border border-slate-100">
                                     <i data-lucide="line-chart" class="w-7 h-7"></i>
                                 </div>
-                                <h3 class="text-2xl font-bold text-slate-900 mb-2">Dashboard Center</h3>
+                                <h3 class="text-2xl font-bold text-slate-900 mb-2">Dashboard Centre</h3>
                                 <p class="text-slate-500 text-xs leading-relaxed mb-5">Analytics & real-time monitoring
                                 </p>
 
@@ -865,6 +865,37 @@
                             </div>
                         </div>
 
+                        <!-- Schedule -->
+                        <a href="pages/schedule.html"
+                            class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
+                            <div
+                                class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
+                            </div>
+                            <div
+                                class="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-bl-[4rem] -mr-8 -mt-8 group-hover:scale-125 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                            </div>
+
+                            <div class="relative z-10 h-full flex flex-col">
+                                <div
+                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-violet-600 mb-6 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                                    <i data-lucide="calendar" class="w-7 h-7"></i>
+                                </div>
+                                <h3
+                                    class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-violet-600 transition-colors">
+                                    Schedule</h3>
+                                <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">View and manage QCO
+                                    timelines, changeover schedules, and production planning dates.</p>
+
+                                <div class="flex items-center justify-between mt-auto">
+                                    <span
+                                        class="flex items-center text-sm font-bold text-slate-900 group-hover:translate-x-2 transition-transform duration-300">
+                                        View Schedule <i data-lucide="arrow-right"
+                                            class="ml-2 w-4 h-4 text-violet-500"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </a>
+
                         <!-- QCO Creation -->
                         <a href="pages/creation.html"
                             class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
@@ -882,7 +913,7 @@
                                 </div>
                                 <h3
                                     class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-indigo-600 transition-colors">
-                                    QCO Creation</h3>
+                                    Creation</h3>
                                 <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">Draft and issue Quality
                                     Control Orders with automated compliance checks.</p>
 
@@ -896,90 +927,7 @@
                             </div>
                         </a>
 
-                        <!-- Operations Sequence -->
-                        <a href="pages/operations.html"
-                            class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
-                            <div
-                                class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
-                            </div>
-                            <div
-                                class="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-bl-[4rem] -mr-8 -mt-8 group-hover:scale-125 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
-                            </div>
-
-                            <div class="relative z-10 h-full flex flex-col">
-                                <div
-                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-violet-600 mb-6 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
-                                    <i data-lucide="list-ordered" class="w-7 h-7"></i>
-                                </div>
-                                <h3
-                                    class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-violet-600 transition-colors">
-                                    Operations</h3>
-                                <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">View, combine, and
-                                    reorder operations for upcoming styles.</p>
-
-                                <div class="flex items-center justify-between mt-auto">
-                                    <span
-                                        class="flex items-center text-sm font-bold text-slate-900 group-hover:translate-x-2 transition-transform duration-300">
-                                        Manage Operations <i data-lucide="arrow-right"
-                                            class="ml-2 w-4 h-4 text-violet-500"></i>
-                                    </span>
-                                </div>
-                            </div>
-                        </a>
-
-                        <!-- ROW 2: Planning & Schedule | Checklists | Recording Tools -->
-                        <!-- Planning & Schedule -->
-                        <div
-                            class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm overflow-hidden block h-full">
-                            <div
-                                class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
-                            </div>
-                            <div class="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-bl-[4rem] -mr-8 -mt-8">
-                            </div>
-
-                            <div class="relative z-10 h-full flex flex-col">
-                                <div
-                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-cyan-600 mb-4 shadow-sm border border-slate-100">
-                                    <i data-lucide="calendar-days" class="w-7 h-7"></i>
-                                </div>
-                                <h3 class="text-2xl font-bold text-slate-900 mb-2">Planning & Schedule</h3>
-                                <p class="text-slate-500 text-xs leading-relaxed mb-5">Workflow timelines and resource
-                                    planning</p>
-
-                                <div class="flex flex-col gap-3 mt-auto">
-                                    <a href="pages/planning.html"
-                                        class="flex items-center gap-3 p-3 rounded-xl bg-white/70 border border-slate-100 hover:border-cyan-300 hover:shadow-md hover:bg-white transition-all duration-300 group/sub">
-                                        <div
-                                            class="w-9 h-9 rounded-lg bg-cyan-50 flex items-center justify-center text-cyan-600 flex-shrink-0 group-hover/sub:scale-110 transition-transform">
-                                            <i data-lucide="layout-grid" class="w-4 h-4"></i>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-bold text-slate-800 leading-tight">Master Planning
-                                            </p>
-                                            <p class="text-[11px] text-slate-400 leading-tight mt-0.5">Resource
-                                                allocation</p>
-                                        </div>
-                                        <i data-lucide="chevron-right"
-                                            class="w-4 h-4 text-slate-300 group-hover/sub:text-cyan-500 group-hover/sub:translate-x-1 transition-all flex-shrink-0"></i>
-                                    </a>
-                                    <a href="pages/schedule.html"
-                                        class="flex items-center gap-3 p-3 rounded-xl bg-white/70 border border-slate-100 hover:border-violet-300 hover:shadow-md hover:bg-white transition-all duration-300 group/sub">
-                                        <div
-                                            class="w-9 h-9 rounded-lg bg-violet-50 flex items-center justify-center text-violet-600 flex-shrink-0 group-hover/sub:scale-110 transition-transform">
-                                            <i data-lucide="calendar" class="w-4 h-4"></i>
-                                        </div>
-                                        <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-bold text-slate-800 leading-tight">QCO Schedule</p>
-                                            <p class="text-[11px] text-slate-400 leading-tight mt-0.5">Timelines per UN
-                                            </p>
-                                        </div>
-                                        <i data-lucide="chevron-right"
-                                            class="w-4 h-4 text-slate-300 group-hover/sub:text-violet-500 group-hover/sub:translate-x-1 transition-all flex-shrink-0"></i>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-
+                        <!-- ROW 2: Checklists | Recording Tools | Reports -->
                         <!-- Checklists -->
                         <div
                             class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm overflow-hidden block h-full">
@@ -1099,52 +1047,6 @@
                             </div>
                         </div>
 
-                        <!-- ROW 3: Style Repository (Wide) | Reports (Standard) -->
-                        <!-- Style Repository -->
-                        <a href="pages/style.html"
-                            class="dashboard-card md:col-span-2 lg:col-span-2 group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
-                            <div
-                                class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
-                            </div>
-                            <div
-                                class="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-bl-[4rem] -mr-8 -mt-8 group-hover:scale-125 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
-                            </div>
-
-                            <div class="relative z-10 h-full flex flex-col">
-                                <div
-                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-teal-600 mb-6 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
-                                    <i data-lucide="swatch-book" class="w-7 h-7"></i>
-                                </div>
-                                <h3
-                                    class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-teal-600 transition-colors">
-                                    Style Repository</h3>
-                                <p class="text-slate-500 text-sm leading-relaxed mb-6 flex-grow">Centralized database
-                                    for
-                                    style configurations, efficiency targets, and operational plans.</p>
-
-                                <div class="flex items-center gap-2 mb-8">
-                                    <div
-                                        class="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center text-teal-600">
-                                        <i data-lucide="database" class="w-4 h-4"></i>
-                                    </div>
-                                    <div>
-                                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                                            Unique Styles</p>
-                                        <p id="styleCountMetric" class="text-sm font-bold text-slate-800">...
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center justify-between mt-auto">
-                                    <span
-                                        class="flex items-center text-sm font-bold text-slate-900 group-hover:translate-x-2 transition-transform duration-300">
-                                        Access Repository <i data-lucide="arrow-right"
-                                            class="ml-2 w-4 h-4 text-teal-500"></i>
-                                    </span>
-                                </div>
-                            </div>
-                        </a>
-
                         <!-- Reports -->
                         <a href="pages/summary.html"
                             class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
@@ -1171,6 +1073,113 @@
                                         class="flex items-center text-sm font-bold text-slate-900 group-hover:translate-x-2 transition-transform duration-300">
                                         View Archives <i data-lucide="arrow-right"
                                             class="ml-2 w-4 h-4 text-rose-500"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- ROW 3: Master Planning | Operations | Style Repository -->
+                        <!-- Master Planning -->
+                        <a href="pages/planning.html"
+                            class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
+                            <div
+                                class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
+                            </div>
+                            <div
+                                class="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-bl-[4rem] -mr-8 -mt-8 group-hover:scale-125 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                            </div>
+
+                            <div class="relative z-10 h-full flex flex-col">
+                                <div
+                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-cyan-600 mb-6 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                                    <i data-lucide="layout-grid" class="w-7 h-7"></i>
+                                </div>
+                                <h3
+                                    class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-cyan-600 transition-colors">
+                                    Master Planning</h3>
+                                <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">Resource allocation,
+                                    workflow timelines, and production capacity planning tools.</p>
+
+                                <div class="flex items-center justify-between mt-auto">
+                                    <span
+                                        class="flex items-center text-sm font-bold text-slate-900 group-hover:translate-x-2 transition-transform duration-300">
+                                        Open Planner <i data-lucide="arrow-right"
+                                            class="ml-2 w-4 h-4 text-cyan-500"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- Operations -->
+                        <a href="pages/operations.html"
+                            class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
+                            <div
+                                class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
+                            </div>
+                            <div
+                                class="absolute top-0 right-0 w-32 h-32 bg-violet-500/10 rounded-bl-[4rem] -mr-8 -mt-8 group-hover:scale-125 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                            </div>
+
+                            <div class="relative z-10 h-full flex flex-col">
+                                <div
+                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-violet-600 mb-6 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                                    <i data-lucide="list-ordered" class="w-7 h-7"></i>
+                                </div>
+                                <h3
+                                    class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-violet-600 transition-colors">
+                                    Operations</h3>
+                                <p class="text-slate-500 text-sm leading-relaxed mb-8 flex-grow">View, combine, and
+                                    reorder operations for upcoming styles.</p>
+
+                                <div class="flex items-center justify-between mt-auto">
+                                    <span
+                                        class="flex items-center text-sm font-bold text-slate-900 group-hover:translate-x-2 transition-transform duration-300">
+                                        Manage Operations <i data-lucide="arrow-right"
+                                            class="ml-2 w-4 h-4 text-violet-500"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- Style Repository -->
+                        <a href="pages/style.html"
+                            class="dashboard-card group relative bg-white/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/60 shadow-sm hover:shadow-xl overflow-hidden block h-full">
+                            <div
+                                class="absolute inset-0 bg-gradient-to-br from-white via-white/50 to-transparent opacity-60">
+                            </div>
+                            <div
+                                class="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-bl-[4rem] -mr-8 -mt-8 group-hover:scale-125 transition-transform duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                            </div>
+
+                            <div class="relative z-10 h-full flex flex-col">
+                                <div
+                                    class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-teal-600 mb-6 shadow-sm border border-slate-100 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)]">
+                                    <i data-lucide="swatch-book" class="w-7 h-7"></i>
+                                </div>
+                                <h3
+                                    class="text-2xl font-bold text-slate-900 mb-3 group-hover:text-teal-600 transition-colors">
+                                    Style Repository</h3>
+                                <p class="text-slate-500 text-sm leading-relaxed mb-6 flex-grow">Centralized database
+                                    for style configurations, efficiency targets, and operational plans.</p>
+
+                                <div class="flex items-center gap-2 mb-8">
+                                    <div
+                                        class="w-8 h-8 rounded-full bg-teal-50 flex items-center justify-center text-teal-600">
+                                        <i data-lucide="database" class="w-4 h-4"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                            Unique Styles</p>
+                                        <p id="styleCountMetric" class="text-sm font-bold text-slate-800">...
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between mt-auto">
+                                    <span
+                                        class="flex items-center text-sm font-bold text-slate-900 group-hover:translate-x-2 transition-transform duration-300">
+                                        Access Repository <i data-lucide="arrow-right"
+                                            class="ml-2 w-4 h-4 text-teal-500"></i>
                                     </span>
                                 </div>
                             </div>
