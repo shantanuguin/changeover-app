@@ -4090,42 +4090,74 @@
         function toggleAdminMenu() {
             const grid = document.getElementById('adminMenuGrid');
             const btn = document.getElementById('adminMenuToggleBtn');
+
             if (grid.classList.contains('hidden')) {
+                // Expanding the menu
                 grid.classList.remove('hidden');
                 btn.innerHTML = '<i class="fas fa-chevron-up mr-2"></i> Collapse';
+
+                // If there's a saved active tab or a currently active tab button, show its section
+                const activeTabBtn = document.querySelector('.admin-tab.active');
+                if (activeTabBtn) {
+                    const tabId = activeTabBtn.getAttribute('data-tab');
+                    const section = document.getElementById(tabId);
+                    if (section) section.classList.remove('hidden');
+                }
             } else {
+                // Collapsing the menu
                 grid.classList.add('hidden');
                 btn.innerHTML = '<i class="fas fa-chevron-down mr-2"></i> Expand Menu';
+
+                // Also hide the currently open admin section below it
+                document.querySelectorAll('.admin-section').forEach(section => {
+                    section.classList.add('hidden');
+                });
             }
         }
 
         function switchToAdminTab(tabId) {
-            // Hide all admin sections
+            const sectionToToggle = document.getElementById(tabId);
+            const isCurrentlyOpen = !sectionToToggle.classList.contains('hidden');
+
+            // Hide all admin sections first
             document.querySelectorAll('.admin-section').forEach(section => {
                 section.classList.add('hidden');
             });
 
-            // Show selected section
-            document.getElementById(tabId).classList.remove('hidden');
-
-            // Update tab buttons
+            // Update all tab buttons to inactive state
             document.querySelectorAll('.admin-tab').forEach(tab => {
                 tab.classList.remove('active', 'bg-blue-600', 'text-white', 'shadow-lg');
                 tab.classList.add('text-slate-500', 'hover:bg-slate-100');
             });
 
-            // Activate clicked tab
             const activeTab = document.querySelector(`.admin-tab[data-tab="${tabId}"]`);
+
+            // If it was already open, we just closed it (Toggle OFF logic)
+            if (isCurrentlyOpen) {
+                // Remove active styling since nothing is selected
+                if (activeTab) {
+                    activeTab.classList.remove('active', 'bg-blue-600', 'text-white', 'shadow-lg');
+                    activeTab.classList.add('text-slate-500', 'hover:bg-slate-100');
+                }
+                return; // Stop execution, leaving it collapsed
+            }
+
+            // Otherwise, open it (Toggle ON logic)
+            sectionToToggle.classList.remove('hidden');
+
+            // Activate clicked tab
             if (activeTab) {
                 activeTab.classList.remove('text-slate-500', 'hover:bg-slate-100');
                 activeTab.classList.add('active', 'bg-blue-600', 'text-white', 'shadow-lg');
             }
 
-            // Auto-collapse after clicking on mobile (optional, but good UX)
+            // Auto-collapse just the grid menu after clicking on mobile (optional, but good UX)
             if (window.innerWidth < 768) {
                 const grid = document.getElementById('adminMenuGrid');
+                const btn = document.getElementById('adminMenuToggleBtn');
                 if (!grid.classList.contains('hidden')) {
-                    toggleAdminMenu();
+                    grid.classList.add('hidden');
+                    btn.innerHTML = '<i class="fas fa-chevron-down mr-2"></i> Expand Menu';
                 }
             }
 
