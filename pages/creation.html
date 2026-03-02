@@ -4101,7 +4101,10 @@
                 if (activeTabBtn) {
                     const tabId = activeTabBtn.getAttribute('data-tab');
                     const section = document.getElementById(tabId);
-                    if (section) section.classList.remove('hidden');
+                    if (section) {
+                        section.classList.remove('hidden');
+                        section.style.display = '';
+                    }
                 }
             } else {
                 // Collapsing the menu
@@ -4111,6 +4114,7 @@
                 // Also hide the currently open admin section below it
                 document.querySelectorAll('.admin-section').forEach(section => {
                     section.classList.add('hidden');
+                    section.style.display = 'none';
                 });
             }
         }
@@ -4122,6 +4126,7 @@
             // Hide all admin sections first
             document.querySelectorAll('.admin-section').forEach(section => {
                 section.classList.add('hidden');
+                section.style.display = 'none';
             });
 
             // Update all tab buttons to inactive state
@@ -4144,6 +4149,7 @@
 
             // Otherwise, open it (Toggle ON logic)
             sectionToToggle.classList.remove('hidden');
+            sectionToToggle.style.display = '';
 
             // Activate clicked tab
             if (activeTab) {
@@ -5171,13 +5177,18 @@
             const meetingTime = settings.defaultMeetingTime || "09:00";
 
             // Determine Meeting Date
-            let scheduledDateText = "( to be decided by planning team in a follow up email)";
+            let scheduledDateText = "(to be decided by planning team in a follow-up email)";
             if (typeof creationMode !== 'undefined' && creationMode === 'existing' && typeof existingQCORef !== 'undefined' && existingQCORef && existingQCORef.scheduledDate) {
                 let sDate = existingQCORef.scheduledDate;
-                if (sDate && typeof sDate.toDate === 'function') sDate = sDate.toDate();
-                else if (sDate) sDate = new Date(sDate);
 
-                if (sDate && !isNaN(sDate.getTime())) {
+                // Handle Firebase Timestamp or String
+                if (sDate && typeof sDate.toDate === 'function') {
+                    sDate = sDate.toDate();
+                } else if (typeof sDate === 'string' || typeof sDate === 'number') {
+                    sDate = new Date(sDate);
+                }
+
+                if (sDate instanceof Date && !isNaN(sDate.getTime())) {
                     scheduledDateText = sDate.toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                 }
             }
