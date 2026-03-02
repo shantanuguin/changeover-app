@@ -2173,347 +2173,346 @@
                 </div>
             </div>
 
-        </div>
-
-        <!-- Main Results Area -->
-        <div class="lg:col-span-2 space-y-6">
-            <!-- Results Section -->
-            <div class="space-y-6 hidden" id="resultsSection">
-                <!-- QCO Number Display -->
-                <div
-                    class="glass-panel p-6 border-l-4 border-indigo-500 slide-in bg-gradient-to-r from-indigo-50 to-purple-50">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <h3 class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Changeover
-                                Reference Number</h3>
-                            <div class="qco-highlight" id="qcoNumberDisplay">S-X-XXX-XXX-XX</div>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-xs text-gray-500">Created by</p>
-                            <p class="font-semibold text-gray-800" id="qcoCreatedBy">--</p>
-                            <p class="text-xs text-gray-500 mt-1" id="qcoCreatedDate">--</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Style Summary Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="glass-panel p-6 border-l-4 border-blue-500 slide-in">
-                        <div class="flex justify-between items-start mb-4">
-                            <h3 class="text-gray-500 text-xs font-bold uppercase tracking-wider">Current Style</h3>
-                            <span class="badge badge-success">Running</span>
-                        </div>
-                        <div class="text-2xl font-bold text-gray-800 mb-2" id="currStyleName">--</div>
-                        <div class="grid grid-cols-3 gap-3 text-sm">
-                            <div class="bg-gray-50 p-3 rounded-lg border">
-                                <div class="text-gray-500">SMV</div>
-                                <div class="font-mono font-bold text-lg" id="currSMV">--</div>
-                            </div>
-                            <div class="bg-gray-50 p-3 rounded-lg border">
-                                <div class="text-gray-500">Target</div>
-                                <div class="font-mono font-bold text-lg" id="currTarget">--</div>
-                            </div>
-                            <div class="bg-gray-50 p-3 rounded-lg border">
-                                <div class="text-gray-500">Machines</div>
-                                <div class="font-mono font-bold text-lg" id="currTotalMachines">--</div>
-                            </div>
-                        </div>
-                        <div class="mt-4 pt-4 border-t border-gray-200">
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-500">Last Updated:</span>
-                                <span class="font-medium" id="currLastUpdated">--</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="glass-panel p-6 border-l-4 border-green-500 slide-in">
-                        <div class="flex justify-between items-start mb-4">
-                            <h3 class="text-gray-500 text-xs font-bold uppercase tracking-wider">Upcoming Style</h3>
-                            <span class="badge badge-warning">Planned</span>
-                        </div>
-                        <div class="text-2xl font-bold text-gray-800 mb-2" id="nextStyleName">--</div>
-                        <div class="grid grid-cols-3 gap-3 text-sm">
-                            <div class="bg-gray-50 p-3 rounded-lg border">
-                                <div class="text-gray-500">SMV</div>
-                                <div class="font-mono font-bold text-lg" id="nextSMV">--</div>
-                            </div>
-                            <div class="bg-gray-50 p-3 rounded-lg border">
-                                <div class="text-gray-500">Target</div>
-                                <div class="font-mono font-bold text-lg" id="nextTarget">--</div>
-                            </div>
-                            <div class="bg-gray-50 p-3 rounded-lg border">
-                                <div class="text-gray-500">Machines</div>
-                                <div class="font-mono font-bold text-lg" id="nextTotalMachines">--</div>
-                            </div>
-                        </div>
-                        <div class="mt-4 pt-4 border-t border-gray-200">
-                            <div class="flex justify-between text-sm">
-                                <span class="text-gray-500">Change Date:</span>
-                                <span class="font-medium" id="nextChangeDate">--</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Change Summary -->
-                <div class="glass-panel p-6">
-                    <h3 class="text-lg font-bold mb-4 flex items-center">
-                        <i class="fas fa-exchange-alt mr-2 text-purple-500"></i> Change Summary
-                    </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div class="bg-red-50 p-4 rounded-lg border border-red-200">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <div class="text-red-600 text-sm font-medium">SMV Change</div>
-                                    <div class="text-xl font-bold text-red-700" id="smvChange">--</div>
-                                </div>
-                                <i class="fas fa-chart-line text-red-500 text-xl"></i>
-                            </div>
-                        </div>
-                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <div class="text-blue-600 text-sm font-medium">Target Change</div>
-                                    <div class="text-xl font-bold text-blue-700" id="targetChange">--</div>
-                                </div>
-                                <i class="fas fa-bullseye text-blue-500 text-xl"></i>
-                            </div>
-                        </div>
-                        <div class="bg-green-50 p-4 rounded-lg border border-green-200">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <div class="text-green-600 text-sm font-medium">Efficiency Impact</div>
-                                    <div class="text-xl font-bold text-green-700" id="efficiencyImpact">--</div>
-                                </div>
-                                <i class="fas fa-percentage text-green-500 text-xl"></i>
-                            </div>
-                        </div>
-                        <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <div class="text-purple-600 text-sm font-medium">Machine Delta</div>
-                                    <div class="text-xl font-bold text-purple-700" id="machineDelta">--</div>
-                                </div>
-                                <i class="fas fa-cogs text-purple-500 text-xl"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-
-                <!-- Machine Requirement Analysis -->
-                <div class="glass-panel overflow-hidden">
-                    <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-4">
-                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
-                            <h2 class="font-bold text-lg mb-2 md:mb-0">Machine Requirement Analysis</h2>
-                            <div class="flex items-center space-x-4">
-                                <span class="text-sm bg-white bg-opacity-20 px-3 py-1 rounded-full">
-                                    Total Delta: <span id="totalDelta" class="font-bold">0</span> machines
-                                </span>
-                                <div class="flex space-x-2">
-                                    <button onclick="exportResults()"
-                                        class="bg-white bg-opacity-20 hover:bg-opacity-30 px-3 py-1 rounded-lg text-sm transition-colors flex items-center">
-                                        <i class="fas fa-download mr-1"></i> Export
-                                    </button>
-                                    <button onclick="toggleRemarks()"
-                                        class="bg-white bg-opacity-20 hover:bg-opacity-30 px-3 py-1 rounded-lg text-sm transition-colors flex items-center">
-                                        <i class="fas fa-edit mr-1"></i> Remarks
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead class="text-xs text-gray-500 uppercase bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-4 text-left font-medium">Machine Type</th>
-                                    <th class="px-6 py-4 text-center font-medium">Current</th>
-                                    <th class="px-6 py-4 text-center font-medium">Required</th>
-                                    <th class="px-6 py-4 text-center font-medium">Delta</th>
-                                    <th class="px-6 py-4 text-center font-medium">Status</th>
-                                    <th class="px-6 py-4 text-center font-medium">Priority</th>
-                                    <th class="px-6 py-4 text-left font-medium">Remarks/Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="machineTableBody" class="divide-y divide-gray-100">
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Detailed Machine Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="machineCards">
-                </div>
-            </div>
-
-            <!-- Email Section -->
-            <div class="lg:col-span-2 space-y-6 hidden no-print" id="emailSection">
-                <div class="glass-panel p-6">
+            <!-- Main Results Area -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Results Section -->
+                <div class="space-y-6 hidden" id="resultsSection">
+                    <!-- QCO Number Display -->
                     <div
-                        class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 space-y-4 md:space-y-0">
-                        <div>
-                            <h2 class="text-xl font-bold text-gray-800 mb-2">Changeover Meeting Email</h2>
-                            <p class="text-sm text-gray-600">Auto-generated based on machine analysis and personnel
-                                allocation</p>
-                            <div class="mt-2 qco-highlight" id="emailQCONumber">S-X-XXX-XXX-XX</div>
-                        </div>
-                        <div class="flex space-x-3 flex-wrap gap-2">
-                            <button onclick="sendEmailSMTP()" class="email-action-btn btn-smtp">
-                                <i class="fas fa-envelope mr-2"></i> Send via Nodemailer
-                            </button>
-                            <button onclick="printEmail()" class="email-action-btn bg-gray-600 text-white">
-                                <i class="fas fa-print mr-2"></i> Print
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Email Templates -->
-                    <div class="mb-6">
-                        <h3 class="text-sm font-medium text-gray-700 mb-3">Email Template</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div class="email-template-card p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                                onclick="selectTemplate('standard')">
-                                <div class="flex items-center mb-2">
-                                    <i class="fas fa-file-alt text-blue-500 mr-2"></i>
-                                    <h4 class="font-medium">Standard Template</h4>
-                                </div>
-                                <p class="text-xs text-gray-600">Comprehensive changeover meeting invitation with
-                                    all details</p>
+                        class="glass-panel p-6 border-l-4 border-indigo-500 slide-in bg-gradient-to-r from-indigo-50 to-purple-50">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="text-gray-500 text-xs font-bold uppercase tracking-wider mb-1">Changeover
+                                    Reference Number</h3>
+                                <div class="qco-highlight" id="qcoNumberDisplay">S-X-XXX-XXX-XX</div>
                             </div>
-                            <div class="email-template-card p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                                onclick="selectTemplate('urgent')">
-                                <div class="flex items-center mb-2">
-                                    <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
-                                    <h4 class="font-medium">Urgent Template</h4>
-                                </div>
-                                <p class="text-xs text-gray-600">Quick notification for urgent changeovers</p>
-                            </div>
-                            <div class="email-template-card p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                                onclick="selectTemplate('detailed')">
-                                <div class="flex items-center mb-2">
-                                    <i class="fas fa-list-alt text-green-500 mr-2"></i>
-                                    <h4 class="font-medium">Detailed Template</h4>
-                                </div>
-                                <p class="text-xs text-gray-600">Detailed analysis with timeline and
-                                    responsibilities</p>
+                            <div class="text-right">
+                                <p class="text-xs text-gray-500">Created by</p>
+                                <p class="font-semibold text-gray-800" id="qcoCreatedBy">--</p>
+                                <p class="text-xs text-gray-500 mt-1" id="qcoCreatedDate">--</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Email Configuration -->
-                    <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">CC</label>
-                            <input type="text" id="emailCC" class="w-full border border-gray-300 rounded-lg p-2 text-sm"
-                                placeholder="cc@example.com">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">BCC</label>
-                            <input type="text" id="emailBCC"
-                                class="w-full border border-gray-300 rounded-lg p-2 text-sm"
-                                placeholder="bcc@example.com">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Meeting Date</label>
-                            <input type="date" id="meetingDate"
-                                class="w-full border border-gray-300 rounded-lg p-2 text-sm">
-                        </div>
-                    </div>
-
-                    <!-- Attachment Section -->
-                    <div class="mb-6 attachment-container">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="text-sm font-medium text-gray-700 flex items-center">
-                                <i class="fas fa-paperclip mr-2"></i> Email Attachments
-                            </h3>
-                            <button type="button" onclick="clearAllAttachments()"
-                                class="text-xs text-red-600 hover:text-red-800">
-                                <i class="fas fa-trash-alt mr-1"></i> Clear All
-                            </button>
-                        </div>
-
-                        <!-- Attachment Dropzone -->
-                        <div id="attachmentDropzone" class="attachment-dropzone mb-3"
-                            onclick="document.getElementById('attachmentFiles').click()">
-                            <i class="fas fa-cloud-upload-alt text-3xl text-blue-500 mb-2"></i>
-                            <p class="text-gray-600 font-medium">Drop files here or click to browse</p>
-                            <p class="text-xs text-gray-500 mt-2">Supports: .xlsx, .xls, .csv, .pdf, .doc, .docx,
-                                .txt, .png, .jpg, .jpeg</p>
-                            <p class="text-xs text-gray-500">Max file size: 10MB per file</p>
-                            <input type="file" id="attachmentFiles" multiple
-                                accept=".xlsx,.xls,.csv,.pdf,.doc,.docx,.txt,.png,.jpg,.jpeg" class="hidden">
-                        </div>
-
-                        <!-- Attachment List -->
-                        <div class="attachment-list" id="attachmentList">
-                            <!-- Attachments will appear here -->
-                        </div>
-
-                        <!-- Total Size Indicator -->
-                        <div class="attachment-total-size" id="attachmentTotalSize">
-                            Total size: 0 MB
-                        </div>
-                    </div>
-
-                    <!-- Email Preview -->
-                    <div class="email-preview-container">
-                        <div class="email-toolbar">
-                            <div class="flex items-center space-x-4">
-                                <span class="text-sm text-gray-600">Preview Mode:</span>
-                                <div class="flex space-x-2">
-                                    <button onclick="toggleEmailPreviewMode('html')"
-                                        class="px-3 py-1 text-xs rounded border bg-white">HTML</button>
-                                    <button onclick="toggleEmailPreviewMode('text')"
-                                        class="px-3 py-1 text-xs rounded border bg-white">Plain Text</button>
+                    <!-- Style Summary Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="glass-panel p-6 border-l-4 border-blue-500 slide-in">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="text-gray-500 text-xs font-bold uppercase tracking-wider">Current Style</h3>
+                                <span class="badge badge-success">Running</span>
+                            </div>
+                            <div class="text-2xl font-bold text-gray-800 mb-2" id="currStyleName">--</div>
+                            <div class="grid grid-cols-3 gap-3 text-sm">
+                                <div class="bg-gray-50 p-3 rounded-lg border">
+                                    <div class="text-gray-500">SMV</div>
+                                    <div class="font-mono font-bold text-lg" id="currSMV">--</div>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg border">
+                                    <div class="text-gray-500">Target</div>
+                                    <div class="font-mono font-bold text-lg" id="currTarget">--</div>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg border">
+                                    <div class="text-gray-500">Machines</div>
+                                    <div class="font-mono font-bold text-lg" id="currTotalMachines">--</div>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-gray-200">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500">Last Updated:</span>
+                                    <span class="font-medium" id="currLastUpdated">--</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- HTML Email Preview -->
-                        <div id="htmlEmailPreview">
-                            <div class="email-header-preview">
-                                <div class="space-y-1">
-                                    <div class="flex">
-                                        <span class="text-gray-600 w-16">From:</span>
-                                        <span class="font-medium">management.trainee@sidneyapparels.com</span>
+                        <div class="glass-panel p-6 border-l-4 border-green-500 slide-in">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="text-gray-500 text-xs font-bold uppercase tracking-wider">Upcoming Style</h3>
+                                <span class="badge badge-warning">Planned</span>
+                            </div>
+                            <div class="text-2xl font-bold text-gray-800 mb-2" id="nextStyleName">--</div>
+                            <div class="grid grid-cols-3 gap-3 text-sm">
+                                <div class="bg-gray-50 p-3 rounded-lg border">
+                                    <div class="text-gray-500">SMV</div>
+                                    <div class="font-mono font-bold text-lg" id="nextSMV">--</div>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg border">
+                                    <div class="text-gray-500">Target</div>
+                                    <div class="font-mono font-bold text-lg" id="nextTarget">--</div>
+                                </div>
+                                <div class="bg-gray-50 p-3 rounded-lg border">
+                                    <div class="text-gray-500">Machines</div>
+                                    <div class="font-mono font-bold text-lg" id="nextTotalMachines">--</div>
+                                </div>
+                            </div>
+                            <div class="mt-4 pt-4 border-t border-gray-200">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-500">Change Date:</span>
+                                    <span class="font-medium" id="nextChangeDate">--</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Change Summary -->
+                    <div class="glass-panel p-6">
+                        <h3 class="text-lg font-bold mb-4 flex items-center">
+                            <i class="fas fa-exchange-alt mr-2 text-purple-500"></i> Change Summary
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="text-red-600 text-sm font-medium">SMV Change</div>
+                                        <div class="text-xl font-bold text-red-700" id="smvChange">--</div>
                                     </div>
-                                    <div class="flex">
-                                        <span class="text-gray-600 w-16">To:</span>
-                                        <span class="font-medium" id="previewRecipients">--</span>
+                                    <i class="fas fa-chart-line text-red-500 text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="text-blue-600 text-sm font-medium">Target Change</div>
+                                        <div class="text-xl font-bold text-blue-700" id="targetChange">--</div>
                                     </div>
-                                    <div class="flex">
-                                        <span class="text-gray-600 w-16">Subject:</span>
-                                        <span class="font-medium" id="previewSubject">--</span>
+                                    <i class="fas fa-bullseye text-blue-500 text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="text-green-600 text-sm font-medium">Efficiency Impact</div>
+                                        <div class="text-xl font-bold text-green-700" id="efficiencyImpact">--</div>
                                     </div>
-                                    <div class="flex">
-                                        <span class="text-gray-600 w-16">Attachments:</span>
-                                        <span class="font-medium" id="previewAttachments">None</span>
+                                    <i class="fas fa-percentage text-green-500 text-xl"></i>
+                                </div>
+                            </div>
+                            <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <div class="text-purple-600 text-sm font-medium">Machine Delta</div>
+                                        <div class="text-xl font-bold text-purple-700" id="machineDelta">--</div>
+                                    </div>
+                                    <i class="fas fa-cogs text-purple-500 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <!-- Machine Requirement Analysis -->
+                    <div class="glass-panel overflow-hidden">
+                        <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-4">
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                                <h2 class="font-bold text-lg mb-2 md:mb-0">Machine Requirement Analysis</h2>
+                                <div class="flex items-center space-x-4">
+                                    <span class="text-sm bg-white bg-opacity-20 px-3 py-1 rounded-full">
+                                        Total Delta: <span id="totalDelta" class="font-bold">0</span> machines
+                                    </span>
+                                    <div class="flex space-x-2">
+                                        <button onclick="exportResults()"
+                                            class="bg-white bg-opacity-20 hover:bg-opacity-30 px-3 py-1 rounded-lg text-sm transition-colors flex items-center">
+                                            <i class="fas fa-download mr-1"></i> Export
+                                        </button>
+                                        <button onclick="toggleRemarks()"
+                                            class="bg-white bg-opacity-20 hover:bg-opacity-30 px-3 py-1 rounded-lg text-sm transition-colors flex items-center">
+                                            <i class="fas fa-edit mr-1"></i> Remarks
+                                        </button>
                                     </div>
                                 </div>
                             </div>
-                            <div class="email-body-preview" id="emailPreviewContent">
-                                <!-- Email content will be inserted here -->
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead class="text-xs text-gray-500 uppercase bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left font-medium">Machine Type</th>
+                                        <th class="px-6 py-4 text-center font-medium">Current</th>
+                                        <th class="px-6 py-4 text-center font-medium">Required</th>
+                                        <th class="px-6 py-4 text-center font-medium">Delta</th>
+                                        <th class="px-6 py-4 text-center font-medium">Status</th>
+                                        <th class="px-6 py-4 text-center font-medium">Priority</th>
+                                        <th class="px-6 py-4 text-left font-medium">Remarks/Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="machineTableBody" class="divide-y divide-gray-100">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Machine Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="machineCards">
+                    </div>
+                </div>
+
+                <!-- Email Section -->
+                <div class="lg:col-span-2 space-y-6 hidden no-print" id="emailSection">
+                    <div class="glass-panel p-6">
+                        <div
+                            class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 space-y-4 md:space-y-0">
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800 mb-2">Changeover Meeting Email</h2>
+                                <p class="text-sm text-gray-600">Auto-generated based on machine analysis and personnel
+                                    allocation</p>
+                                <div class="mt-2 qco-highlight" id="emailQCONumber">S-X-XXX-XXX-XX</div>
                             </div>
-                            <div class="email-footer-preview">
-                                <p>Changeover Meeting Initiator System - Manufacturing Excellence Tool</p>
+                            <div class="flex space-x-3 flex-wrap gap-2">
+                                <button onclick="sendEmailSMTP()" class="email-action-btn btn-smtp">
+                                    <i class="fas fa-envelope mr-2"></i> Send via Nodemailer
+                                </button>
+                                <button onclick="printEmail()" class="email-action-btn bg-gray-600 text-white">
+                                    <i class="fas fa-print mr-2"></i> Print
+                                </button>
                             </div>
                         </div>
 
-                        <!-- Plain Text Email Editor -->
-                        <div id="textEmailEditor" class="hidden">
-                            <div class="p-4">
-                                <textarea id="plainTextEmail"
-                                    class="w-full h-96 p-3 border rounded-lg font-mono text-sm"
-                                    placeholder="Email content will appear here..."></textarea>
+                        <!-- Email Templates -->
+                        <div class="mb-6">
+                            <h3 class="text-sm font-medium text-gray-700 mb-3">Email Template</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="email-template-card p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                                    onclick="selectTemplate('standard')">
+                                    <div class="flex items-center mb-2">
+                                        <i class="fas fa-file-alt text-blue-500 mr-2"></i>
+                                        <h4 class="font-medium">Standard Template</h4>
+                                    </div>
+                                    <p class="text-xs text-gray-600">Comprehensive changeover meeting invitation with
+                                        all details</p>
+                                </div>
+                                <div class="email-template-card p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                                    onclick="selectTemplate('urgent')">
+                                    <div class="flex items-center mb-2">
+                                        <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+                                        <h4 class="font-medium">Urgent Template</h4>
+                                    </div>
+                                    <p class="text-xs text-gray-600">Quick notification for urgent changeovers</p>
+                                </div>
+                                <div class="email-template-card p-4 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                                    onclick="selectTemplate('detailed')">
+                                    <div class="flex items-center mb-2">
+                                        <i class="fas fa-list-alt text-green-500 mr-2"></i>
+                                        <h4 class="font-medium">Detailed Template</h4>
+                                    </div>
+                                    <p class="text-xs text-gray-600">Detailed analysis with timeline and
+                                        responsibilities</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Email Configuration -->
+                        <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">CC</label>
+                                <input type="text" id="emailCC"
+                                    class="w-full border border-gray-300 rounded-lg p-2 text-sm"
+                                    placeholder="cc@example.com">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">BCC</label>
+                                <input type="text" id="emailBCC"
+                                    class="w-full border border-gray-300 rounded-lg p-2 text-sm"
+                                    placeholder="bcc@example.com">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Meeting Date</label>
+                                <input type="date" id="meetingDate"
+                                    class="w-full border border-gray-300 rounded-lg p-2 text-sm">
+                            </div>
+                        </div>
+
+                        <!-- Attachment Section -->
+                        <div class="mb-6 attachment-container">
+                            <div class="flex justify-between items-center mb-3">
+                                <h3 class="text-sm font-medium text-gray-700 flex items-center">
+                                    <i class="fas fa-paperclip mr-2"></i> Email Attachments
+                                </h3>
+                                <button type="button" onclick="clearAllAttachments()"
+                                    class="text-xs text-red-600 hover:text-red-800">
+                                    <i class="fas fa-trash-alt mr-1"></i> Clear All
+                                </button>
+                            </div>
+
+                            <!-- Attachment Dropzone -->
+                            <div id="attachmentDropzone" class="attachment-dropzone mb-3"
+                                onclick="document.getElementById('attachmentFiles').click()">
+                                <i class="fas fa-cloud-upload-alt text-3xl text-blue-500 mb-2"></i>
+                                <p class="text-gray-600 font-medium">Drop files here or click to browse</p>
+                                <p class="text-xs text-gray-500 mt-2">Supports: .xlsx, .xls, .csv, .pdf, .doc, .docx,
+                                    .txt, .png, .jpg, .jpeg</p>
+                                <p class="text-xs text-gray-500">Max file size: 10MB per file</p>
+                                <input type="file" id="attachmentFiles" multiple
+                                    accept=".xlsx,.xls,.csv,.pdf,.doc,.docx,.txt,.png,.jpg,.jpeg" class="hidden">
+                            </div>
+
+                            <!-- Attachment List -->
+                            <div class="attachment-list" id="attachmentList">
+                                <!-- Attachments will appear here -->
+                            </div>
+
+                            <!-- Total Size Indicator -->
+                            <div class="attachment-total-size" id="attachmentTotalSize">
+                                Total size: 0 MB
+                            </div>
+                        </div>
+
+                        <!-- Email Preview -->
+                        <div class="email-preview-container">
+                            <div class="email-toolbar">
+                                <div class="flex items-center space-x-4">
+                                    <span class="text-sm text-gray-600">Preview Mode:</span>
+                                    <div class="flex space-x-2">
+                                        <button onclick="toggleEmailPreviewMode('html')"
+                                            class="px-3 py-1 text-xs rounded border bg-white">HTML</button>
+                                        <button onclick="toggleEmailPreviewMode('text')"
+                                            class="px-3 py-1 text-xs rounded border bg-white">Plain Text</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- HTML Email Preview -->
+                            <div id="htmlEmailPreview">
+                                <div class="email-header-preview">
+                                    <div class="space-y-1">
+                                        <div class="flex">
+                                            <span class="text-gray-600 w-16">From:</span>
+                                            <span class="font-medium">management.trainee@sidneyapparels.com</span>
+                                        </div>
+                                        <div class="flex">
+                                            <span class="text-gray-600 w-16">To:</span>
+                                            <span class="font-medium" id="previewRecipients">--</span>
+                                        </div>
+                                        <div class="flex">
+                                            <span class="text-gray-600 w-16">Subject:</span>
+                                            <span class="font-medium" id="previewSubject">--</span>
+                                        </div>
+                                        <div class="flex">
+                                            <span class="text-gray-600 w-16">Attachments:</span>
+                                            <span class="font-medium" id="previewAttachments">None</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="email-body-preview" id="emailPreviewContent">
+                                    <!-- Email content will be inserted here -->
+                                </div>
+                                <div class="email-footer-preview">
+                                    <p>Changeover Meeting Initiator System - Manufacturing Excellence Tool</p>
+                                </div>
+                            </div>
+
+                            <!-- Plain Text Email Editor -->
+                            <div id="textEmailEditor" class="hidden">
+                                <div class="p-4">
+                                    <textarea id="plainTextEmail"
+                                        class="w-full h-96 p-3 border rounded-lg font-mono text-sm"
+                                        placeholder="Email content will appear here..."></textarea>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
     </div>
 
     <!-- Loading Overlay -->
