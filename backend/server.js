@@ -85,45 +85,87 @@ const emailLimiter = rateLimit({
     legacyHeaders: false,
 });
 
-// Email configuration
-let transporter;
+// Email configuration - Dual SMTP support
+let creationTransporter;
+let scheduleTransporter;
 
-function initializeTransporter() {
+function createSmtpTransporter(username, password, displayName) {
     const smtpConfig = {
         host: process.env.SMTP_SERVER || 'mail.sidneyapparels.com',
         port: parseInt(process.env.SMTP_PORT) || 587,
-        secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+        secure: process.env.SMTP_SECURE === 'true',
         auth: {
-            user: process.env.SMTP_USERNAME,
-            pass: process.env.SMTP_PASSWORD
+            user: username,
+            pass: password
         },
         tls: {
-            // Remove SSLv3 as it is insecure and often blocked. 
-            // Let Nodemailer/Node.js negotiate the best version (preferring TLS 1.2+)
             rejectUnauthorized: false
         }
     };
 
-    // Sidney Apparels specific settings
     if (smtpConfig.host.includes('sidneyapparels.com')) {
         smtpConfig.requireTLS = true;
-        // The above setting ensures TLS is used if possible.
     }
 
-    transporter = nodemailer.createTransport(smtpConfig);
-
-    // Verify connection configuration
-    transporter.verify(function (error, success) {
-        if (error) {
-            console.error('SMTP Connection Error:', error);
-        } else {
-            console.log('SMTP Server is ready to take messages');
-        }
-    });
+    return nodemailer.createTransport(smtpConfig);
 }
 
-// Initialize transporter
-initializeTransporter();
+function initializeTransporters() {
+    // Creation page transporter (management.trainee)
+    creationTransporter = createSmtpTransporter(
+        process.env.CREATION_SMTP_USERNAME,
+        process.env.CREATION_SMTP_PASSWORD,
+        process.env.CREATION_SMTP_DISPLAY_NAME
+    );
+    creationTransporter.verify(function (error, success) {
+        if (error) console.error('Creation SMTP Error:', error.message);
+        else console.log('Creation SMTP (management.trainee) ready');
+    });
+
+    // Schedule page transporter (planner)
+    if (process.env.SCHEDULE_SMTP_USERNAME && process.env.SCHEDULE_SMTP_PASSWORD) {
+        scheduleTransporter = createSmtpTransporter(
+            process.env.SCHEDULE_SMTP_USERNAME,
+            process.env.SCHEDULE_SMTP_PASSWORD,
+            process.env.SCHEDULE_SMTP_DISPLAY_NAME
+        );
+        scheduleTransporter.verify(function (error, success) {
+            if (error) console.error('Schedule SMTP Error:', error.message);
+            else console.log('Schedule SMTP (planner) ready');
+        });
+    } else {
+        console.warn('Schedule SMTP credentials not set - will fall back to creation transporter');
+        scheduleTransporter = null;
+    }
+}
+
+// Helper to get the right transporter config based on accountType
+function getTransporterConfig(accountType) {
+    if (accountType === 'schedule' && scheduleTransporter) {
+        return {
+            transporter: scheduleTransporter,
+            sender: process.env.SCHEDULE_SMTP_USERNAME,
+            displayName: process.env.SCHEDULE_SMTP_DISPLAY_NAME || 'Planning SA'
+        };
+    }
+    // Default to creation
+    return {
+        transporter: creationTransporter,
+        sender: process.env.CREATION_SMTP_USERNAME,
+        displayName: process.env.CREATION_SMTP_DISPLAY_NAME || 'ME SA'
+    };
+}
+
+// Backward compat: single transporter reference (used by update-smtp)
+let transporter;
+function initializeTransporter() {
+    initializeTransporters();
+    transporter = creationTransporter; // legacy fallback
+}
+
+// Initialize transporters
+initializeTransporters();
+transporter = creationTransporter;
 
 // NEW: File upload endpoint for large attachments
 app.post('/api/upload-attachment', upload.single('file'), (req, res) => {
@@ -245,34 +287,30 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Test SMTP connection
-// Test SMTP connection (Enhanced)
+// Test SMTP connection (Enhanced - supports accountType query param)
 app.get('/api/test-smtp', emailLimiter, async (req, res) => {
     try {
-        // Diagnostic check for environment variables
-        if (!process.env.SMTP_USERNAME || !process.env.SMTP_PASSWORD) {
+        const accountType = req.query.account || 'creation';
+        const config = getTransporterConfig(accountType);
+
+        if (!config.sender) {
             return res.status(500).json({
                 success: false,
-                message: 'SMTP Configuration Missing',
-                error: 'SMTP_USERNAME or SMTP_PASSWORD not set in environment variables',
-                details: {
-                    hasHost: !!process.env.SMTP_SERVER,
-                    hasUser: !!process.env.SMTP_USERNAME,
-                    hasPass: !!process.env.SMTP_PASSWORD
-                }
+                message: `SMTP Configuration Missing for account: ${accountType}`,
+                error: `${accountType.toUpperCase()}_SMTP_USERNAME not set in environment variables`
             });
         }
 
-        await transporter.verify();
+        await config.transporter.verify();
         res.json({
             success: true,
-            message: 'SMTP connection successful',
+            message: `SMTP connection successful (${accountType})`,
             details: {
                 host: process.env.SMTP_SERVER || 'default',
-                items: 'Configuration OK',
+                account: accountType,
                 configCheck: {
                     host: (process.env.SMTP_SERVER || '').substring(0, 4) + '***',
-                    user: (process.env.SMTP_USERNAME || '').substring(0, 4) + '***',
+                    user: (config.sender || '').substring(0, 4) + '***',
                     port: process.env.SMTP_PORT,
                     secure: process.env.SMTP_SECURE
                 }
@@ -284,18 +322,12 @@ app.get('/api/test-smtp', emailLimiter, async (req, res) => {
             success: false,
             message: 'SMTP connection failed',
             error: error.message,
-            code: error.code,
-            configCheck: {
-                host: (process.env.SMTP_SERVER || '').substring(0, 4) + '***',
-                user: (process.env.SMTP_USERNAME || '').substring(0, 4) + '***',
-                port: process.env.SMTP_PORT,
-                secure: process.env.SMTP_SECURE
-            }
+            code: error.code
         });
     }
 });
 
-// UPDATED: Send email endpoint with attachment support
+// UPDATED: Send email endpoint with attachment support and multi-SMTP
 app.post('/api/send-email', emailLimiter, async (req, res) => {
     try {
         const {
@@ -306,7 +338,8 @@ app.post('/api/send-email', emailLimiter, async (req, res) => {
             cc,
             bcc,
             replyTo,
-            attachments
+            attachments,
+            accountType  // NEW: 'creation' or 'schedule'
         } = req.body;
 
         // Validate required fields
@@ -329,7 +362,6 @@ app.post('/api/send-email', emailLimiter, async (req, res) => {
                 });
             }
 
-            // Validate individual file sizes
             for (const attachment of attachments) {
                 if (attachment.size > 10 * 1024 * 1024) {
                     return res.status(400).json({
@@ -340,53 +372,46 @@ app.post('/api/send-email', emailLimiter, async (req, res) => {
             }
         }
 
-        // Prepare email options
-        // FIX: Force From address to match SMTP credentials to avoid 550 5.7.60 error
-        const authenticatedSender = process.env.SMTP_USERNAME;
+        // Select the right SMTP account
+        const config = getTransporterConfig(accountType || 'creation');
+        const authenticatedSender = config.sender;
+        console.log(`Using ${accountType || 'creation'} SMTP account: ${authenticatedSender}`);
 
         const mailOptions = {
             from: {
-                name: process.env.SMTP_DISPLAY_NAME || 'Changeover Meeting System',
-                address: authenticatedSender // MUST match config
+                name: config.displayName,
+                address: authenticatedSender
             },
             to: Array.isArray(to) ? to : to.split(',').map(email => email.trim()),
             subject: subject,
             html: html,
-            text: html.replace(/<[^>]*>/g, ' '), // Convert HTML to plain text
-            // Use the requested 'from' as Reply-To so replies go to the right person (e.g. Planning)
+            text: html.replace(/<[^>]*>/g, ' '),
             replyTo: replyTo || from || authenticatedSender,
             headers: {
                 'X-Application': 'Changeover Meeting Initiator',
-                'X-Priority': '1', // High priority
+                'X-Priority': '1',
                 'X-Attachments-Count': attachments ? attachments.length : 0
             }
         };
 
-        // Add CC if provided
         if (cc) {
             mailOptions.cc = Array.isArray(cc) ? cc : cc.split(',').map(email => email.trim());
         }
-
-        // Add BCC if provided
         if (bcc) {
             mailOptions.bcc = Array.isArray(bcc) ? bcc : bcc.split(',').map(email => email.trim());
         }
 
-        // UPDATED: Process attachments if provided
         if (attachments && Array.isArray(attachments)) {
             mailOptions.attachments = attachments.map(attachment => {
-                // Handle both base64 content and file paths
                 if (attachment.content) {
-                    // Base64 content from frontend
                     return {
                         filename: attachment.filename,
                         content: attachment.content,
                         encoding: 'base64',
                         contentType: attachment.contentType || getMimeType(attachment.filename),
-                        cid: attachment.cid // For embedded images
+                        cid: attachment.cid
                     };
                 } else if (attachment.path) {
-                    // File path from upload
                     const filePath = path.join(uploadsDir, attachment.path);
                     if (fs.existsSync(filePath)) {
                         return {
@@ -396,19 +421,16 @@ app.post('/api/send-email', emailLimiter, async (req, res) => {
                         };
                     }
                 }
-
-                // If no content or path, return as-is (nodemailer will handle it)
                 return attachment;
-            }).filter(att => att); // Remove null entries
+            }).filter(att => att);
         }
 
-        // Send email
-        const info = await transporter.sendMail(mailOptions);
+        // Send email using the selected transporter
+        const info = await config.transporter.sendMail(mailOptions);
 
-        console.log('Email sent:', info.messageId);
+        console.log('Email sent:', info.messageId, '| Account:', accountType || 'creation');
         console.log('Attachments:', attachments ? attachments.length : 0);
 
-        // NEW: Log attachment details
         if (attachments && attachments.length > 0) {
             console.log('Attachment details:', attachments.map(att => ({
                 filename: att.filename,
@@ -423,6 +445,7 @@ app.post('/api/send-email', emailLimiter, async (req, res) => {
             messageId: info.messageId,
             accepted: info.accepted,
             rejected: info.rejected,
+            account: accountType || 'creation',
             attachmentsCount: attachments ? attachments.length : 0,
             attachments: attachments ? attachments.map(att => att.filename) : []
         });
@@ -430,7 +453,6 @@ app.post('/api/send-email', emailLimiter, async (req, res) => {
     } catch (error) {
         console.error('Error sending email:', error);
 
-        // Specific error handling
         let errorMessage = 'Failed to send email';
         let statusCode = 500;
 
@@ -521,7 +543,7 @@ app.post('/api/validate-attachments', upload.array('files', 10), (req, res) => {
     }
 });
 
-// Bulk email endpoint (for multiple recipients) - Updated for attachments
+// Bulk email endpoint (for multiple recipients) - Updated for attachments + multi-SMTP
 app.post('/api/send-bulk', emailLimiter, async (req, res) => {
     try {
         const {
@@ -530,7 +552,8 @@ app.post('/api/send-bulk', emailLimiter, async (req, res) => {
             subject,
             html,
             bccAll,
-            attachments
+            attachments,
+            accountType  // NEW: 'creation' or 'schedule'
         } = req.body;
 
         if (!from || !recipients || !subject || !html) {
@@ -540,7 +563,6 @@ app.post('/api/send-bulk', emailLimiter, async (req, res) => {
             });
         }
 
-        // NEW: Prepare attachments for bulk sending
         let preparedAttachments = [];
         if (attachments && Array.isArray(attachments)) {
             preparedAttachments = attachments.map(attachment => {
@@ -559,33 +581,33 @@ app.post('/api/send-bulk', emailLimiter, async (req, res) => {
         const results = [];
         const errors = [];
 
-        // Send to each recipient
-        // Send to each recipient
-        const authenticatedSender = process.env.SMTP_USERNAME; // Define once
+        // Select the right SMTP account
+        const config = getTransporterConfig(accountType || 'creation');
+        const authenticatedSender = config.sender;
+        console.log(`Bulk send using ${accountType || 'creation'} SMTP account: ${authenticatedSender}`);
 
         for (const recipient of recipients) {
             try {
                 const mailOptions = {
                     from: {
-                        name: process.env.SMTP_DISPLAY_NAME || 'Changeover Meeting System',
+                        name: config.displayName,
                         address: authenticatedSender
                     },
                     to: recipient,
                     subject: subject,
                     html: html,
                     text: html.replace(/<[^>]*>/g, ' '),
-                    replyTo: from || authenticatedSender, // Redirect replies
+                    replyTo: from || authenticatedSender,
                     headers: {
                         'X-Application': 'Changeover Meeting Initiator'
                     }
                 };
 
-                // Add attachments if available
                 if (preparedAttachments.length > 0) {
                     mailOptions.attachments = preparedAttachments;
                 }
 
-                const info = await transporter.sendMail(mailOptions);
+                const info = await config.transporter.sendMail(mailOptions);
                 results.push({
                     recipient,
                     success: true,
@@ -593,7 +615,6 @@ app.post('/api/send-bulk', emailLimiter, async (req, res) => {
                     attachmentsCount: preparedAttachments.length
                 });
 
-                // Delay to avoid rate limiting
                 await new Promise(resolve => setTimeout(resolve, 100));
 
             } catch (error) {
@@ -609,6 +630,7 @@ app.post('/api/send-bulk', emailLimiter, async (req, res) => {
             success: true,
             message: `Sent ${results.length} emails successfully`,
             totalRecipients: recipients.length,
+            account: accountType || 'creation',
             results,
             errors: errors.length > 0 ? errors : undefined,
             attachmentsCount: preparedAttachments.length

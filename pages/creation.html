@@ -5641,7 +5641,7 @@ Shantanu & Sampreeti`;
             const recipients = generateEmailRecipients();
             const subject = document.getElementById('previewSubject').textContent;
 
-            document.getElementById('modalSenderEmail').value = "management.trainee@sidneyapparels.co";
+            document.getElementById('modalSenderEmail').value = "management.trainee@sidneyapparels.com";
             document.getElementById('modalRecipients').value = recipients.join(', ');
             document.getElementById('modalSubject').value = subject;
 
@@ -5709,7 +5709,8 @@ Shantanu & Sampreeti`;
                         text: emailBody,
                         cc: document.getElementById('emailCC').value || null,
                         bcc: document.getElementById('emailBCC').value || null,
-                        attachments: emailAttachments.length > 0 ? emailAttachments : null
+                        attachments: emailAttachments.length > 0 ? emailAttachments : null,
+                        accountType: 'creation'
                     })
                 });
 
@@ -5773,7 +5774,7 @@ Shantanu & Sampreeti`;
             statusElement.classList.remove('hidden');
 
             try {
-                const response = await fetch(`${backendUrl}/api/test-smtp`);
+                const response = await fetch(`${backendUrl}/api/test-smtp?account=creation`);
                 const data = await response.json();
 
                 if (response.ok && data.success) {
@@ -7193,7 +7194,7 @@ Shantanu & Sampreeti`;
                         <div class="qco-highlight">Reference: ${currentQCONumber || 'N/A'}</div>
                         <h2>${document.getElementById('previewSubject').textContent}</h2>
                         <p><strong>To:</strong> ${document.getElementById('previewRecipients').textContent}</p>
-                        <p><strong>From:</strong> management.trainee@sidneyapparel.com</p>
+                        <p><strong>From:</strong> management.trainee@sidneyapparels.com</p>
                     </div>
                     ${printContent}
                     <div class="footer">

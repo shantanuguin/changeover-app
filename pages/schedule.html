@@ -2384,7 +2384,7 @@ Sidney Apparels QCO Portal`;
             sendBtn.disabled = true;
 
             try {
-                const payload = { from: sender, to: recipients.split(',').map(e => e.trim()), subject, text: currentEmailBodyText, html: currentEmailBodyHtml };
+                const payload = { from: sender, to: recipients.split(',').map(e => e.trim()), subject, text: currentEmailBodyText, html: currentEmailBodyHtml, accountType: 'schedule' };
                 const response = await fetch(`${backendUrl}/api/send-email`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 const data = await response.json();
                 if (response.ok) {
@@ -2437,7 +2437,7 @@ Sidney Apparels QCO Portal`;
             statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Testing SMTP...';
             statusDiv.classList.remove('hidden');
             try {
-                const response = await fetch(`${backendUrl}/api/test-smtp`);
+                const response = await fetch(`${backendUrl}/api/test-smtp?account=schedule`);
                 const data = await response.json();
                 if (response.ok && data.success) {
                     statusDiv.classList.remove('bg-blue-50', 'text-blue-700'); statusDiv.classList.add('bg-green-50', 'text-green-700');
@@ -2781,8 +2781,7 @@ Sidney Apparels QCO Portal`;
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 uppercase mb-1">From</label>
-                                <input type="text" id="modalSender" value="management.trainee@sidneyapparels.com"
-                                    readonly
+                                <input type="text" id="modalSender" value="planner.SA@sidneyapparels.com" readonly
                                     class="w-full rounded-lg border-slate-200 bg-slate-100 text-slate-500 text-sm cursor-not-allowed p-2.5">
                             </div>
                         </div>
