@@ -4975,11 +4975,7 @@
             if (lineEmails.cutting) recipients.add(lineEmails.cutting);
             if (lineEmails.maintenance) recipients.add(lineEmails.maintenance);
 
-            // Add additional recipients from select2
-            const additionalRecipients = $('#additionalRecipients').select2('data');
-            additionalRecipients.forEach(recipient => {
-                recipients.add(recipient.text);
-            });
+            // Removed additionalRecipients logic because the UI was deleted
 
             // Add default CC from settings
             const settings = JSON.parse(localStorage.getItem('appSettings')) || defaultSettings;
@@ -6479,14 +6475,7 @@ Shantanu & Sampreeti`;
             document.getElementById('mobileMenuBtn').addEventListener('click', toggleMobileMenu);
             document.getElementById('closeMobileMenu').addEventListener('click', toggleMobileMenu);
 
-            // Configuration handlers
-            document.getElementById('includeMaintenance').addEventListener('change', generateEmail);
-            document.getElementById('includeManagement').addEventListener('change', generateEmail);
-            document.getElementById('autoGenerateEmail').addEventListener('change', function () {
-                if (this.checked && comparisonResults) {
-                    generateEmail();
-                }
-            });
+            // Configuration handlers removed as UI blocks deleted
 
             // Meeting date handler
             document.getElementById('meetingDate').addEventListener('change', generateEmail);
@@ -7219,6 +7208,8 @@ Shantanu & Sampreeti`;
 
         function updateRecentActivity(activity) {
             const recentActivityDiv = document.getElementById('recentActivity');
+            if (!recentActivityDiv) return;
+
             recentActivityDiv.classList.remove('hidden');
 
             const timeline = recentActivityDiv.querySelector('.timeline');
