@@ -7,8 +7,8 @@ const multer = require('multer'); // NEW: For handling file uploads
 const path = require('path');
 const fs = require('fs');
 
-// Load environment variables
-dotenv.config({ path: path.join(__dirname, '.env') });
+// Load environment variables (from project root)
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
