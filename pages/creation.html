@@ -4103,7 +4103,6 @@
                     const section = document.getElementById(tabId);
                     if (section) {
                         section.classList.remove('hidden');
-                        section.style.display = '';
                     }
                 }
             } else {
@@ -4114,7 +4113,6 @@
                 // Also hide the currently open admin section below it
                 document.querySelectorAll('.admin-section').forEach(section => {
                     section.classList.add('hidden');
-                    section.style.display = 'none';
                 });
             }
         }
@@ -4126,7 +4124,6 @@
             // Hide all admin sections first
             document.querySelectorAll('.admin-section').forEach(section => {
                 section.classList.add('hidden');
-                section.style.display = 'none';
             });
 
             // Update all tab buttons to inactive state
@@ -4149,7 +4146,6 @@
 
             // Otherwise, open it (Toggle ON logic)
             sectionToToggle.classList.remove('hidden');
-            sectionToToggle.style.display = '';
 
             // Activate clicked tab
             if (activeTab) {
@@ -6533,13 +6529,7 @@ Shantanu & Sampreeti`;
                 showNotification(this.checked ? 'Auto-detection enabled' : 'Auto-detection disabled', 'info');
             });
 
-            // Admin tab handlers
-            document.querySelectorAll('.admin-tab').forEach(tab => {
-                tab.addEventListener('click', function () {
-                    const tabId = this.getAttribute('data-tab');
-                    switchToAdminTab(tabId);
-                });
-            });
+            // Admin tab handlers are handled entirely by inline onclick attributes in the HTML
 
             // Close modal with Escape key
             document.addEventListener('keydown', function (e) {
