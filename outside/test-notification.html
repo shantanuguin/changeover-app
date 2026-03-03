@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Test FCM Notification</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Poppins', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Firebase SDK (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .btn-animate {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-animate:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 max-w-md w-full text-center">
+        <div
+            class="w-20 h-20 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+            <i data-lucide="bell-ring" class="w-10 h-10"></i>
+        </div>
+
+        <h1 class="text-2xl font-heading font-bold text-slate-900 mb-2">FCM Test Portal</h1>
+        <p class="text-slate-500 text-sm mb-8">This tool triggers a backend notification directly to test if your device
+            receives Push Notifications in the background.</p>
+
+        <button id="testBtn" onclick="testNotification()"
+            class="btn-animate w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-4 px-6 rounded-2xl shadow-lg shadow-slate-900/20 flex items-center justify-center gap-3 text-lg">
+            <i data-lucide="send" class="w-5 h-5"></i>
+            Send Test Notification
+        </button>
+        <p class="text-xs text-slate-400 mt-4">Make sure you allow notifications when prompted, and <strong>minimize
+                this window</strong> right after clicking "Send" to test background delivery.</p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../assets/js/firebase-config.js"></script>
+    <script src="../assets/js/fcm-notifications.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Init Firebase
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            window.db = firebase.firestore();
+
+            // Init FCM token generation and permission
+            await initFCM();
+            lucide.createIcons();
+        });
+
+        async function testNotification() {
+            const btn = document.getElementById('testBtn');
+            const originalText = btn.innerHTML;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Sending...`;
+                lucide.createIcons();
+
+                // Mock data simulating a changeover start
+                const dummyQcoId = `TEST-${Math.floor(Math.random() * 10000)}`;
+                const opName = "Prepare Machines";
+                const qcoData = {
+                    lineNumber: "13/21",
+                    upcomingStyle: "Test Style NF0A",
+                    qcoNumber: dummyQcoId
+                };
+
+                // Use the existing function from fcm-notifications.js
+                await sendStartNotification(dummyQcoId, opName, qcoData);
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Sent!',
+                    text: 'The notification request has been sent to the backend. Minimise the window now if you are testing push.',
+                    timer: 5000,
+                    showConfirmButton: true,
+                    confirmButtonColor: '#0f172a'
+                });
+
+            } catch (error) {
+                console.error("Test notification failed:", error);
+                Swal.fire('Error', 'Failed to send notification request.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                lucide.createIcons();
+            }
+        }
+    </script>
+</body>
+
+</html>
