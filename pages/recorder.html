@@ -1316,7 +1316,7 @@
 
         async function loadChangeoverList() {
             try {
-                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(20).get();
+                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(50).get();
                 const selector = document.getElementById('qcoSelector');
                 selector.innerHTML = '<option value="">Select Changeover...</option>';
 
@@ -2042,7 +2042,7 @@
                 return;
             }
 
-            searchTimeout = setTimeout(() => {
+            searchTimeout = setTimeout(async () => {
                 const matchedQCO = allChangeovers.find(q => {
                     const qcoNumber = (q.qcoNumber || '').toUpperCase();
                     const upcomingStyle = (q.upcomingStyle || '').toUpperCase();
@@ -2053,7 +2053,7 @@
                 });
 
                 if (matchedQCO) {
-                    statusEl.textContent = `Found: ${matchedQCO.id || 'QCO'}`;
+                    statusEl.textContent = `Found: ${matchedQCO.qcoNumber || matchedQCO.id}`;
                     statusEl.classList.remove('hidden', 'text-red-500');
                     statusEl.classList.add('text-emerald-600');
 
@@ -2065,9 +2065,39 @@
                         handleQCOChange(matchedQCO.id);
                     }
                 } else {
-                    statusEl.textContent = `No QCO found matching "${searchTerm}"`;
-                    statusEl.classList.remove('hidden', 'text-emerald-600');
-                    statusEl.classList.add('text-red-500');
+                    // Try direct Firestore lookup by qcoNumber
+                    try {
+                        const fbSnapshot = await db.collection('changeovers')
+                            .where('qcoNumber', '==', searchTerm)
+                            .get();
+                        if (!fbSnapshot.empty) {
+                            const doc = fbSnapshot.docs[0];
+                            const data = doc.data();
+                            statusEl.textContent = `Found: ${data.qcoNumber || doc.id}`;
+                            statusEl.classList.remove('hidden', 'text-red-500');
+                            statusEl.classList.add('text-emerald-600');
+
+                            // Add to dropdown and local cache
+                            const selector = document.getElementById('qcoSelector');
+                            const opt = document.createElement('option');
+                            opt.value = doc.id;
+                            const last4 = (data.upcomingStyle || '').slice(-4);
+                            opt.textContent = `${data.qcoNumber || 'QCO'} - ${last4}`;
+                            opt.selected = true;
+                            selector.appendChild(opt);
+                            allChangeovers.push({ id: doc.id, ...data });
+                            handleQCOChange(doc.id);
+                        } else {
+                            statusEl.textContent = `No QCO found matching "${searchTerm}"`;
+                            statusEl.classList.remove('hidden', 'text-emerald-600');
+                            statusEl.classList.add('text-red-500');
+                        }
+                    } catch (fbErr) {
+                        console.error('Firestore search error:', fbErr);
+                        statusEl.textContent = `No QCO found matching "${searchTerm}"`;
+                        statusEl.classList.remove('hidden', 'text-emerald-600');
+                        statusEl.classList.add('text-red-500');
+                    }
                 }
             }, 500);
         }

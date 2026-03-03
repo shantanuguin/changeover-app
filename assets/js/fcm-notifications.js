@@ -21,8 +21,9 @@ async function initFCM() {
             return;
         }
 
-        // Register service worker
-        const swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        // Register service worker — resolve path relative to site root
+        const swPath = new URL('/firebase-messaging-sw.js', window.location.origin).href;
+        const swRegistration = await navigator.serviceWorker.register(swPath, { scope: '/' });
         console.log('[FCM] Service worker registered');
 
         // Get messaging instance (compat SDK)
