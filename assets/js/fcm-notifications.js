@@ -172,6 +172,9 @@ async function saveTokenToFirestore(token) {
  * Show a toast notification for foreground messages.
  */
 function showFCMToast(payload) {
+    // Play notification sound on the RECEIVER's device
+    playNotificationSound();
+
     const title = payload.notification?.title || payload.data?.title || 'Notification';
     const body = payload.notification?.body || payload.data?.body || '';
 
@@ -431,8 +434,6 @@ function getFirstOperationName(qcoData, fallbackOpName) {
  */
 async function sendStartNotification(qcoId, opName, qcoData, isTest = false) {
     try {
-        // Play sound locally immediately
-        playNotificationSound();
 
         const settings = JSON.parse(localStorage.getItem('appSettings')) || {};
         const backendUrl = settings.backendUrl || (typeof BACKEND_URL !== 'undefined' ? BACKEND_URL : 'http://localhost:3000');

@@ -829,15 +829,17 @@ app.post('/api/send-notification', async (req, res) => {
 
         console.log(`[FCM] Sending notification to ${tokens.length} devices`);
 
-        // Send multicast message
+        // Send as DATA-ONLY message (no 'notification' key).
+        // This ensures onBackgroundMessage always fires in the service worker
+        // so we control the notification display, icon, vibration, and sound.
         const message = {
-            notification: {
+            data: {
                 title: title,
-                body: body
+                body: body,
+                ...(data ? Object.fromEntries(
+                    Object.entries(data).map(([k, v]) => [k, String(v)])
+                ) : {})
             },
-            data: data ? Object.fromEntries(
-                Object.entries(data).map(([k, v]) => [k, String(v)])
-            ) : {},
             tokens: tokens
         };
 
