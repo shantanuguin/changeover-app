@@ -1,10 +1,73 @@
 // firebase-messaging-sw.js — Unified Service Worker for PWA + FCM
 // Must be at the ROOT of the domain for scope to cover all pages
 
-// PWA lifecycle
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+// =====================================================
+// OFFLINE CACHE — Cache core assets for PWA reliability
+// =====================================================
+const CACHE_NAME = 'qco-pwa-v1';
+const CORE_ASSETS = [
+    '/',
+    '/index.html',
+    '/manifest.json',
+    '/assets/icons/icon-192.png',
+    '/assets/icons/icon-512.png',
+    '/assets/icons/icon-72.png',
+    '/assets/js/fcm-notifications.js',
+    '/assets/js/qco-loader.js',
+    '/assets/js/qco-alert.js',
+    '/assets/js/firebase-config.js'
+];
 
+// On install: pre-cache core assets
+self.addEventListener('install', (event) => {
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then(cache => cache.addAll(CORE_ASSETS))
+            .then(() => self.skipWaiting())
+            .catch(err => {
+                console.warn('[SW] Cache addAll failed (some assets may not exist yet):', err);
+                self.skipWaiting();
+            })
+    );
+});
+
+// On activate: clean old caches and claim clients
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then(keys =>
+            Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+        ).then(() => self.clients.claim())
+    );
+});
+
+// Fetch strategy: Network first, fallback to cache
+self.addEventListener('fetch', (event) => {
+    // Skip non-GET and cross-origin requests
+    if (event.request.method !== 'GET') return;
+    if (!event.request.url.startsWith(self.location.origin)) return;
+
+    // Don't cache Firebase or other API requests
+    if (event.request.url.includes('firestore.googleapis.com') ||
+        event.request.url.includes('fcm.googleapis.com') ||
+        event.request.url.includes('/api/')) return;
+
+    event.respondWith(
+        fetch(event.request)
+            .then(response => {
+                // Clone and cache successful responses
+                if (response.ok) {
+                    const clone = response.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+                }
+                return response;
+            })
+            .catch(() => caches.match(event.request))
+    );
+});
+
+// =====================================================
+// FIREBASE CLOUD MESSAGING
+// =====================================================
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
 
@@ -24,8 +87,7 @@ messaging.onBackgroundMessage((payload) => {
     console.log('[SW] Background message received:', payload);
 
     // If the payload has a `notification` object, Firebase SDK will automatically 
-    // display a system notification. We don't need to manually show it again.
-    // However, if we receive a pure **data** payload, we can manually build and show it.
+    // display a system notification. We only manually show for pure data payloads.
     if (!payload.notification && payload.data) {
         const notificationTitle = payload.data.title || 'Changeover Alert';
         const notificationOptions = {
@@ -52,13 +114,11 @@ self.addEventListener('notificationclick', (event) => {
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            // Focus existing change.html window if available
             for (const client of clientList) {
                 if (client.url.includes('change.html')) {
                     return client.focus();
                 }
             }
-            // Otherwise open new window
             return clients.openWindow(url);
         })
     );
