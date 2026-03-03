@@ -90,6 +90,13 @@
             lucide.createIcons();
         });
 
+        // Minimal fallback for supervisor lookup on test page
+        const RAW_LINE_SCHEDULES = {
+            'S-13': { supervisor: 'SUMON' },
+            'S-01': { supervisor: 'WASANA-1' },
+            'S-05': { supervisor: 'OMAR FARUK' }
+        };
+
         async function testNotification() {
             const btn = document.getElementById('testBtn');
             const originalText = btn.innerHTML;
@@ -99,29 +106,31 @@
                 btn.innerHTML = `<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> Sending...`;
                 lucide.createIcons();
 
-                // Mock data simulating a changeover start
-                const dummyQcoId = `TEST-${Math.floor(Math.random() * 10000)}`;
-                const opName = "Prepare Machines";
+                // Realistic mock simulating a real changeover start notification
+                const dummyQcoId = `S-13-NF0A-TEST-${Math.floor(Math.random() * 1000)}`;
                 const qcoData = {
-                    lineNumber: "13/21",
-                    upcomingStyle: "Test Style NF0A",
-                    qcoNumber: dummyQcoId
+                    lineNumber: 'S-13',
+                    qcoNumber: dummyQcoId,
+                    operationsList: ['Prepare Machines', 'Thread Change', 'Sample Approval']
                 };
+                const firstOp = qcoData.operationsList[0];
 
-                // Use the existing function from fcm-notifications.js
-                await sendStartNotification(dummyQcoId, opName, qcoData);
+                // isTest=true adds [TEST] prefix to the notification title
+                await sendStartNotification(dummyQcoId, firstOp, qcoData, true);
 
                 Swal.fire({
                     icon: 'success',
                     title: 'Sent!',
-                    text: 'The notification request has been sent to the backend. Minimise the window now if you are testing push.',
-                    timer: 5000,
-                    showConfirmButton: true,
+                    html: `<div style="text-align:left;font-size:13px;line-height:1.8">
+                        <b>Title:</b> 🚨🚨[TEST] Changeover started in SUMON Line S-13<br>
+                        <b>Body:</b> and the first operation is "${firstOp}"<br><br>
+                        <span style="color:#94a3b8">Minimise the window to test background push delivery.</span>
+                    </div>`,
                     confirmButtonColor: '#0f172a'
                 });
 
             } catch (error) {
-                console.error("Test notification failed:", error);
+                console.error('Test notification failed:', error);
                 Swal.fire('Error', 'Failed to send notification request.', 'error');
             } finally {
                 btn.disabled = false;

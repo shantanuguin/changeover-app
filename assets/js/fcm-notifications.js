@@ -361,32 +361,107 @@ function showIOSInstallPrompt() {
 // BACKEND NOTIFICATION SENDER
 // =====================================================
 
+// =====================================================
+// NOTIFICATION SOUND
+// =====================================================
+function playNotificationSound() {
+    try {
+        const audio = new Audio('/assets/sounds/notification.mp3');
+        audio.volume = 1.0;
+        audio.play().catch(e => console.warn('[FCM] Sound play blocked (user gesture required):', e.message));
+    } catch (e) {
+        console.warn('[FCM] Sound error:', e);
+    }
+}
+
+// =====================================================
+// SUPERVISOR LOOKUP
+// =====================================================
+/**
+ * Attempt to get supervisor name from RAW_LINE_SCHEDULES (defined in recorder/outorder pages).
+ * Falls back to 'Unknown Supervisor' if not available.
+ */
+function getSupervisorName(qcoData) {
+    // Get the RAW_LINE_SCHEDULES from the page scope if available
+    const schedules = (typeof RAW_LINE_SCHEDULES !== 'undefined') ? RAW_LINE_SCHEDULES : {};
+
+    // Determine line key: prefer explicit lineNumber field, then parse from qcoNumber
+    let lineKey = (qcoData?.lineNumber || '').toString().trim().toUpperCase();
+
+    if (!lineKey && qcoData?.qcoNumber) {
+        const parts = qcoData.qcoNumber.split('-');
+        if (parts[0].toUpperCase() === 'S' && parts.length >= 2) {
+            lineKey = `S-${parts[1]}`;
+            // Handle letter suffixes like S-01A
+            if (parts[2] && /^[A-Z]$/.test(parts[2])) lineKey += parts[2];
+        } else {
+            lineKey = parts[0];
+        }
+    }
+
+    // Normalize to S-XX format
+    if (lineKey && !lineKey.startsWith('S-') && /^\d+[A-Z]?$/.test(lineKey)) {
+        const num = lineKey.match(/\d+/)[0];
+        const letter = lineKey.match(/[A-Z]$/) ? lineKey.match(/[A-Z]$/)[0] : '';
+        lineKey = `S-${num.padStart(2, '0')}${letter}`;
+    }
+
+    return schedules[lineKey]?.supervisor || 'Unknown Supervisor';
+}
+
+/**
+ * Get the first operation name from qcoData.operationsList.
+ */
+function getFirstOperationName(qcoData, fallbackOpName) {
+    const ops = qcoData?.operationsList;
+    if (Array.isArray(ops) && ops.length > 0) {
+        const first = ops[0];
+        return typeof first === 'string' ? first : (first?.name || fallbackOpName);
+    }
+    return fallbackOpName;
+}
+
+// =====================================================
+// BACKEND NOTIFICATION SENDER
+// =====================================================
 /**
  * Send a notification to all subscribed users via the backend.
  * Called from startOperation() when it's the FIRST operation.
+ * @param {boolean} isTest - if true, prefix message with [TEST]
  */
-async function sendStartNotification(qcoId, opName, qcoData) {
+async function sendStartNotification(qcoId, opName, qcoData, isTest = false) {
     try {
+        // Play sound locally immediately
+        playNotificationSound();
+
         const settings = JSON.parse(localStorage.getItem('appSettings')) || {};
         const backendUrl = settings.backendUrl || (typeof BACKEND_URL !== 'undefined' ? BACKEND_URL : 'http://localhost:3000');
 
-        const lineName = qcoData?.lineNumber || 'Unknown Line';
-        const styleName = qcoData?.upcomingStyle || 'Unknown Style';
+        const lineNumber = qcoData?.lineNumber || 'Unknown Line';
         const qcoNumber = qcoData?.qcoNumber || qcoId;
+        const supervisorName = getSupervisorName(qcoData);
+        const firstOp = getFirstOperationName(qcoData, opName);
+        const testPrefix = isTest ? '[TEST] ' : '';
+
+        const title = `🚨🚨${testPrefix}Changeover started in ${supervisorName} Line ${lineNumber}`;
+        const body = `and the first operation is "${firstOp}" | QCO: ${qcoNumber}`;
 
         const response = await fetch(`${backendUrl}/api/send-notification`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                title: `🔄 Changeover Started — ${lineName}`,
-                body: `${qcoNumber} | Style: ${styleName} | First operation "${opName}" has begun.`,
-                qcoId: qcoId,
+                title,
+                body,
+                qcoId,
                 data: {
                     qcoId,
                     qcoNumber,
-                    lineName,
-                    styleName,
-                    opName,
+                    lineNumber,
+                    supervisorName,
+                    firstOp,
+                    title,
+                    body,
+                    sound: '/assets/sounds/notification.mp3',
                     startedAt: new Date().toISOString()
                 }
             })
