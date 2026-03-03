@@ -13,7 +13,8 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
         rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    <script src="../assets/js/qco-loader.js"></script>
+    <script src="../assets/js/qco-alert.js"></script>
     <!-- Firebase SDK (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -381,87 +382,91 @@
                 <div class="flex flex-col md:flex-row justify-between items-center py-2 md:py-2.5 gap-2 md:gap-0">
 
                     <!-- Left: Brand & User Info -->
-                    <div class="flex items-center justify-between w-full md:w-auto gap-4">
-                        <div class="flex items-center gap-3">
-                            <div
-                                class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white shadow-lg flex-shrink-0">
-                                <i data-lucide="clipboard-check" class="w-5 h-5"></i>
-                            </div>
-                            <div class="min-w-0 flex flex-col justify-center">
-                                <h1
-                                    class="font-heading font-bold text-slate-900 text-lg md:text-xl leading-tight truncate">
-                                    Changeover Checklist</h1>
-                                <div class="flex items-center gap-2 mt-0.5">
-                                    <span id="deptBadge"
-                                        class="px-2 py-0.5 rounded-md text-[10px] md:text-xs font-bold uppercase tracking-wider truncate bg-slate-100 text-slate-600">Dept</span>
-                                    <span id="connectionStatus"
-                                        class="hidden w-2 h-2 rounded-full bg-red-500 animate-pulse"
-                                        title="Offline"></span>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="flex flex-col md:flex-row justify-between items-center py-2 md:py-2.5 gap-2 md:gap-0">
 
-                        <!-- Mobile Logout (Icon only) -->
-                        <button onclick="logout()"
-                            class="md:hidden p-2.5 text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors touch-manipulation">
-                            <i data-lucide="log-out" class="w-5 h-5"></i>
-                        </button>
-                    </div>
-
-                    <!-- Right: Controls & Actions -->
-                    <div
-                        class="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto mt-1 md:mt-0">
-
-                        <!-- Mobile: Controls Row -->
-                        <div class="flex items-center gap-2 w-full md:w-auto">
-                            <!-- QCO Selector -->
-                            <div class="relative flex-1 md:w-auto group">
-                                <select id="qcoSelector" onchange="handleQCOChange(this.value)"
-                                    class="w-full appearance-none bg-white/80 border border-slate-200/60 text-slate-700 font-bold py-2.5 pl-4 pr-10 rounded-xl hover:bg-white hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-sm shadow-sm md:min-w-[240px]">
-                                    <option value="">Select QCO...</option>
-                                </select>
-                                <i data-lucide="chevron-down"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
-                            </div>
-
-                            <!-- Search (Compact) -->
-                            <div
-                                class="flex items-center gap-2 bg-white/80 rounded-xl border border-slate-200/60 px-3 py-2.5 shadow-sm max-w-[140px] md:max-w-[200px]">
-                                <i data-lucide="search" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
-                                <input type="text" id="qcoSearchInput" placeholder="Find #"
-                                    class="bg-transparent border-none outline-none text-sm font-semibold text-slate-700 w-full placeholder:text-slate-400 min-w-0"
-                                    onkeypress="handleSearchKeypress(event)">
-                            </div>
-                        </div>
-
-                        <!-- Action Bar: Countdown & Save -->
-                        <div class="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
-
-
+                        <!-- Left: Brand & User Info -->
+                        <div class="flex items-center justify-between w-full md:w-auto gap-4">
                             <div class="flex items-center gap-3">
-                                <!-- Save Status -->
-                                <div id="saveStatus"
-                                    class="hidden items-center gap-1.5 text-xs text-emerald-600 font-medium bg-emerald-50 px-2.5 py-1.5 rounded-full border border-emerald-100">
-                                    <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full live-dot"></div>
-                                    <span class="hidden sm:inline">Saved</span>
+                                <div
+                                    class="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white shadow-lg flex-shrink-0">
+                                    <i data-lucide="clipboard-check" class="w-5 h-5"></i>
                                 </div>
-
-                                <!-- Save Button -->
-                                <button onclick="manualSave()"
-                                    class="flex-1 md:flex-none px-5 py-2.5 rounded-xl bg-slate-900 text-white font-semibold text-sm shadow-lg shadow-slate-900/20 hover:translate-y-[-1px] active:translate-y-[1px] transition-all flex items-center justify-center gap-2 touch-manipulation">
-                                    <i data-lucide="save" class="w-4 h-4"></i>
-                                    <span>Save</span>
-                                </button>
-
-                                <!-- Desktop Logout -->
-                                <button onclick="logout()"
-                                    class="hidden md:flex p-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                                    title="Logout">
-                                    <i data-lucide="log-out" class="w-5 h-5"></i>
-                                </button>
+                                <div class="min-w-0 flex flex-col justify-center">
+                                    <h1
+                                        class="font-heading font-bold text-slate-900 text-lg md:text-xl leading-tight truncate">
+                                        Changeover Checklist</h1>
+                                    <div class="flex items-center gap-2 mt-0.5">
+                                        <span id="deptBadge"
+                                            class="px-2 py-0.5 rounded-md text-[10px] md:text-xs font-bold uppercase tracking-wider truncate bg-slate-100 text-slate-600">Dept</span>
+                                        <span id="connectionStatus"
+                                            class="hidden w-2 h-2 rounded-full bg-red-500 animate-pulse"
+                                            title="Offline"></span>
+                                    </div>
+                                </div>
                             </div>
+
+                            <!-- Mobile Logout (Icon only) -->
+                            <button onclick="logout()"
+                                class="md:hidden p-2.5 text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors touch-manipulation">
+                                <i data-lucide="log-out" class="w-5 h-5"></i>
+                            </button>
                         </div>
 
+                        <!-- Right: Controls & Actions -->
+                        <div
+                            class="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full md:w-auto mt-1 md:mt-0">
+
+                            <!-- Mobile: Controls Row -->
+                            <div class="flex items-center gap-2 w-full md:w-auto">
+                                <!-- QCO Selector -->
+                                <div class="relative flex-1 md:w-auto group">
+                                    <select id="qcoSelector" onchange="handleQCOChange(this.value)"
+                                        class="w-full appearance-none bg-white/80 border border-slate-200/60 text-slate-700 font-bold py-2.5 pl-4 pr-10 rounded-xl hover:bg-white hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-sm shadow-sm md:min-w-[240px]">
+                                        <option value="">Select QCO...</option>
+                                    </select>
+                                    <i data-lucide="chevron-down"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none"></i>
+                                </div>
+
+                                <!-- Search (Compact) -->
+                                <div
+                                    class="flex items-center gap-2 bg-white/80 rounded-xl border border-slate-200/60 px-3 py-2.5 shadow-sm max-w-[140px] md:max-w-[200px]">
+                                    <i data-lucide="search" class="w-4 h-4 text-slate-400 flex-shrink-0"></i>
+                                    <input type="text" id="qcoSearchInput" placeholder="Find #"
+                                        class="bg-transparent border-none outline-none text-sm font-semibold text-slate-700 w-full placeholder:text-slate-400 min-w-0"
+                                        onkeypress="handleSearchKeypress(event)">
+                                </div>
+                            </div>
+
+                            <!-- Action Bar: Countdown & Save -->
+                            <div class="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
+
+
+                                <div class="flex items-center gap-3">
+                                    <!-- Save Status -->
+                                    <div id="saveStatus"
+                                        class="hidden items-center gap-1.5 text-xs text-emerald-600 font-medium bg-emerald-50 px-2.5 py-1.5 rounded-full border border-emerald-100">
+                                        <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full live-dot"></div>
+                                        <span class="hidden sm:inline">Saved</span>
+                                    </div>
+
+                                    <!-- Save Button -->
+                                    <button onclick="manualSave()"
+                                        class="flex-1 md:flex-none px-5 py-2.5 rounded-xl bg-slate-900 text-white font-semibold text-sm shadow-lg shadow-slate-900/20 hover:translate-y-[-1px] active:translate-y-[1px] transition-all flex items-center justify-center gap-2 touch-manipulation">
+                                        <i data-lucide="save" class="w-4 h-4"></i>
+                                        <span>Save</span>
+                                    </button>
+
+                                    <!-- Desktop Logout -->
+                                    <button onclick="logout()"
+                                        class="hidden md:flex p-2.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                        title="Logout">
+                                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
             </div>
@@ -784,117 +789,31 @@
 
             gsap.to(app, { opacity: 1, duration: 0.5 });
 
-            loadChangeoverList();
-
-            const savedQCO = sessionStorage.getItem('currentQCOId');
-            if (savedQCO) {
-                handleQCOChange(savedQCO);
-            }
+            initQCOLoader();
         }
 
         // --- QCO Management ---
 
-        async function loadChangeoverList() {
-            if (!db) return;
-            try {
-                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(50).get();
-                const selector = document.getElementById('qcoSelector');
-                selector.innerHTML = '<option value="">Select QCO...</option>';
-
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const option = document.createElement('option');
-                    option.value = doc.id;
-                    const qcoNum = data.qcoNumber || doc.id.substring(0, 8);
-                    const style = data.upcomingStyle || 'Unknown';
-                    option.textContent = `${qcoNum} - ${style}`;
-                    option.dataset.qcoNumber = qcoNum;
-                    selector.appendChild(option);
-                });
-            } catch (error) {
-                console.error("Error loading QCO list:", error);
-            }
-        }
-
-        function handleSearchKeypress(e) {
-            if (e.key === 'Enter') searchQCO();
-        }
-
-        async function searchQCO() {
-            if (!isOnline) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Offline',
-                    text: 'Search requires internet connection',
-                    confirmButtonColor: '#0ea5e9'
-                });
-                return;
-            }
-
-            const searchVal = document.getElementById('qcoSearchInput').value.trim().toUpperCase();
-            if (!searchVal || !db) return;
-
-            try {
-                // Try exact match on qcoNumber
-                let snapshot = await db.collection('changeovers')
-                    .where('qcoNumber', '==', searchVal)
-                    .limit(1)
-                    .get();
-
-                // If not found, try partial match (starts with)
-                if (snapshot.empty) {
-                    snapshot = await db.collection('changeovers')
-                        .orderBy('qcoNumber')
-                        .startAt(searchVal)
-                        .endAt(searchVal + '\uf8ff')
-                        .limit(1)
-                        .get();
+        // ==========================================
+        // DATA LOADING (existing changeovers)
+        // ==========================================
+        function initQCOLoader() {
+            window.qcoLoader = new QCOLoader({
+                selectElementId: 'qcoSelector',
+                searchInputId: 'qcoSearchInput',
+                pageSize: 10,
+                onSelect: (qcoId) => {
+                    handleQCOChange(qcoId);
                 }
+            });
 
-                if (!snapshot.empty) {
-                    const doc = snapshot.docs[0];
-                    const selector = document.getElementById('qcoSelector');
-
-                    // Check if already exists in dropdown
-                    let exists = false;
-                    for (let i = 0; i < selector.options.length; i++) {
-                        if (selector.options[i].value === doc.id) {
-                            selector.selectedIndex = i;
-                            exists = true;
-                            break;
-                        }
-                    }
-
-                    if (!exists) {
-                        const data = doc.data();
-                        const option = document.createElement('option');
-                        option.value = doc.id;
-                        option.textContent = `${data.qcoNumber || doc.id} - ${data.upcomingStyle || 'Unknown'}`;
-                        option.selected = true;
-                        selector.appendChild(option);
-                    }
-
-                    handleQCOChange(doc.id);
-
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'QCO Found',
-                        text: `Loaded ${doc.data().qcoNumber || doc.id}`,
-                        timer: 1500,
-                        showConfirmButton: false,
-                        position: 'top-end',
-                        toast: true
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Not Found',
-                        text: 'No changeover found matching this number',
-                        confirmButtonColor: '#0ea5e9'
-                    });
-                }
-            } catch (error) {
-                console.error("Search error:", error);
+            const savedQCO = localStorage.getItem('outlistCurrentQCO');
+            if (savedQCO) {
+                // Wait briefly for reset to populate the first page
+                setTimeout(() => {
+                    document.getElementById('qcoSelector').value = savedQCO;
+                    handleQCOChange(savedQCO);
+                }, 1000);
             }
         }
 

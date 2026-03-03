@@ -718,7 +718,7 @@
             db = firebase.firestore();
 
             // Load QCOs
-            await loadChangeoverList();
+            initQCOLoader();
 
             lucide.createIcons();
         });
@@ -726,33 +726,26 @@
         // =====================================================
         //  QCO LIST & SELECTION
         // =====================================================
-        async function loadChangeoverList() {
-            try {
-                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(30).get();
-                const selector = document.getElementById('qcoSelector');
-                selector.innerHTML = '<option value="">Select Changeover...</option>';
-
-                const savedId = localStorage.getItem('monitorQCOId');
-
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const opt = document.createElement('option');
-                    opt.value = doc.id;
-                    const upStyle = data.upcomingStyle || 'Unknown';
-                    const last4 = upStyle.length >= 4 ? upStyle.slice(-4) : upStyle;
-                    const lineInfo = data.lineNumber ? `L${data.lineNumber} - ` : '';
-                    opt.textContent = `${lineInfo}${data.qcoNumber || 'QCO'} - ${last4}`;
-                    if (doc.id === savedId) opt.selected = true;
-                    selector.appendChild(opt);
-                    allChangeovers.push({ id: doc.id, ...data });
-                });
-
-                if (savedId) {
-                    currentQCOId = savedId;
-                    attachRealtimeListener(savedId);
+        // ==========================================
+        // DATA LOADING (existing changeovers)
+        // ==========================================
+        function initQCOLoader() {
+            window.qcoLoader = new QCOLoader({
+                selectElementId: 'qcoSelector',
+                searchInputId: 'qcoSearch',
+                pageSize: 10,
+                onSelect: (qcoId) => {
+                    handleQCOChange(qcoId);
                 }
-            } catch (e) {
-                console.error("Error loading changeover list:", e);
+            });
+
+            const savedId = localStorage.getItem('monitorQCOId');
+            if (savedId) {
+                // Wait briefly for reset to populate the first page
+                setTimeout(() => {
+                    document.getElementById('qcoSelector').value = savedId;
+                    handleQCOChange(savedId);
+                }, 1000);
             }
         }
 
@@ -763,24 +756,7 @@
             attachRealtimeListener(qcoId);
         }
 
-        let searchTimeout = null;
-        function handleSearch(event) {
-            const term = event.target.value.trim().toUpperCase();
-            if (searchTimeout) clearTimeout(searchTimeout);
-            if (!term) return;
-
-            searchTimeout = setTimeout(() => {
-                const matched = allChangeovers.find(q => {
-                    const qn = (q.qcoNumber || '').toUpperCase();
-                    const us = (q.upcomingStyle || '').toUpperCase();
-                    return qn.includes(term) || us.includes(term);
-                });
-                if (matched) {
-                    document.getElementById('qcoSelector').value = matched.id;
-                    handleQCOChange(matched.id);
-                }
-            }, 400);
-        }
+        // SEARCH logic is now handled by QCOLoader internally.
 
         // =====================================================
         //  REALTIME LISTENER
@@ -1445,6 +1421,7 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../assets/js/qco-loader.js"></script>
     <script src="../assets/js/qco-alert.js"></script>
 </body>
 

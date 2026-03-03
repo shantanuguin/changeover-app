@@ -23,20 +23,25 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
     console.log('[SW] Background message received:', payload);
 
-    const notificationTitle = payload.notification?.title || 'Changeover Alert';
-    const notificationOptions = {
-        body: payload.notification?.body || 'A changeover operation has started.',
-        icon: '/assets/icons/icon-192.png',
-        badge: '/assets/icons/icon-72.png',
-        tag: payload.data?.qcoId || 'changeover-notification',
-        data: payload.data || {},
-        vibrate: [200, 100, 200],
-        actions: [
-            { action: 'view', title: 'View Details' }
-        ]
-    };
+    // If the payload has a `notification` object, Firebase SDK will automatically 
+    // display a system notification. We don't need to manually show it again.
+    // However, if we receive a pure **data** payload, we can manually build and show it.
+    if (!payload.notification && payload.data) {
+        const notificationTitle = payload.data.title || 'Changeover Alert';
+        const notificationOptions = {
+            body: payload.data.body || 'A changeover operation has started.',
+            icon: '/assets/icons/icon-192.png',
+            badge: '/assets/icons/icon-72.png',
+            tag: payload.data.qcoId || 'changeover-notification',
+            data: payload.data || {},
+            vibrate: [200, 100, 200],
+            actions: [
+                { action: 'view', title: 'View Details' }
+            ]
+        };
 
-    self.registration.showNotification(notificationTitle, notificationOptions);
+        return self.registration.showNotification(notificationTitle, notificationOptions);
+    }
 });
 
 // Handle notification click
