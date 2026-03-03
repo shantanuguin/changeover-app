@@ -1,57 +1,17 @@
-// firebase-messaging-sw.js — Unified Service Worker for PWA + FCM
+// firebase-messaging-sw.js — Service Worker for FCM Push Notifications
 // Must be at the ROOT of the domain for scope to cover all pages
+//
+// IMPORTANT: This service worker handles ONLY Firebase Cloud Messaging.
+// No offline caching — iOS Safari service worker caching causes SSL/navigation errors.
 
-// =====================================================
-// OFFLINE CACHE — Cache core assets for PWA reliability
-// =====================================================
-const CACHE_NAME = 'qco-pwa-v1';
-const CORE_ASSETS = [
-    '/',
-    '/index.html',
-    '/manifest.json',
-    '/assets/icons/icon-192.png',
-    '/assets/icons/icon-512.png',
-    '/assets/icons/icon-72.png',
-    '/assets/js/fcm-notifications.js',
-    '/assets/js/qco-loader.js',
-    '/assets/js/qco-alert.js',
-    '/assets/js/firebase-config.js'
-];
-
-// On install: pre-cache core assets
-self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(cache => cache.addAll(CORE_ASSETS))
-            .then(() => self.skipWaiting())
-            .catch(err => {
-                console.warn('[SW] Cache addAll failed (some assets may not exist yet):', err);
-                self.skipWaiting();
-            })
-    );
-});
-
-// On activate: clean old caches and claim clients
+// PWA lifecycle — keep it simple
+self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => {
+    // Clean up any old caches from previous versions
     event.waitUntil(
         caches.keys().then(keys =>
-            Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+            Promise.all(keys.map(k => caches.delete(k)))
         ).then(() => self.clients.claim())
-    );
-});
-
-// Fetch strategy: Only serve cached static assets when offline.
-// IMPORTANT: Do NOT intercept navigation requests — this breaks iOS Safari SSL.
-self.addEventListener('fetch', (event) => {
-    // Only handle GET requests for same-origin static assets
-    if (event.request.method !== 'GET') return;
-    if (event.request.mode === 'navigate') return; // Never intercept page navigation
-    if (!event.request.url.startsWith(self.location.origin)) return;
-    if (event.request.url.includes('/api/')) return;
-
-    // Only use cache as fallback when network fails (for static assets only)
-    event.respondWith(
-        fetch(event.request).catch(() => caches.match(event.request))
     );
 });
 
@@ -76,7 +36,7 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
     console.log('[SW] Background message received:', payload);
 
-    // If the payload has a `notification` object, Firebase SDK will automatically 
+    // If the payload has a `notification` object, Firebase SDK will automatically
     // display a system notification. We only manually show for pure data payloads.
     if (!payload.notification && payload.data) {
         const notificationTitle = payload.data.title || 'Changeover Alert';
