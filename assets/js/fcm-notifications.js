@@ -1,19 +1,38 @@
 /**
- * FCM Notifications Module
- * Handles permission requests, token management, and foreground message display.
+ * FCM Notifications & PWA Install Module
+ * Handles permission requests, token management, foreground messages,
+ * and PWA install prompts for ALL platforms (iOS, Android, Desktop).
  * 
  * Usage: Include this script, then call initFCM() after Firebase is initialized.
- * On iOS PWA, call requestNotificationPermission() from a user gesture (button tap).
  */
 
 const FCM_VAPID_KEY = 'BDYMjTSGQ8IxPCTS3dasWodoDW6Z_VZEYOkWMZx6Xec29DCyVdiiIrYNLB6dlb_hCPdfKbbF6OHSAEGLsptuoeQ';
 
 let fcmMessaging = null;
 let fcmSwRegistration = null;
+let _deferredInstallPrompt = null; // Captured beforeinstallprompt event
 
 // --- Platform Detection ---
 const _isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 const _isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+// =====================================================
+// PWA INSTALL PROMPT (Android / Desktop Chrome)
+// =====================================================
+// Capture the browser's install prompt before it auto-fires
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); // Prevent the mini-infobar from appearing
+    _deferredInstallPrompt = e;
+    console.log('[PWA] Install prompt captured');
+    showInstallButton();
+});
+
+// Hide install button if app is installed
+window.addEventListener('appinstalled', () => {
+    console.log('[PWA] App installed successfully');
+    _deferredInstallPrompt = null;
+    hideInstallButton();
+});
 
 /**
  * Initialize FCM: register service worker and set up foreground listener.
@@ -31,7 +50,7 @@ async function initFCM() {
         // iOS detection — FCM requires PWA installation on iOS
         if (_isIOS && !_isStandalone) {
             console.log('[FCM] iOS detected but not running as PWA — skipping FCM init');
-            showInstallPrompt();
+            showIOSInstallPrompt();
             return;
         }
 
@@ -42,7 +61,6 @@ async function initFCM() {
             console.log('[FCM] Service worker registered');
         } catch (swError) {
             console.error('[FCM] Service worker registration failed:', swError.message);
-            console.error('[FCM] Ensure firebase-messaging-sw.js exists at the root of your domain');
             return;
         }
 
@@ -55,16 +73,15 @@ async function initFCM() {
             showFCMToast(payload);
         });
 
-        // Step 4: Auto-request permission on non-iOS (or if already granted)
-        if (!_isIOS) {
-            // On desktop/Android, auto-request is fine
-            await requestNotificationPermission();
-        } else if (Notification.permission === 'granted') {
-            // iOS PWA with already-granted permission — just get token
+        // Step 4: Handle permission based on platform
+        if (Notification.permission === 'granted') {
+            // Already granted — just get token
             await _getTokenAndSave();
+        } else if (Notification.permission === 'denied') {
+            console.warn('[FCM] Notifications blocked by user');
         } else {
-            // iOS PWA without permission — show the enable button
-            console.log('[FCM] iOS PWA detected — waiting for user gesture to request permission');
+            // Permission is 'default' — show Enable Alerts button
+            // (works on all platforms; iOS requires user gesture, and it's better UX everywhere)
             showNotificationButton();
         }
 
@@ -122,21 +139,18 @@ async function _getTokenAndSave() {
             console.error('[FCM] ⚠️  FIX: Enable these APIs in Google Cloud Console → APIs & Services → Library:');
             console.error('[FCM]    1. "Firebase Cloud Messaging API" (NOT the Legacy one)');
             console.error('[FCM]    2. "Firebase Installations API"');
-            console.error('[FCM]    Project: sidneymailer | URL: https://console.cloud.google.com/apis/library?project=sidneymailer');
         }
     }
 }
 
 /**
  * Save FCM token to Firestore fcm_tokens collection.
- * Uses the token itself as the document ID to avoid duplicates.
  */
 async function saveTokenToFirestore(token) {
     if (!db) {
         console.warn('[FCM] Firestore not available, cannot save token');
         return;
     }
-
     try {
         await db.collection('fcm_tokens').doc(token).set({
             token: token,
@@ -149,6 +163,10 @@ async function saveTokenToFirestore(token) {
         console.error('[FCM] Error saving token:', error);
     }
 }
+
+// =====================================================
+// UI COMPONENTS
+// =====================================================
 
 /**
  * Show a toast notification for foreground messages.
@@ -176,7 +194,6 @@ function showFCMToast(payload) {
 
     document.body.appendChild(toast);
     requestAnimationFrame(() => toast.classList.remove('translate-x-full'));
-
     if (typeof lucide !== 'undefined') lucide.createIcons();
 
     setTimeout(() => {
@@ -185,27 +202,93 @@ function showFCMToast(payload) {
     }, 8000);
 }
 
-/**
- * Show "Enable Notifications" floating button for iOS PWA.
- */
-function showNotificationButton() {
-    // Don't duplicate
-    if (document.getElementById('fcm-enable-btn')) return;
+// =====================================================
+// FLOATING ACTION BUTTONS (Install + Alerts)
+// =====================================================
 
+const _fabContainerStyle = `
+    position: fixed; bottom: 24px; right: 24px; z-index: 9998;
+    display: flex; flex-direction: column; gap: 12px; align-items: flex-end;
+`;
+
+function _getFabContainer() {
+    let container = document.getElementById('pwa-fab-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'pwa-fab-container';
+        container.style.cssText = _fabContainerStyle;
+        document.body.appendChild(container);
+    }
+    return container;
+}
+
+function _createFab(id, icon, label, gradient) {
     const btn = document.createElement('button');
-    btn.id = 'fcm-enable-btn';
-    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg> Enable Alerts`;
+    btn.id = id;
+    btn.innerHTML = `${icon} ${label}`;
     btn.style.cssText = `
-        position: fixed; bottom: 24px; right: 24px; z-index: 9999;
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        background: ${gradient};
         color: white; border: none; padding: 14px 20px; border-radius: 16px;
         font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px;
         display: flex; align-items: center; gap: 8px;
         box-shadow: 0 10px 25px rgba(15, 23, 42, 0.3);
-        cursor: pointer; transition: all 0.2s;
+        cursor: pointer; transition: all 0.2s; white-space: nowrap;
+        animation: pwa-fab-in 0.4s ease-out;
     `;
+    return btn;
+}
+
+// --- Install Button (Android / Desktop) ---
+function showInstallButton() {
+    if (document.getElementById('pwa-install-btn')) return;
+    if (_isStandalone) return; // Already installed
+
+    const container = _getFabContainer();
+    const icon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`;
+    const btn = _createFab('pwa-install-btn', icon, 'Install App', 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)');
+
     btn.addEventListener('click', async () => {
-        btn.innerHTML = '<span style="animation: spin 1s linear infinite; display:inline-block;">⏳</span> Requesting...';
+        if (!_deferredInstallPrompt) {
+            // Fallback: browser doesn't support beforeinstallprompt or it wasn't captured
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Install App',
+                    html: 'Use your browser menu:<br><strong>⋮ → "Install App"</strong> or <strong>"Add to Home Screen"</strong>',
+                    confirmButtonColor: '#7c3aed'
+                });
+            }
+            return;
+        }
+        _deferredInstallPrompt.prompt();
+        const { outcome } = await _deferredInstallPrompt.userChoice;
+        console.log('[PWA] Install prompt outcome:', outcome);
+        _deferredInstallPrompt = null;
+        if (outcome === 'accepted') {
+            btn.innerHTML = '✅ Installed!';
+            btn.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
+            setTimeout(() => btn.remove(), 2000);
+        }
+    });
+
+    container.appendChild(btn);
+}
+
+function hideInstallButton() {
+    const btn = document.getElementById('pwa-install-btn');
+    if (btn) btn.remove();
+}
+
+// --- Notification Button (All platforms) ---
+function showNotificationButton() {
+    if (document.getElementById('fcm-enable-btn')) return;
+
+    const container = _getFabContainer();
+    const icon = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>`;
+    const btn = _createFab('fcm-enable-btn', icon, 'Enable Alerts', 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)');
+
+    btn.addEventListener('click', async () => {
+        btn.innerHTML = '⏳ Requesting...';
         const granted = await requestNotificationPermission();
         if (granted) {
             btn.innerHTML = '✅ Alerts Enabled!';
@@ -214,26 +297,23 @@ function showNotificationButton() {
         } else {
             btn.innerHTML = '❌ Permission Denied';
             btn.style.background = 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)';
-            setTimeout(() => btn.remove(), 3000);
+            setTimeout(() => {
+                btn.innerHTML = `${icon} Enable Alerts`;
+                btn.style.background = 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)';
+            }, 3000);
         }
     });
 
-    document.body.appendChild(btn);
+    container.appendChild(btn);
 }
 
-/**
- * Hide the notification enable button after permission is granted.
- */
 function hideNotificationButton() {
     const btn = document.getElementById('fcm-enable-btn');
     if (btn) btn.remove();
 }
 
-/**
- * Show install prompt for iOS Safari (not in standalone mode).
- */
-function showInstallPrompt() {
-    // Don't show if it's already been dismissed this session
+// --- iOS Safari Install Banner ---
+function showIOSInstallPrompt() {
     if (sessionStorage.getItem('pwa-install-dismissed')) return;
 
     const banner = document.createElement('div');
@@ -244,6 +324,7 @@ function showInstallPrompt() {
         color: white; padding: 16px 20px; font-family: 'Inter', sans-serif;
         display: flex; align-items: center; gap: 12px;
         box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+        animation: pwa-fab-in 0.4s ease-out;
     `;
     banner.innerHTML = `
         <div style="flex:1; min-width:0;">
@@ -259,6 +340,26 @@ function showInstallPrompt() {
         sessionStorage.setItem('pwa-install-dismissed', '1');
     });
 }
+
+// =====================================================
+// ANIMATION KEYFRAMES (injected once)
+// =====================================================
+(function injectFabAnimation() {
+    if (document.getElementById('pwa-fab-keyframes')) return;
+    const style = document.createElement('style');
+    style.id = 'pwa-fab-keyframes';
+    style.textContent = `
+        @keyframes pwa-fab-in {
+            from { opacity: 0; transform: translateY(20px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+    `;
+    document.head.appendChild(style);
+})();
+
+// =====================================================
+// BACKEND NOTIFICATION SENDER
+// =====================================================
 
 /**
  * Send a notification to all subscribed users via the backend.
