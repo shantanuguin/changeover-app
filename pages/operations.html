@@ -1138,21 +1138,7 @@
         };
 
         // --- Utils ---
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
 
-        const handleStyleSearchDebounced = debounce((event) => {
-            performStyleSearch(event.target.value);
-        }, 150);
 
         // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -1175,7 +1161,36 @@
                     await initFirebase();
                     checkAuth();
                     initLenis();
-                    await loadUpcomingStyles();
+
+                    // Initialize QCOLoader
+                    window.qcoLoader = new QCOLoader({
+                        db: db,
+                        searchInputId: 'styleSearch',
+                        selectElementId: 'styleSelector',
+                        statusElId: 'searchStatus',
+                        clearBtnId: 'clearSearchBtn',
+                        onQCOLsLoaded: (qcos) => {
+                            allChangeovers = qcos;
+                        },
+                        onQCOSelected: (qcoId, qcoData) => {
+                            loadOperationsForStyle(qcoId);
+                        },
+                        onCleared: () => {
+                            document.getElementById('operationsContainer').innerHTML = `
+                                <div class="text-center py-20 text-slate-400">
+                                    <i data-lucide="list-checks" class="w-16 h-16 mx-auto mb-4 opacity-30"></i>
+                                    <p class="text-lg font-medium">Select a style to view operations</p>
+                                </div>
+                            `;
+                            lucide.createIcons();
+                            document.getElementById('styleInfo').classList.add('hidden');
+                            currentQCOId = null;
+                            currentOperations = [];
+                            selectedOperationIds.clear();
+                            updateSelectionUI();
+                        }
+                    });
+
                     if (typeof lucide !== 'undefined') lucide.createIcons();
                 } catch (e) {
                     console.error("Delayed data error:", e);
@@ -1277,199 +1292,7 @@
             }, { passive: true });
         }
 
-        // --- Load Styles ---
-        async function loadUpcomingStyles() {
-            try {
-                const snapshot = await db.collection('changeovers')
-                    .orderBy('createdAt', 'desc')
-                    .limit(50)
-                    .get();
-
-                const selector = document.getElementById('styleSelector');
-                selector.innerHTML = '<option value="">-- Select Upcoming Style --</option>';
-
-                allChangeovers = [];
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    allChangeovers.push({ id: doc.id, ...data });
-
-                    const upcomingStyle = data.upcomingStyle || data.newStyle || 'Unknown';
-                    const line = data.line || data.lineNumber || '-';
-                    const option = document.createElement('option');
-                    option.value = doc.id;
-                    option.textContent = `${upcomingStyle} (Line ${line}) - ${doc.id}`;
-                    selector.appendChild(option);
-                });
-
-                if (allChangeovers.length === 0) {
-                    showToast('No changeovers found in database', 'info');
-                }
-
-            } catch (error) {
-                console.error('Error loading styles:', error);
-                showToast('Failed to load styles', 'error');
-            }
-        }
-
-        // --- Load Operations for Style ---
-        async function loadOperationsForStyle(qcoId) {
-            if (!qcoId) {
-                document.getElementById('operationsContainer').innerHTML = `
-                    <div class="text-center py-20 text-slate-400">
-                        <i data-lucide="list-checks" class="w-16 h-16 mx-auto mb-4 opacity-30"></i>
-                        <p class="text-lg font-medium">Select a style to view operations</p>
-                    </div>
-                `;
-                lucide.createIcons();
-                document.getElementById('styleInfo').classList.add('hidden');
-                return;
-            }
-
-            currentQCOId = qcoId;
-            const changeover = allChangeovers.find(c => c.id === qcoId);
-
-            if (!changeover) {
-                showToast('Changeover not found', 'error');
-                return;
-            }
-
-            // Try to load from sub-collection first, fallback to operationsList
-            let operations = [];
-
-            try {
-                const opsSnapshot = await db.collection('changeovers').doc(qcoId).collection('operations').orderBy('order').get();
-                if (!opsSnapshot.empty) {
-                    opsSnapshot.forEach(doc => {
-                        operations.push({ id: doc.id, ...doc.data() });
-                    });
-                }
-            } catch (e) {
-                console.log('No operations sub-collection, using operationsList');
-            }
-
-            // Fallback to operationsList from main document
-            if (operations.length === 0 && changeover.operationsList) {
-                operations = changeover.operationsList.map((op, index) => ({
-                    id: `op-${index}`,
-                    serialNumber: op.serialNumber || (index + 1).toString(),
-                    name: op.name || 'Unknown',
-                    smv: op.smv || 0,
-                    machineType: op.machineType || 'MANUAL',
-                    allocatedWP: op.allocatedWP || 0,
-                    allocatedDirect: op.allocatedDirect || 0,
-                    order: index,
-                    isCombined: false
-                }));
-            }
-
-            currentOperations = operations;
-            selectedOperationIds.clear();
-            hasUnsavedChanges = false;
-            updateSaveButton();
-            renderOperations();
-            updateStyleInfo(changeover, operations);
-        }
-
-        function updateStyleInfo(changeover, operations) {
-            const upcomingStyle = changeover.upcomingStyle || changeover.newStyle || 'Unknown';
-
-            if (!uiCache.infoStyleNumber) uiCache.infoStyleNumber = document.getElementById('infoStyleNumber');
-            if (!uiCache.infoTotalOps) uiCache.infoTotalOps = document.getElementById('infoTotalOps');
-            if (!uiCache.infoTotalWP) uiCache.infoTotalWP = document.getElementById('infoTotalWP');
-            if (!uiCache.infoTotalDirect) uiCache.infoTotalDirect = document.getElementById('infoTotalDirect');
-            if (!uiCache.styleInfo) uiCache.styleInfo = document.getElementById('styleInfo');
-
-            uiCache.infoStyleNumber.textContent = upcomingStyle;
-            uiCache.infoTotalOps.textContent = operations.length;
-
-            const totalWP = operations.reduce((sum, op) => sum + (parseFloat(op.allocatedWP) || 0), 0);
-            const totalDirect = operations.reduce((sum, op) => sum + (parseFloat(op.allocatedDirect) || 0), 0);
-
-            uiCache.infoTotalWP.textContent = totalWP.toFixed(2);
-            uiCache.infoTotalDirect.textContent = totalDirect.toFixed(2);
-            uiCache.styleInfo.classList.remove('hidden');
-        }
-
-        // --- Search Logic ---
-        function handleStyleSearch(event) {
-            handleStyleSearchDebounced(event);
-        }
-
-        let searchTimeout = null;
-
-        function performStyleSearch(query) {
-            const searchTerm = query.toLowerCase().trim();
-            const selector = document.getElementById('styleSelector');
-            const options = selector.options;
-            const clearBtn = document.getElementById('clearSearchBtn');
-            const statusEl = document.getElementById('searchStatus');
-
-            // Show/Hide Clear Button
-            if (searchTerm.length > 0) {
-                clearBtn.classList.remove('hidden');
-            } else {
-                clearBtn.classList.add('hidden');
-                statusEl.classList.add('hidden');
-            }
-
-            if (!searchTerm) return;
-
-            // Filter Options and find match
-            let matchCount = 0;
-            let firstMatchId = null;
-            let matchedName = "";
-
-            for (let i = 1; i < options.length; i++) {
-                const text = options[i].text.toLowerCase();
-                const isMatch = text.includes(searchTerm);
-                options[i].style.display = isMatch ? "" : "none";
-
-                if (isMatch) {
-                    matchCount++;
-                    firstMatchId = options[i].value;
-                    matchedName = options[i].text;
-                }
-            }
-
-            // Status Display Logic (debounced slightly to avoid flickering)
-            if (searchTimeout) clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                if (matchCount === 1) {
-                    statusEl.textContent = `Found: ${matchedName.split(' - ')[0]}`;
-                    statusEl.classList.remove('hidden', 'text-rose-500');
-                    statusEl.classList.add('text-emerald-600');
-
-                    // Auto-select
-                    if (selector.value !== firstMatchId) {
-                        selector.value = firstMatchId;
-                        loadOperationsForStyle(firstMatchId);
-                    }
-                } else if (matchCount > 1) {
-                    statusEl.textContent = `${matchCount} styles match`;
-                    statusEl.classList.remove('hidden', 'text-rose-500', 'text-emerald-600');
-                    statusEl.classList.add('text-slate-500');
-                } else {
-                    statusEl.textContent = `No matches found`;
-                    statusEl.classList.remove('hidden', 'text-emerald-600');
-                    statusEl.classList.add('text-rose-500');
-                }
-            }, 100);
-        }
-
-        function clearStyleSearch() {
-            const searchInput = document.getElementById('styleSearch');
-            searchInput.value = '';
-            document.getElementById('clearSearchBtn').classList.add('hidden');
-            document.getElementById('searchStatus').classList.add('hidden');
-
-            const selector = document.getElementById('styleSelector');
-            const options = selector.options;
-
-            for (let i = 0; i < options.length; i++) {
-                options[i].style.display = "";
-            }
-            searchInput.focus();
-        }
+        // Search/Select Logic is handled by QCOLoader class now
 
         // --- Render Operations ---
         function renderOperations() {
@@ -1820,6 +1643,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="../assets/js/qco-alert.js"></script>
+    <script src="../assets/js/qco-loader.js"></script>
 </body>
 
 </html>

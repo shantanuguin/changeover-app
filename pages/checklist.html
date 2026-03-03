@@ -840,10 +840,9 @@
                                 <div class="relative flex-1 min-w-[200px]">
                                     <i data-lucide="search"
                                         class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
-                                    <input type="text" id="qcoSearch" onkeyup="handleSearch(event)"
-                                        placeholder="Search QCO..."
+                                    <input type="text" id="qcoSearch" placeholder="Search QCO..."
                                         class="pl-10 pr-10 py-3 rounded-2xl bg-white/60 border border-white/60 text-slate-600 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 w-full transition-all">
-                                    <button onclick="clearSearch()" id="clearSearchBtn"
+                                    <button id="clearSearchBtn"
                                         class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors hidden">
                                         <i data-lucide="x" class="w-3 h-3"></i>
                                     </button>
@@ -2376,64 +2375,6 @@
             }
         }
 
-        let searchTimeout = null;
-
-        function handleSearch(event) {
-            const searchTerm = event.target.value.trim().toUpperCase();
-            const statusEl = document.getElementById('searchStatus');
-            const clearBtn = document.getElementById('clearSearchBtn');
-
-            if (searchTerm) {
-                clearBtn.classList.remove('hidden');
-                statusEl.classList.remove('hidden');
-            } else {
-                clearBtn.classList.add('hidden');
-                statusEl.classList.add('hidden');
-            }
-
-            if (searchTimeout) clearTimeout(searchTimeout);
-
-            if (!searchTerm) {
-                return;
-            }
-
-            searchTimeout = setTimeout(() => {
-                const matchedQCO = allChangeovers.find(q => {
-                    const qcoNumber = (q.qcoNumber || '').toUpperCase();
-                    const upcomingStyle = (q.upcomingStyle || '').toUpperCase();
-                    return qcoNumber === searchTerm ||
-                        upcomingStyle === searchTerm ||
-                        qcoNumber.includes(searchTerm) ||
-                        upcomingStyle.includes(searchTerm);
-                });
-
-                if (matchedQCO) {
-                    statusEl.textContent = `Found: ${matchedQCO.id || 'QCO'}`;
-                    statusEl.classList.remove('hidden', 'text-red-500');
-                    statusEl.classList.add('text-emerald-600');
-
-                    const selector = document.getElementById('qcoSelector');
-                    let optionExists = Array.from(selector.options).some(opt => opt.value === matchedQCO.id);
-
-                    if (optionExists) {
-                        if (selector.value !== matchedQCO.id) {
-                            selector.value = matchedQCO.id;
-                            handleQCOChange(matchedQCO.id);
-                        }
-                    }
-                } else {
-                    statusEl.textContent = `No matches found`;
-                    statusEl.classList.remove('hidden', 'text-emerald-600');
-                    statusEl.classList.add('text-red-500');
-                }
-            }, 100);
-        }
-
-        function clearSearch() {
-            document.getElementById('qcoSearch').value = '';
-            document.getElementById('searchStatus').classList.add('hidden');
-            document.getElementById('clearSearchBtn').classList.add('hidden');
-        }
 
         // --- UI Helpers ---
 
