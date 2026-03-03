@@ -587,13 +587,21 @@
                                     <p class="text-sm text-slate-600" id="activeQCOName">No changeover selected</p>
                                 </div>
                             </div>
-                            <div class="relative group w-full sm:w-auto sm:ml-auto">
-                                <select id="qcoSelector" onchange="handleQCOChange(this.value)"
-                                    class="appearance-none w-full sm:w-auto bg-white border border-slate-200 text-slate-700 font-bold py-2.5 pl-4 pr-10 rounded-xl hover:border-indigo-400 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-sm min-w-[240px]">
-                                    <option value="">Select Changeover...</option>
-                                </select>
-                                <i data-lucide="chevron-down"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                            <div class="flex items-center gap-3 flex-wrap w-full sm:w-auto sm:ml-auto">
+                                <div class="relative flex-1 min-w-[180px]">
+                                    <i data-lucide="search"
+                                        class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
+                                    <input type="text" id="qcoSearch" placeholder="Search QCO..."
+                                        class="pl-10 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full transition-all hover:border-slate-300">
+                                </div>
+                                <div class="relative group flex-1 min-w-[240px]">
+                                    <select id="qcoSelector" onchange="handleQCOChange(this.value)"
+                                        class="appearance-none w-full bg-white border border-slate-200 text-slate-700 font-bold py-2.5 pl-4 pr-10 rounded-xl hover:border-indigo-400 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer text-sm min-w-[240px]">
+                                        <option value="">Select Changeover...</option>
+                                    </select>
+                                    <i data-lucide="chevron-down"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -854,7 +862,7 @@
             });
 
             initLenis();
-            await loadChangeoverList();
+            initQCOLoader();
             initEfficiencyChart();
 
             // Check URL for pre-selected QCO
@@ -939,27 +947,33 @@
         }
 
         // --- Data Loading ---
-        async function loadChangeoverList() {
-            const selector = document.getElementById('qcoSelector');
+        function initQCOLoader() {
             if (!db) return;
-            try {
-                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(100).get();
-                selector.innerHTML = '<option value="">Select Changeover...</option>';
-                const savedId = localStorage.getItem('currentStyleQCOId');
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const option = document.createElement('option');
-                    option.value = doc.id;
-                    const qcoNum = data.qcoNumber || doc.id.substring(0, 8);
-                    const style = data.upcomingStyle || 'Unknown';
-                    const last4 = style.length >= 4 ? style.slice(-4) : style;
-                    option.textContent = `${qcoNum} — ${last4}`;
-                    if (doc.id === savedId) option.selected = true;
-                    selector.appendChild(option);
+            window.qcoLoader = new QCOLoader({
+                selectElementId: 'qcoSelector',
+                searchInputId: 'qcoSearch',
+                pageSize: 10,
+                onSelect: (qcoId) => {
+                    handleQCOChange(qcoId);
+                }
+            });
+
+            const savedId = localStorage.getItem('currentStyleQCOId');
+            if (savedId) {
+                db.collection('changeovers').doc(savedId).get().then(doc => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        const selector = document.getElementById('qcoSelector');
+                        if (!Array.from(selector.options).find(o => o.value === doc.id)) {
+                            const opt = document.createElement('option');
+                            opt.value = doc.id;
+                            opt.textContent = `${data.qcoNumber || doc.id} - ${(data.upcomingStyle || '').slice(-4)}`;
+                            selector.insertBefore(opt, selector.children[1]);
+                        }
+                        selector.value = doc.id;
+                        handleQCOChange(doc.id);
+                    }
                 });
-                if (savedId) await handleQCOChange(savedId);
-            } catch (error) {
-                console.error("Error loading QCO list:", error);
             }
         }
 
@@ -1291,6 +1305,7 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../assets/js/qco-loader.js"></script>
     <script src="../assets/js/qco-alert.js"></script>
 </body>
 

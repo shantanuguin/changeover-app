@@ -3,7 +3,7 @@ class QCOLoader {
     constructor(config) {
         this.selectElementId = config.selectElementId || 'qcoSelector';
         this.searchInputId = config.searchInputId || 'qcoSearch';
-        this.onSelect = config.onSelect || (() => {});
+        this.onSelect = config.onSelect || (() => { });
         this.pageSize = config.pageSize || 10;
         this.lastVisible = null;
         this.isLoading = false;
@@ -24,15 +24,15 @@ class QCOLoader {
         // Reset state
         this.selectElement.innerHTML = '<option value="">Select QCO...</option>';
         this.selectElement.innerHTML += '<option value="load_more" disabled>Scroll for more...</option>';
-        
+
         // Listeners
         this.selectElement.addEventListener('change', (e) => this.handleChange(e));
-        
+
         // Add scroll listener for pagination on the select dropdown
         // (Note: pure <select> dropdowns don't fire scroll events reliably across browsers. 
         // We will load more when the user focuses or clicks if they are near the bottom,
         // or we can implement an IntersectionObserver if we build a custom dropdown)
-        
+
         if (this.searchInput) {
             this.searchInput.addEventListener('input', (e) => this.handleSearch(e));
         }
@@ -41,20 +41,20 @@ class QCOLoader {
     }
 
     async loadMore() {
-        if (this.isLoading || !this.hasMore || !typeof db !== 'undefined') return;
+        if (this.isLoading || !this.hasMore || typeof db === 'undefined' || !db) return;
         this.isLoading = true;
 
         try {
             let query = db.collection('changeovers')
-                          .orderBy('createdAt', 'desc')
-                          .limit(this.pageSize);
+                .orderBy('createdAt', 'desc')
+                .limit(this.pageSize);
 
             if (this.lastVisible) {
                 query = query.startAfter(this.lastVisible);
             }
 
             const snapshot = await query.get();
-            
+
             if (snapshot.empty) {
                 this.hasMore = false;
                 this.updateLoadMoreOption(false);
@@ -71,7 +71,7 @@ class QCOLoader {
             snapshot.forEach(doc => {
                 const data = doc.data();
                 this.allChangeovers.push({ id: doc.id, ...data });
-                
+
                 const opt = document.createElement('option');
                 opt.value = doc.id;
                 const last4 = (data.upcomingStyle || '').slice(-4);
@@ -137,7 +137,7 @@ class QCOLoader {
             // First check local loaded items
             const localMatch = this.allChangeovers.find(q => {
                 return (q.qcoNumber || '').toUpperCase().includes(term) ||
-                       (q.upcomingStyle || '').toUpperCase().includes(term);
+                    (q.upcomingStyle || '').toUpperCase().includes(term);
             });
 
             if (localMatch) {
@@ -147,25 +147,25 @@ class QCOLoader {
                 // Query Firestore directly
                 try {
                     const snap = await db.collection('changeovers')
-                                         .where('qcoNumber', '==', term)
-                                         .get();
+                        .where('qcoNumber', '==', term)
+                        .get();
                     if (!snap.empty) {
                         const doc = snap.docs[0];
                         const data = doc.data();
-                        
+
                         // Add to list and select
                         const opt = document.createElement('option');
                         opt.value = doc.id;
                         const last4 = (data.upcomingStyle || '').slice(-4);
                         opt.textContent = `${data.qcoNumber || doc.id} - ${last4}`;
-                        
+
                         // Insert after the first "Select QCO" option
                         this.selectElement.insertBefore(opt, this.selectElement.children[1]);
                         this.selectElement.value = doc.id;
-                        
+
                         this.allChangeovers.push({ id: doc.id, ...data });
                         this.onSelect(doc.id);
-                        
+
                         if (typeof Swal !== 'undefined') {
                             Swal.fire({ icon: 'success', title: 'Found from Database', toast: true, position: 'top-end', timer: 2000, showConfirmButton: false });
                         }
