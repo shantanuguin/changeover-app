@@ -1141,7 +1141,7 @@
 
         async function loadChangeoverList(selectedLine = 'ALL') {
             try {
-                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(100).get();
+                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(500).get();
                 allQCOs = [];
 
                 snapshot.forEach(doc => {

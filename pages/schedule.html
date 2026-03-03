@@ -1169,7 +1169,7 @@
         let isFirebaseConnected = false;
         var currentQCOId = null;
         let currentQCOData = null;
-        let allChangeovers = [];
+
         let currentMode = 'new'; // 'new' or 'existing'
         let hasUnsavedChanges = false;
         let autoSaveTimeout = null;
@@ -1863,43 +1863,24 @@
         // ==========================================
         // DATA LOADING (existing changeovers)
         // ==========================================
-        async function loadChangeoverList() {
-            const selector = document.getElementById('qcoSelector');
-            if (!db || !selector) return;
-            try {
-                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(50).get();
-                while (selector.options.length > 1) selector.remove(1);
-                allChangeovers = [];
-
-                if (snapshot.empty) {
-                    const opt = document.createElement('option');
-                    opt.text = "No changeovers found"; opt.disabled = true;
-                    selector.add(opt); return;
+        function initQCOLoader() {
+            window.qcoLoader = new QCOLoader({
+                selectElementId: 'qcoSelector',
+                searchInputId: 'qcoSearch',
+                pageSize: 10,
+                onSelect: (qcoId) => {
+                    handleQCOChange(qcoId);
                 }
+            });
 
-                const savedId = localStorage.getItem('scheduleQCOId');
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    if (data.status === 'discarded') return; // Hide discarded QCOs from the list
-
-                    const opt = document.createElement('option');
-                    opt.value = doc.id;
-                    const qcoNum = data.qcoNumber || doc.id.substring(0, 8);
-                    const upStyle = data.upcomingStyle || 'Unknown';
-                    const last4 = upStyle.length >= 4 ? upStyle.slice(-4) : upStyle;
-                    opt.textContent = `${qcoNum} - ${last4}`;
-                    opt.dataset.qcoNumber = qcoNum;
-                    opt.dataset.style = last4;
-                    if (doc.id === savedId) opt.selected = true;
-                    selector.appendChild(opt);
-                    allChangeovers.push({ id: doc.id, ...data });
-                });
-
-                if (savedId && currentMode === 'existing') {
-                    await handleQCOChange(savedId, false);
-                }
-            } catch (error) {
-                console.error("Error loading changeovers:", error);
+            const savedId = localStorage.getItem('scheduleQCOId');
+            if (savedId && currentMode === 'existing') {
+                // If there's a saved valid QCO, the loader might take a tick.
+                // We'll trust handleQCOChange logic to load data correctly regardless of it being visually selected first.
+                setTimeout(() => {
+                    document.getElementById('qcoSelector').value = savedId;
+                    handleQCOChange(savedId, false);
+                }, 1000);
             }
         }
 
@@ -1994,47 +1975,7 @@
             }
         }
 
-        // ==========================================
-        // SEARCH
-        // ==========================================
-        let searchTimeout = null;
-        function handleSearch(event) {
-            const searchTerm = event.target.value.trim().toUpperCase();
-            const statusEl = document.getElementById('searchStatus');
-            const clearBtn = document.getElementById('clearSearchBtn');
-            if (searchTerm) clearBtn.classList.remove('hidden');
-            else clearBtn.classList.add('hidden');
-            if (searchTimeout) clearTimeout(searchTimeout);
-            if (!searchTerm) { statusEl.classList.add('hidden'); return; }
-
-            searchTimeout = setTimeout(() => {
-                const matched = allChangeovers.find(q => {
-                    const qn = (q.qcoNumber || '').toUpperCase();
-                    const us = (q.upcomingStyle || '').toUpperCase();
-                    return qn === searchTerm || us === searchTerm || qn.includes(searchTerm) || us.includes(searchTerm);
-                });
-                if (matched) {
-                    statusEl.textContent = `Found: ${matched.qcoNumber || 'QCO'} - ${matched.upcomingStyle}`;
-                    statusEl.classList.remove('hidden', 'text-red-500');
-                    statusEl.classList.add('text-emerald-600');
-                    const sel = document.getElementById('qcoSelector');
-                    if (Array.from(sel.options).some(o => o.value === matched.id)) {
-                        sel.value = matched.id;
-                        handleQCOChange(matched.id);
-                    }
-                } else {
-                    statusEl.textContent = `No QCO found matching "${searchTerm}"`;
-                    statusEl.classList.remove('hidden', 'text-emerald-600');
-                    statusEl.classList.add('text-red-500');
-                }
-            }, 500);
-        }
-
-        function clearSearch() {
-            document.getElementById('qcoSearch').value = '';
-            document.getElementById('searchStatus').classList.add('hidden');
-            document.getElementById('clearSearchBtn').classList.add('hidden');
-        }
+        // SEARCH logic is now handled by QCOLoader internally.
 
         // ==========================================
         // EMAIL & BACKEND LOGIC
@@ -2125,9 +2066,7 @@
         async function openEmailModal() {
             try {
                 if (!currentQCOId) { Swal.fire('Error', 'No QCO Selected', 'error'); return; }
-                const qcoListItem = allChangeovers.find(q => q.id === currentQCOId) || {};
-                const qcoFullData = currentQCOData || {};
-                const qco = { ...qcoListItem, ...qcoFullData };
+                const qco = currentQCOData || {};
 
                 let rawLine = qco.lineNumber || qco.line_number || qco.line || '';
                 if (!rawLine && currentQCOId.startsWith('S-')) {
@@ -2584,17 +2523,19 @@ Sidney Apparels QCO Portal`;
 
                 // 7. Refresh dropdown if in Existing mode
                 if (currentMode === 'existing') {
-                    await loadChangeoverList();
-                    const selector = document.getElementById('qcoSelector');
-                    if (selector) selector.value = newQcoId;
+                    if (window.qcoLoader) window.qcoLoader.reset();
+                    // Wait briefly for reset to populate the first page
+                    setTimeout(() => {
+                        const selector = document.getElementById('qcoSelector');
+                        if (selector) selector.value = newQcoId;
+                    }, 500);
 
                     // Trigger handleQCOChange to fully refresh the UI sections with new data (like references to ID)
                     currentQCOId = null; // force reload bypass
                     await handleQCOChange(newQcoId, true);
                 } else {
-                    // Update allChangeovers list for New mode
-                    allChangeovers = allChangeovers.filter(co => co.qcoNumber !== oldQcoId);
-                    allChangeovers.push({ id: newQcoId, ...newData });
+                    // Update lists internally
+                    if (window.qcoLoader) window.qcoLoader.reset();
                     // Keep New mode but ensure memory is updated
                 }
 
@@ -2721,17 +2662,18 @@ Sidney Apparels QCO Portal`;
 
                 // 6. Refresh dropdown if in Existing mode
                 if (currentMode === 'existing') {
-                    await loadChangeoverList();
-                    const selector = document.getElementById('qcoSelector');
-                    if (selector) selector.value = newQcoId;
+                    if (window.qcoLoader) window.qcoLoader.reset();
+                    setTimeout(() => {
+                        const selector = document.getElementById('qcoSelector');
+                        if (selector) selector.value = newQcoId;
+                    }, 500);
 
                     // Force a local UI sync on the new ID
                     currentQCOId = null;
                     await handleQCOChange(newQcoId, true);
                 } else {
                     // Update lists internally
-                    allChangeovers = allChangeovers.filter(co => co.qcoNumber !== oldQcoId);
-                    allChangeovers.push({ id: newQcoId, ...newData });
+                    if (window.qcoLoader) window.qcoLoader.reset();
                 }
 
                 Swal.fire({ icon: 'success', title: 'Styles Updated', text: `New QCO Number: ${newQcoId}`, timer: 3000, showConfirmButton: false, position: 'top-end', toast: true });

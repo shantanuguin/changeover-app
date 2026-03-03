@@ -2337,7 +2337,7 @@
                         showToast('Loading dashboard data...', 'info');
 
                         // Load changeovers from Firebase
-                        const changeoversRef = firebase.firestore().collection('changeovers');
+                        const changeoversRef = firebase.firestore().collection('changeovers').orderBy('createdAt', 'desc').limit(500);
                         const snapshot = await changeoversRef.get();
 
                         allChangeovers = snapshot.docs.map(doc => ({
@@ -4343,7 +4343,7 @@
                 // REAL-TIME DATA LISTENERS
                 // =====================================================
                 function startRealtimeListeners() {
-                    const changeoverRef = firebase.firestore().collection('changeovers');
+                    const changeoverRef = firebase.firestore().collection('changeovers').orderBy('createdAt', 'desc').limit(500);
 
                     const unsubscribe = changeoverRef.onSnapshot((snapshot) => {
                         allChangeovers = snapshot.docs.map(doc => ({
