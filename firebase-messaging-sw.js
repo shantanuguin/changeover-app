@@ -1,8 +1,12 @@
-// firebase-messaging-sw.js — Service Worker for FCM background notifications
+// firebase-messaging-sw.js — Unified Service Worker for PWA + FCM
 // Must be at the ROOT of the domain for scope to cover all pages
 
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
+// PWA lifecycle
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+
+importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
 
 firebase.initializeApp({
     apiKey: "AIzaSyCayfWGQP1t3oBU9eFj-3Ww0uu7nSl3Q4g",

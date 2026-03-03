@@ -1272,7 +1272,7 @@
             });
 
             // 6. Data Loading
-            await loadChangeoverList();
+            initQCOLoader();
 
             // 7. Cursor
             const dot = document.querySelector('.cursor-dot');
@@ -1314,45 +1314,41 @@
 
         // --- Data Logic: Selection & Loading ---
 
-        async function loadChangeoverList() {
-            try {
-                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(50).get();
-                const selector = document.getElementById('qcoSelector');
-                selector.innerHTML = '<option value="">Select Changeover...</option>';
-
-                const currentSaved = localStorage.getItem('currentQCOId');
-                let foundMatch = false;
-
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const opt = document.createElement('option');
-                    opt.value = doc.id;
-                    const upcomingStyle = data.upcomingStyle || 'Unknown';
-                    const last4Digits = upcomingStyle.length >= 4 ? upcomingStyle.slice(-4) : upcomingStyle;
-                    opt.textContent = `${data.qcoNumber || 'QCO'} - ${last4Digits}`;
-
-                    if (doc.id === currentSaved) {
-                        opt.selected = true;
-                        foundMatch = true;
-                    }
-                    selector.appendChild(opt);
-                    allChangeovers.push({ id: doc.id, ...data });
-                });
-
-                if (foundMatch) {
-                    currentQCOId = currentSaved;
-                    await loadData();
-                } else if (snapshot.size > 0) {
-                    // document.getElementById('qcoSelector').value = ""; // Default empty to force selection or prompt
+        function initQCOLoader() {
+            if (!db) return;
+            window.qcoLoader = new QCOLoader({
+                selectElementId: 'qcoSelector',
+                searchInputId: 'qcoSearch',
+                pageSize: 10,
+                onSelect: (qcoId) => {
+                    handleQCOChange(qcoId);
                 }
+            });
 
-            } catch (e) {
-                console.error("Error loading Changeover list:", e);
+            const savedQCO = localStorage.getItem('currentQCOId');
+            if (savedQCO) {
+                // If there's a saved QCO, we need to ensure it's loaded and set
+                // The loader might not have fetched it in the first 10, so we do a direct fetch if needed
+                db.collection('changeovers').doc(savedQCO).get().then(doc => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        const opt = document.createElement('option');
+                        opt.value = doc.id;
+                        opt.textContent = `${data.qcoNumber || doc.id} - ${(data.upcomingStyle || '').slice(-4)}`;
+
+                        const selector = document.getElementById('qcoSelector');
+                        if (!Array.from(selector.options).find(o => o.value === doc.id)) {
+                            selector.insertBefore(opt, selector.children[1]);
+                        }
+                        selector.value = doc.id;
+                        handleQCOChange(doc.id);
+                    }
+                });
             }
         }
 
         function handleQCOChange(qcoId) {
-            if (!qcoId) return;
+            if (!qcoId || qcoId === "load_more") return;
             localStorage.setItem('currentQCOId', qcoId);
             currentQCOId = qcoId;
 
@@ -2022,90 +2018,18 @@
             }
         }
 
-        let searchTimeout = null;
-
+        // Search logic has been moved to QCOLoader in assets/js/qco-loader.js
         function handleSearch(event) {
-            const searchTerm = event.target.value.trim().toUpperCase();
-            const statusEl = document.getElementById('searchStatus');
-            const clearBtn = document.getElementById('clearSearchBtn');
-
-            if (searchTerm) {
-                clearBtn.classList.remove('hidden');
-            } else {
-                clearBtn.classList.add('hidden');
-            }
-
-            if (searchTimeout) clearTimeout(searchTimeout);
-
-            if (!searchTerm) {
-                statusEl.classList.add('hidden');
-                return;
-            }
-
-            searchTimeout = setTimeout(async () => {
-                const matchedQCO = allChangeovers.find(q => {
-                    const qcoNumber = (q.qcoNumber || '').toUpperCase();
-                    const upcomingStyle = (q.upcomingStyle || '').toUpperCase();
-                    return qcoNumber === searchTerm ||
-                        upcomingStyle === searchTerm ||
-                        qcoNumber.includes(searchTerm) ||
-                        upcomingStyle.includes(searchTerm);
-                });
-
-                if (matchedQCO) {
-                    statusEl.textContent = `Found: ${matchedQCO.qcoNumber || matchedQCO.id}`;
-                    statusEl.classList.remove('hidden', 'text-red-500');
-                    statusEl.classList.add('text-emerald-600');
-
-                    const selector = document.getElementById('qcoSelector');
-                    let optionExists = Array.from(selector.options).some(opt => opt.value === matchedQCO.id);
-
-                    if (optionExists) {
-                        selector.value = matchedQCO.id;
-                        handleQCOChange(matchedQCO.id);
-                    }
-                } else {
-                    // Try direct Firestore lookup by qcoNumber
-                    try {
-                        const fbSnapshot = await db.collection('changeovers')
-                            .where('qcoNumber', '==', searchTerm)
-                            .get();
-                        if (!fbSnapshot.empty) {
-                            const doc = fbSnapshot.docs[0];
-                            const data = doc.data();
-                            statusEl.textContent = `Found: ${data.qcoNumber || doc.id}`;
-                            statusEl.classList.remove('hidden', 'text-red-500');
-                            statusEl.classList.add('text-emerald-600');
-
-                            // Add to dropdown and local cache
-                            const selector = document.getElementById('qcoSelector');
-                            const opt = document.createElement('option');
-                            opt.value = doc.id;
-                            const last4 = (data.upcomingStyle || '').slice(-4);
-                            opt.textContent = `${data.qcoNumber || 'QCO'} - ${last4}`;
-                            opt.selected = true;
-                            selector.appendChild(opt);
-                            allChangeovers.push({ id: doc.id, ...data });
-                            handleQCOChange(doc.id);
-                        } else {
-                            statusEl.textContent = `No QCO found matching "${searchTerm}"`;
-                            statusEl.classList.remove('hidden', 'text-emerald-600');
-                            statusEl.classList.add('text-red-500');
-                        }
-                    } catch (fbErr) {
-                        console.error('Firestore search error:', fbErr);
-                        statusEl.textContent = `No QCO found matching "${searchTerm}"`;
-                        statusEl.classList.remove('hidden', 'text-emerald-600');
-                        statusEl.classList.add('text-red-500');
-                    }
-                }
-            }, 500);
+            // Forward event to loader if needed, but loader already attached an event listener to the input
         }
 
         function clearSearch() {
             document.getElementById('qcoSearch').value = '';
             document.getElementById('searchStatus').classList.add('hidden');
             document.getElementById('clearSearchBtn').classList.add('hidden');
+            if (window.qcoLoader) {
+                window.qcoLoader.reset();
+            }
         }
     </script>
 

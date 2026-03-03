@@ -1567,7 +1567,7 @@
                     }
 
                     initLenis();
-                    await loadChangeoverList();
+                    initQCOLoader();
                     if (typeof lucide !== 'undefined') lucide.createIcons();
                 } catch (e) {
                     console.error("Delayed data error:", e);
@@ -1684,35 +1684,33 @@
 
         // --- Data Management ---
 
-        async function loadChangeoverList() {
-            const selector = document.getElementById('qcoSelector');
+        function initQCOLoader() {
             if (!db) return;
-
-            try {
-                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(50).get();
-                selector.innerHTML = '<option value="">Select Changeover...</option>';
-
-                const savedId = localStorage.getItem('currentQCOId');
-
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const option = document.createElement('option');
-                    option.value = doc.id;
-                    const qcoNum = data.qcoNumber || data.id || doc.id.substring(0, 8);
-                    const upcomingStyle = data.upcomingStyle || 'Unknown';
-                    const last4Digits = upcomingStyle.length >= 4 ? upcomingStyle.slice(-4) : upcomingStyle;
-                    option.textContent = `${qcoNum} - ${last4Digits}`;
-                    option.dataset.qcoNumber = qcoNum;
-                    if (doc.id === savedId) option.selected = true;
-                    selector.appendChild(option);
-                    allChangeovers.push({ id: doc.id, ...data });
-                });
-
-                if (savedId) {
-                    await handleQCOChange(savedId, false);
+            window.qcoLoader = new QCOLoader({
+                selectElementId: 'qcoSelector',
+                searchInputId: null,
+                pageSize: 10,
+                onSelect: (qcoId) => {
+                    handleQCOChange(qcoId);
                 }
-            } catch (error) {
-                console.error("Error loading QCO list:", error);
+            });
+
+            const savedId = localStorage.getItem('currentQCOId');
+            if (savedId) {
+                db.collection('changeovers').doc(savedId).get().then(doc => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        const selector = document.getElementById('qcoSelector');
+                        if (!Array.from(selector.options).find(o => o.value === doc.id)) {
+                            const opt = document.createElement('option');
+                            opt.value = doc.id;
+                            opt.textContent = `${data.qcoNumber || doc.id} - ${(data.upcomingStyle || '').slice(-4)}`;
+                            selector.insertBefore(opt, selector.children[1]);
+                        }
+                        selector.value = doc.id;
+                        handleQCOChange(doc.id, false);
+                    }
+                });
             }
         }
 
@@ -2742,6 +2740,7 @@
         </div>
     </div>
 
+    <script src="../assets/js/qco-loader.js"></script>
     <script src="../assets/js/qco-alert.js"></script>
 </body>
 

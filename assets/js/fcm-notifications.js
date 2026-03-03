@@ -21,35 +21,61 @@ async function initFCM() {
             return;
         }
 
-        // Register service worker — resolve path relative to site root
-        const swPath = new URL('/firebase-messaging-sw.js', window.location.origin).href;
-        const swRegistration = await navigator.serviceWorker.register(swPath, { scope: '/' });
-        console.log('[FCM] Service worker registered');
+        // iOS detection — FCM requires PWA installation on iOS
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        if (isIOS && !isStandalone) {
+            console.log('[FCM] iOS detected but not running as PWA — skipping FCM init');
+            return;
+        }
 
-        // Get messaging instance (compat SDK)
+        // Step 1: Register service worker
+        let swRegistration;
+        try {
+            const swPath = new URL('/firebase-messaging-sw.js', window.location.origin).href;
+            swRegistration = await navigator.serviceWorker.register(swPath, { scope: '/' });
+            console.log('[FCM] Service worker registered');
+        } catch (swError) {
+            console.error('[FCM] Service worker registration failed:', swError.message);
+            console.error('[FCM] Ensure firebase-messaging-sw.js exists at the root of your domain');
+            return;
+        }
+
+        // Step 2: Get messaging instance
         fcmMessaging = firebase.messaging();
 
-        // Request permission
+        // Step 3: Request permission
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') {
             console.warn('[FCM] Notification permission denied');
             return;
         }
 
-        // Get token
-        const token = await fcmMessaging.getToken({
-            vapidKey: FCM_VAPID_KEY,
-            serviceWorkerRegistration: swRegistration
-        });
+        // Step 4: Get token
+        try {
+            const token = await fcmMessaging.getToken({
+                vapidKey: FCM_VAPID_KEY,
+                serviceWorkerRegistration: swRegistration
+            });
 
-        if (token) {
-            console.log('[FCM] Token obtained:', token.substring(0, 20) + '...');
-            await saveTokenToFirestore(token);
-        } else {
-            console.warn('[FCM] No token available');
+            if (token) {
+                console.log('[FCM] Token obtained:', token.substring(0, 20) + '...');
+                await saveTokenToFirestore(token);
+            } else {
+                console.warn('[FCM] No token available — ensure FCM API is enabled in Google Cloud Console');
+            }
+        } catch (tokenError) {
+            console.error('[FCM] Token retrieval failed:', tokenError.message);
+            if (tokenError.message.includes('push service')) {
+                console.error('[FCM] ⚠️  FIX: Enable these APIs in Google Cloud Console → APIs & Services → Library:');
+                console.error('[FCM]    1. "Firebase Cloud Messaging API" (NOT the Legacy one)');
+                console.error('[FCM]    2. "Firebase Installations API"');
+                console.error('[FCM]    Project: sidneymailer | URL: https://console.cloud.google.com/apis/library?project=sidneymailer');
+            }
+            return;
         }
 
-        // Listen for foreground messages
+        // Step 5: Listen for foreground messages
         fcmMessaging.onMessage((payload) => {
             console.log('[FCM] Foreground message:', payload);
             showFCMToast(payload);

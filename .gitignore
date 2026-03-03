@@ -8,8 +8,9 @@ backend/node_modules/
 .env.production
 .env.development
 
-# Firebase service account keys
+# Firebase service account keys & OAuth secrets
 api/*-firebase-adminsdk-*.json
+api/client_secret_*.json
 
 # Logs
 npm-debug.log*

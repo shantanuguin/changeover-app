@@ -517,63 +517,51 @@
 
             gsap.to(app, { opacity: 1, duration: 0.5 });
 
-            loadChangeoverList();
-
-            const savedQCO = sessionStorage.getItem('currentQCOId');
-            if (savedQCO) {
-                handleQCOChange(savedQCO);
-            }
+            initQCOLoader();
         }
 
         // --- QCO & Data Management ---
 
-        async function loadChangeoverList() {
+        function initQCOLoader() {
             if (!db) return;
-            try {
-                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(50).get();
-                const selector = document.getElementById('qcoSelector');
-                selector.innerHTML = '<option value="">Select QCO...</option>';
+            window.qcoLoader = new QCOLoader({
+                selectElementId: 'qcoSelector',
+                searchInputId: 'qcoSearchInput',
+                pageSize: 10,
+                onSelect: (qcoId) => {
+                    handleQCOChange(qcoId);
+                }
+            });
 
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const option = document.createElement('option');
-                    option.value = doc.id;
-                    const qcoNum = data.qcoNumber || doc.id.substring(0, 8);
-                    const style = data.upcomingStyle || 'Unknown';
-                    option.textContent = `${qcoNum} - ${style}`;
-                    option.dataset.qcoNumber = qcoNum;
-                    selector.appendChild(option);
+            const savedQCO = sessionStorage.getItem('currentQCOId');
+            if (savedQCO) {
+                db.collection('changeovers').doc(savedQCO).get().then(doc => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        const selector = document.getElementById('qcoSelector');
+                        if (!Array.from(selector.options).find(o => o.value === doc.id)) {
+                            const opt = document.createElement('option');
+                            opt.value = doc.id;
+                            opt.textContent = `${data.qcoNumber || doc.id} - ${(data.upcomingStyle || '').slice(-4)}`;
+                            selector.insertBefore(opt, selector.children[1]);
+                        }
+                        selector.value = doc.id;
+                        handleQCOChange(doc.id);
+                    }
                 });
-            } catch (error) {
-                console.error("Error loading QCO list:", error);
             }
         }
 
         function handleSearchKeypress(e) {
-            if (e.key === 'Enter') searchQCO();
+            if (e.key === 'Enter' && window.qcoLoader) {
+                window.qcoLoader.handleSearch({ target: document.getElementById('qcoSearchInput') });
+            }
         }
 
-        async function searchQCO() {
-            const searchVal = document.getElementById('qcoSearchInput').value.trim().toUpperCase();
-            if (!searchVal || !db) return;
-
-            try {
-                let snapshot = await db.collection('changeovers').where('qcoNumber', '==', searchVal).limit(1).get();
-                if (snapshot.empty) {
-                    snapshot = await db.collection('changeovers')
-                        .orderBy('qcoNumber').startAt(searchVal).endAt(searchVal + '\uf8ff').limit(1).get();
-                }
-
-                if (!snapshot.empty) {
-                    const doc = snapshot.docs[0];
-                    const selector = document.getElementById('qcoSelector');
-                    selector.value = doc.id;
-                    handleQCOChange(doc.id);
-                    Swal.fire({ icon: 'success', title: 'Found', toast: true, position: 'top-end', timer: 1500, showConfirmButton: false });
-                } else {
-                    Swal.fire({ icon: 'error', title: 'Not Found', text: 'No matching QCO found' });
-                }
-            } catch (e) { console.error(e); }
+        function searchQCO() {
+            if (window.qcoLoader) {
+                window.qcoLoader.handleSearch({ target: document.getElementById('qcoSearchInput') });
+            }
         }
 
         async function handleQCOChange(qcoId) {
@@ -1006,6 +994,7 @@
     </div>
 
     <script src="../assets/js/fcm-notifications.js"></script>
+    <script src="../assets/js/qco-loader.js"></script>
     <script src="../assets/js/qco-alert.js"></script>
 </body>
 
