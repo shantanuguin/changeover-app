@@ -40,28 +40,18 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Fetch strategy: Network first, fallback to cache
+// Fetch strategy: Only serve cached static assets when offline.
+// IMPORTANT: Do NOT intercept navigation requests — this breaks iOS Safari SSL.
 self.addEventListener('fetch', (event) => {
-    // Skip non-GET and cross-origin requests
+    // Only handle GET requests for same-origin static assets
     if (event.request.method !== 'GET') return;
+    if (event.request.mode === 'navigate') return; // Never intercept page navigation
     if (!event.request.url.startsWith(self.location.origin)) return;
+    if (event.request.url.includes('/api/')) return;
 
-    // Don't cache Firebase or other API requests
-    if (event.request.url.includes('firestore.googleapis.com') ||
-        event.request.url.includes('fcm.googleapis.com') ||
-        event.request.url.includes('/api/')) return;
-
+    // Only use cache as fallback when network fails (for static assets only)
     event.respondWith(
-        fetch(event.request)
-            .then(response => {
-                // Clone and cache successful responses
-                if (response.ok) {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-                }
-                return response;
-            })
-            .catch(() => caches.match(event.request))
+        fetch(event.request).catch(() => caches.match(event.request))
     );
 });
 
