@@ -27,13 +27,12 @@
         if (!qcoNumber) return;
 
         try {
-            // Check Firebase if available
+            // Check Firebase if available — only need db to be initialized
             const hasDb = typeof db !== 'undefined' && db !== null;
-            const hasFirebase = typeof isFirebaseConnected !== 'undefined' && isFirebaseConnected;
 
-            console.log('[qco-alert] hasDb:', hasDb, 'hasFirebase:', hasFirebase);
+            console.log('[qco-alert] hasDb:', hasDb);
 
-            if (hasDb && hasFirebase) {
+            if (hasDb) {
                 console.log('[qco-alert] Querying Firebase for QCO:', qcoNumber);
                 const doc = await db.collection('changeovers').doc(qcoNumber).get();
                 console.log('[qco-alert] doc.exists?', doc.exists);

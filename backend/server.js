@@ -17,13 +17,27 @@ const PORT = process.env.PORT || 3000;
 // Initialize Firebase Admin SDK for FCM
 try {
     const serviceAccountPath = path.join(__dirname, '..', 'api', 'sidneymailer-firebase-adminsdk-fbsvc-727f67b825.json');
+
+    let serviceAccount = null;
+
+    // Option 1: Load from local file (development)
     if (fs.existsSync(serviceAccountPath)) {
+        serviceAccount = require(serviceAccountPath);
+        console.log('Firebase Admin: loaded credentials from local file');
+    }
+    // Option 2: Load from environment variable (Vercel / production)
+    else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        console.log('Firebase Admin: loaded credentials from environment variable');
+    }
+
+    if (serviceAccount) {
         admin.initializeApp({
-            credential: admin.credential.cert(require(serviceAccountPath))
+            credential: admin.credential.cert(serviceAccount)
         });
-        console.log('Firebase Admin SDK initialized');
+        console.log('Firebase Admin SDK initialized successfully');
     } else {
-        console.warn('Firebase service account key not found at:', serviceAccountPath);
+        console.warn('Firebase Admin SDK: No credentials found (set FIREBASE_SERVICE_ACCOUNT env var for production)');
     }
 } catch (error) {
     console.error('Firebase Admin SDK init error:', error.message);
