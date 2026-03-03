@@ -6,12 +6,28 @@ const rateLimit = require('express-rate-limit');
 const multer = require('multer'); // NEW: For handling file uploads
 const path = require('path');
 const fs = require('fs');
+const admin = require('firebase-admin');
 
 // Load environment variables (from project root)
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Initialize Firebase Admin SDK for FCM
+try {
+    const serviceAccountPath = path.join(__dirname, '..', 'api', 'sidneymailer-firebase-adminsdk-fbsvc-727f67b825.json');
+    if (fs.existsSync(serviceAccountPath)) {
+        admin.initializeApp({
+            credential: admin.credential.cert(require(serviceAccountPath))
+        });
+        console.log('Firebase Admin SDK initialized');
+    } else {
+        console.warn('Firebase service account key not found at:', serviceAccountPath);
+    }
+} catch (error) {
+    console.error('Firebase Admin SDK init error:', error.message);
+}
 
 // NEW: Configure multer for memory storage (for in-memory file processing)
 const upload = multer({
@@ -752,6 +768,109 @@ function cleanupOldFiles() {
         console.error('Cleanup error:', error);
     }
 }
+
+// =============================================
+// FCM Push Notifications
+// =============================================
+app.post('/api/send-notification', async (req, res) => {
+    try {
+        const { title, body, qcoId, data } = req.body;
+
+        if (!title || !body) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required fields: title, body'
+            });
+        }
+
+        // Check if Firebase Admin is initialized
+        if (!admin.apps.length) {
+            return res.status(500).json({
+                success: false,
+                message: 'Firebase Admin SDK not initialized'
+            });
+        }
+
+        // Load all FCM tokens from Firestore
+        const db = admin.firestore();
+        const tokensSnapshot = await db.collection('fcm_tokens').get();
+
+        if (tokensSnapshot.empty) {
+            return res.json({
+                success: true,
+                message: 'No devices registered for notifications',
+                successCount: 0
+            });
+        }
+
+        const tokens = tokensSnapshot.docs.map(doc => doc.data().token).filter(Boolean);
+
+        if (tokens.length === 0) {
+            return res.json({
+                success: true,
+                message: 'No valid tokens found',
+                successCount: 0
+            });
+        }
+
+        console.log(`[FCM] Sending notification to ${tokens.length} devices`);
+
+        // Send multicast message
+        const message = {
+            notification: {
+                title: title,
+                body: body
+            },
+            data: data ? Object.fromEntries(
+                Object.entries(data).map(([k, v]) => [k, String(v)])
+            ) : {},
+            tokens: tokens
+        };
+
+        const response = await admin.messaging().sendEachForMulticast(message);
+
+        console.log(`[FCM] Success: ${response.successCount}, Failures: ${response.failureCount}`);
+
+        // Clean up invalid tokens
+        if (response.failureCount > 0) {
+            const invalidTokens = [];
+            response.responses.forEach((resp, idx) => {
+                if (!resp.success) {
+                    const errorCode = resp.error?.code;
+                    if (errorCode === 'messaging/invalid-registration-token' ||
+                        errorCode === 'messaging/registration-token-not-registered') {
+                        invalidTokens.push(tokens[idx]);
+                    }
+                }
+            });
+
+            // Delete invalid tokens from Firestore
+            if (invalidTokens.length > 0) {
+                const batch = db.batch();
+                invalidTokens.forEach(token => {
+                    batch.delete(db.collection('fcm_tokens').doc(token));
+                });
+                await batch.commit();
+                console.log(`[FCM] Cleaned up ${invalidTokens.length} invalid tokens`);
+            }
+        }
+
+        res.json({
+            success: true,
+            message: `Notification sent to ${response.successCount} devices`,
+            successCount: response.successCount,
+            failureCount: response.failureCount
+        });
+
+    } catch (error) {
+        console.error('[FCM] Send notification error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to send notification',
+            error: error.message
+        });
+    }
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {

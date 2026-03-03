@@ -24,6 +24,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
 
     <!-- GSAP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -1795,6 +1796,9 @@
                 db = firebase.firestore();
                 auth = firebase.auth();
                 isFirebaseConnected = true;
+
+                // Initialize FCM notifications
+                initFCM();
             } catch (error) {
                 console.error("Firebase init error:", error);
                 Swal.fire({ icon: 'error', title: 'Connection Error', text: 'Failed to connect to database.', confirmButtonColor: '#7c3aed' });
@@ -2832,6 +2836,7 @@ Sidney Apparels QCO Portal`;
         </div>
     </div>
 
+    <script src="../assets/js/fcm-notifications.js"></script>
     <script src="../assets/js/qco-alert.js"></script>
 </body>
 

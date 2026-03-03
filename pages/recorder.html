@@ -21,6 +21,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
 
     <script>
         tailwind.config = {
@@ -1248,6 +1249,9 @@
             db = firebase.firestore();
             auth = firebase.auth();
 
+            // Initialize FCM notifications
+            initFCM();
+
             // Wait for Auth
             await new Promise(resolve => {
                 const unsubscribe = auth.onAuthStateChanged(u => {
@@ -1922,6 +1926,14 @@
                     );
                 }
 
+                // SEND FCM NOTIFICATION on FIRST operation only
+                // Check: index is 0 AND no other operations have a start time yet
+                const isFirstOperation = index === '0' || index === 0;
+                const noOtherStarted = !Object.values(timings).some(t => t && t.start);
+                if (isFirstOperation && noOtherStarted && typeof sendStartNotification === 'function') {
+                    sendStartNotification(qcoId, opName, data);
+                }
+
                 // Refresh data to update status
                 loadData();
             } catch (e) {
@@ -2215,6 +2227,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../assets/js/fcm-notifications.js"></script>
     <script src="../assets/js/qco-alert.js"></script>
 </body>
 

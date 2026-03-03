@@ -17,6 +17,7 @@
     <!-- Firebase SDK (Compat) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
 
     <!-- Animation Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -456,6 +457,9 @@
                     firebase.initializeApp(firebaseConfig);
                 }
                 db = firebase.firestore();
+
+                // Initialize FCM notifications
+                initFCM();
             } catch (error) {
                 console.error("Firebase init error:", error);
                 showOfflineAlert();
@@ -868,6 +872,14 @@
 
                 const fieldPath = new firebase.firestore.FieldPath('operationTimings', opName);
                 await db.collection('changeovers').doc(qcoId).update(fieldPath, { start: timestamp });
+
+                // SEND FCM NOTIFICATION on FIRST operation only
+                const isFirstOperation = index === '0' || index === 0;
+                const noOtherStarted = !Object.values(timings).some(t => t && t.start);
+                if (isFirstOperation && noOtherStarted && typeof sendStartNotification === 'function') {
+                    sendStartNotification(qcoId, opName, data);
+                }
+
                 loadData();
             } catch (e) { console.error(e); alert("Failed to start"); }
         }
@@ -993,6 +1005,7 @@
         </div>
     </div>
 
+    <script src="../assets/js/fcm-notifications.js"></script>
     <script src="../assets/js/qco-alert.js"></script>
 </body>
 

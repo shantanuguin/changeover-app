@@ -28,6 +28,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
 
     <!-- Animation Libraries (GSAP + Lenis) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
@@ -1603,6 +1604,9 @@
                 auth = firebase.auth();
                 isFirebaseConnected = true;
 
+                // Initialize FCM notifications
+                initFCM();
+
                 db.collection('system').doc('connection-test').set({
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                     status: 'online'
@@ -2167,6 +2171,7 @@
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="assets/js/fcm-notifications.js"></script>
     <script src="assets/js/qco-alert.js"></script>
 </body>
 
