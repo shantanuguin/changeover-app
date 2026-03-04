@@ -1560,6 +1560,59 @@
         // ==========================================
         // SECTION I: SAVE STYLES & GENERATE QCO
         // ==========================================
+        async function resolveSpecificLineForQCO(lineVal) {
+            // Check if line comprises multiple lines (e.g., '8+5', '13/21', '6+17')
+            if (!lineVal.includes('+') && !lineVal.includes('/')) {
+                return lineVal;
+            }
+
+            // Extract the separate line numbers
+            const subLines = lineVal.split(/[\+\/]/).map(l => l.trim()).filter(l => l);
+            if (subLines.length === 0) return lineVal;
+
+            // Extract supervisors if available from personnelData
+            const lineData = typeof personnelData !== 'undefined' ? personnelData[lineVal] : null;
+            let supervisors = [];
+            if (lineData && lineData.supervisor) {
+                // Supervisors are usually separated by '/'
+                supervisors = lineData.supervisor.split('/').map(s => s.trim());
+            }
+
+            // Create sweet alert options
+            const inputOptions = {};
+            subLines.forEach((l, index) => {
+                let text = `Line ${l}`;
+                // Match supervisor to subline by index
+                if (supervisors[index]) {
+                    text += ` (${supervisors[index]})`;
+                }
+                inputOptions[l] = text;
+            });
+
+            const { value: specificLine } = await Swal.fire({
+                title: 'Select Specific Line',
+                text: `You selected a combined line group (${lineVal}). Which specific line represents this QCO?`,
+                icon: 'question',
+                input: 'radio',
+                inputOptions: inputOptions,
+                inputValidator: (value) => {
+                    if (!value) {
+                        return 'You need to choose a specific line!';
+                    }
+                },
+                showCancelButton: true,
+                confirmButtonColor: '#7c3aed',
+                cancelButtonColor: '#64748b'
+            });
+
+            if (!specificLine) {
+                // User cancelled or closed the modal
+                throw new Error("Line resolution cancelled");
+            }
+
+            return specificLine;
+        }
+
         async function saveStylesAndGenerateQCO() {
             const fromStyle = document.getElementById('fromStyleInput').value.trim();
             const toStyle = document.getElementById('toStyleInput').value.trim();
@@ -1581,7 +1634,10 @@
             btn.disabled = true;
 
             try {
-                const qcoNumber = await getNextQCONumber(lineVal, fromStyle, toStyle);
+                // Determine if we need to resolve a specific line for the QCO string
+                const specificLineStr = await resolveSpecificLineForQCO(lineVal);
+
+                const qcoNumber = await getNextQCONumber(specificLineStr, fromStyle, toStyle);
                 currentQCOId = qcoNumber;
 
                 const changeoverData = {
@@ -1619,8 +1675,12 @@
 
                 Swal.fire({ icon: 'success', title: 'QCO Generated!', text: qcoNumber, timer: 2000, showConfirmButton: false, position: 'top-end', toast: true });
             } catch (error) {
-                console.error('Generate QCO error:', error);
-                Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to generate QCO: ' + error.message, confirmButtonColor: '#7c3aed' });
+                if (error.message === "Line resolution cancelled") {
+                    // Just reset the button if user cancels the prompt
+                } else {
+                    console.error('Generate QCO error:', error);
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to generate QCO: ' + error.message, confirmButtonColor: '#7c3aed' });
+                }
             } finally {
                 btn.innerHTML = origHTML;
                 btn.disabled = false;
@@ -2481,7 +2541,8 @@ Sidney Apparels QCO Portal`;
                 const toStyle = currentQCOData.upcomingStyle;
 
                 // 1. Generate new QCO Number
-                const newQcoId = await getNextQCONumber(newLine, fromStyle, toStyle);
+                const specificLineStr = await resolveSpecificLineForQCO(newLine);
+                const newQcoId = await getNextQCONumber(specificLineStr, fromStyle, toStyle);
 
                 // 2. Clone data and update fields
                 const newData = {
@@ -2549,9 +2610,14 @@ Sidney Apparels QCO Portal`;
                 Swal.fire({ icon: 'success', title: 'Line Updated', text: `New QCO Number: ${newQcoId}`, timer: 3000, showConfirmButton: false, position: 'top-end', toast: true });
 
             } catch (error) {
-                console.error("Error migrating line:", error);
-                Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update line number: ' + error.message });
-                cancelLineEdit();
+                if (error.message === "Line resolution cancelled") {
+                    Swal.close();
+                    cancelLineEdit();
+                } else {
+                    console.error("Error migrating line:", error);
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update line number: ' + error.message });
+                    cancelLineEdit();
+                }
             }
         }
 
@@ -2620,7 +2686,8 @@ Sidney Apparels QCO Portal`;
                 const lineVal = currentQCOData.lineNumber;
 
                 // 1. Generate new QCO Number based on new styles
-                const newQcoId = await getNextQCONumber(lineVal, fromInput, toInput);
+                const specificLineStr = await resolveSpecificLineForQCO(lineVal);
+                const newQcoId = await getNextQCONumber(specificLineStr, fromInput, toInput);
 
                 // 2. Clone data and update style fields
                 const newData = {
@@ -2686,9 +2753,14 @@ Sidney Apparels QCO Portal`;
                 Swal.fire({ icon: 'success', title: 'Styles Updated', text: `New QCO Number: ${newQcoId}`, timer: 3000, showConfirmButton: false, position: 'top-end', toast: true });
 
             } catch (error) {
-                console.error("Error migrating styles:", error);
-                Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update styles: ' + error.message });
-                cancelStyleEdit();
+                if (error.message === "Line resolution cancelled") {
+                    Swal.close();
+                    cancelStyleEdit();
+                } else {
+                    console.error("Error migrating styles:", error);
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to update styles: ' + error.message });
+                    cancelStyleEdit();
+                }
             }
         }
     </script>

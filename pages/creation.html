@@ -24,6 +24,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="../assets/js/qco-loader.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
@@ -1950,6 +1951,21 @@
                             </div>
                             <p class="text-xs text-gray-500 mb-3">Choose a QCO created from the Schedule page to add OB
                                 analysis.</p>
+                            <div class="relative w-full group mb-4">
+                                <i
+                                    class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors"></i>
+                                <input type="text" id="existingQCOSearch" placeholder="Search Style or QCO Number..."
+                                    class="w-full pl-11 pr-12 py-3 bg-gray-50/50 backdrop-blur-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm font-medium shadow-sm"
+                                    autocomplete="off">
+                                <button id="existingQCOClearSearch"
+                                    class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden p-1">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <!-- Search Status -->
+                            <div id="existingQCOSearchStatus"
+                                class="hidden my-2 mx-1 p-2 rounded-lg border text-sm font-medium flex items-center justify-center transition-all">
+                            </div>
                             <select id="existingQCOSelect"
                                 class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                                 onchange="handleExistingQCOSelect(this.value)">
@@ -2658,36 +2674,43 @@
                 existBtn.className = 'flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all bg-blue-600 text-white shadow-lg';
                 newBtn.className = 'flex-1 py-3 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all text-slate-500 hover:bg-slate-100';
                 existSelector.classList.remove('hidden');
-                loadExistingQCOs();
+                initializeExistingQCOLoader();
             }
         }
 
-        async function loadExistingQCOs() {
-            const selector = document.getElementById('existingQCOSelect');
-            if (!selector || !db) return;
+        function initializeExistingQCOLoader() {
+            if (window.qcoLoaderInitComplete) return;
+            window.qcoLoader = new QCOLoader({
+                db: db,
+                searchInputId: 'existingQCOSearch',
+                selectElementId: 'existingQCOSelect',
+                statusElId: 'existingQCOSearchStatus',
+                clearBtnId: 'existingQCOClearSearch',
+                onQCOLsLoaded: (qcos) => {
+                    // Custom formatting for creation page dropdown
+                    const selector = document.getElementById('existingQCOSelect');
+                    if (!selector) return;
 
-            // Clear existing options except the placeholder
-            while (selector.options.length > 1) selector.remove(1);
+                    // Keep the default option
+                    while (selector.options.length > 1) {
+                        selector.remove(1);
+                    }
 
-            try {
-                // Load QCOs created from schedule page (or any with source field)
-                const snapshot = await db.collection('changeovers').orderBy('createdAt', 'desc').limit(50).get();
-
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    const opt = document.createElement('option');
-                    opt.value = doc.id;
-                    const qcoNum = data.qcoNumber || doc.id;
-                    const fromS = data.currentStyle || '???';
-                    const toS = data.upcomingStyle || '???';
-                    const line = data.lineNumber || '?';
-                    opt.textContent = `${qcoNum} — Line ${line} (${fromS} → ${toS})`;
-                    selector.appendChild(opt);
-                });
-            } catch (error) {
-                console.error('Error loading existing QCOs:', error);
-                addFirebaseLog('Error loading existing QCOs: ' + error.message, 'error');
-            }
+                    qcos.forEach(doc => {
+                        const data = doc.data();
+                        const opt = document.createElement('option');
+                        opt.value = doc.id;
+                        const qcoNum = data.qcoNumber || doc.id;
+                        const fromS = data.currentStyle || '???';
+                        const toS = data.upcomingStyle || '???';
+                        const line = data.lineNumber || '?';
+                        opt.textContent = `${qcoNum} — Line ${line} (${fromS} → ${toS})`;
+                        selector.appendChild(opt);
+                    });
+                }
+            });
+            window.qcoLoader.init();
+            window.qcoLoaderInitComplete = true;
         }
 
         async function handleExistingQCOSelect(qcoId) {
