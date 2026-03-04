@@ -10,7 +10,9 @@
     <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
     <link rel="manifest" href="/manifest.json">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Changeover Calendar | QCO System</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -48,10 +50,19 @@
     </script>
 
     <style>
+        /* BASE */
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+
         body {
             background-color: #f8fafc;
             color: #1e293b;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            overscroll-behavior-y: none;
         }
 
         #appContent {
@@ -62,6 +73,7 @@
             overscroll-behavior-y: contain;
         }
 
+        /* Glass */
         .glass {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(240, 249, 255, 0.9));
             backdrop-filter: blur(20px) saturate(180%);
@@ -78,20 +90,6 @@
             border: 1px solid rgba(226, 232, 240, 0.8);
             box-shadow: 0 40px 100px -12px rgba(0, 0, 0, 0.08), 0 20px 50px -12px rgba(0, 0, 0, 0.1);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @media (max-width: 768px) {
-
-            .glass,
-            .glass-card {
-                backdrop-filter: none !important;
-                background: rgba(255, 255, 255, 0.95) !important;
-            }
-
-            #mainApp {
-                padding-left: 1rem !important;
-                padding-right: 1rem !important;
-            }
         }
 
         /* Calendar Grid */
@@ -307,17 +305,256 @@
             min-height: 44px;
         }
 
-        @media (max-width: 640px) {
+        /* Bottom Tab Bar (mobile only) */
+        .bottom-tabs {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 40;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-top: 1px solid rgba(226, 232, 240, 0.6);
+            padding-bottom: env(safe-area-inset-bottom, 0);
+        }
+
+        .bottom-tabs .tab-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 0 4px;
+            gap: 2px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            color: #94a3b8;
+            transition: color 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .bottom-tabs .tab-item.active {
+            color: #7c3aed;
+        }
+
+        .bottom-tabs .tab-item .tab-icon {
+            width: 22px;
+            height: 22px;
+        }
+
+        .bottom-tabs .tab-item .tab-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #7c3aed;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .bottom-tabs .tab-item.active .tab-dot {
+            opacity: 1;
+        }
+
+        /* ============================================================ */
+        /*                     MOBILE OVERHAUL                         */
+        /* ============================================================ */
+        @media (max-width: 768px) {
+
+            .glass,
+            .glass-card {
+                backdrop-filter: none !important;
+                background: rgba(255, 255, 255, 0.95) !important;
+            }
+
+            #mainApp {
+                padding-left: 0.75rem !important;
+                padding-right: 0.75rem !important;
+                padding-top: 0.5rem !important;
+            }
+
+            /* --- Header: compact, single row, native feel --- */
+            #appHeader {
+                min-height: 3.5rem !important;
+                padding: 0 0.75rem !important;
+                gap: 0.5rem !important;
+                padding-top: env(safe-area-inset-top, 0) !important;
+            }
+
+            #appHeader h1 {
+                font-size: 0.8rem !important;
+            }
+
+            #appHeader p {
+                font-size: 8px !important;
+            }
+
+            .header-icon-box {
+                width: 2rem !important;
+                height: 2rem !important;
+                border-radius: 0.5rem !important;
+            }
+
+            .header-icon-box i {
+                width: 14px !important;
+                height: 14px !important;
+            }
+
+            /* hide desktop toggles on mobile */
+            .desktop-controls {
+                display: none !important;
+            }
+
+            /* show bottom tabs */
+            .bottom-tabs {
+                display: flex;
+            }
+
+            /* add bottom safe-area room so content doesn't hide behind tabs */
+            #appContent {
+                padding-bottom: calc(70px + env(safe-area-inset-bottom, 0)) !important;
+            }
+
+            /* --- Month Nav --- */
+            #monthTitle {
+                font-size: 1.1rem !important;
+                min-width: auto !important;
+            }
+
+            .month-nav-btn {
+                width: 2.5rem !important;
+                height: 2.5rem !important;
+                border-radius: 0.75rem !important;
+            }
+
+            /* --- Metrics: horizontal scroll strip --- */
+            .metrics-grid {
+                display: flex !important;
+                flex-wrap: nowrap !important;
+                overflow-x: auto !important;
+                gap: 0.5rem !important;
+                padding-bottom: 0.25rem;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                margin-bottom: 0.75rem !important;
+            }
+
+            .metrics-grid>div {
+                flex: 0 0 42% !important;
+                scroll-snap-align: start;
+                padding: 0.75rem !important;
+                border-radius: 1rem !important;
+            }
+
+            .metrics-grid .metric-icon {
+                width: 2rem !important;
+                height: 2rem !important;
+                border-radius: 0.5rem !important;
+            }
+
+            .metrics-grid .metric-icon i {
+                width: 14px !important;
+                height: 14px !important;
+            }
+
+            .metrics-grid .metric-label {
+                font-size: 8px !important;
+            }
+
+            .metrics-grid .metric-value {
+                font-size: 1.25rem !important;
+            }
+
+            .metrics-grid .metric-sub {
+                font-size: 8px !important;
+            }
+
+            .metrics-grid::-webkit-scrollbar {
+                display: none;
+            }
+
+            /* --- Calendar cells: touch-sized --- */
+            .cal-grid {
+                gap: 2px;
+            }
+
             .cal-day {
-                min-height: 65px;
+                min-height: 52px;
+                border-radius: 0.5rem;
+                padding: 0.25rem;
             }
 
             .cal-day .qco-chip {
                 display: none;
             }
 
-            .metrics-grid {
-                grid-template-columns: repeat(2, 1fr) !important;
+            .day-num {
+                font-size: 0.7rem;
+            }
+
+            .day-count {
+                font-size: 0.5rem;
+                padding: 0 4px;
+            }
+
+            /* --- Calendar card & linewise card --- */
+            .glass-card {
+                border-radius: 1rem !important;
+                padding: 0.75rem !important;
+            }
+
+            /* --- Modal: bottom sheet --- */
+            #dayModal>div {
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                max-width: 100% !important;
+                max-height: 85vh !important;
+                border-radius: 1.5rem 1.5rem 0 0 !important;
+                margin: 0 !important;
+                animation: slideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            }
+
+            #dayModal>div::before {
+                content: '';
+                display: block;
+                width: 36px;
+                height: 4px;
+                background: #cbd5e1;
+                border-radius: 99px;
+                margin: 8px auto 0;
+            }
+
+            /* --- Footer: hide on mobile --- */
+            footer {
+                display: none !important;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+            }
+
+            to {
+                transform: translateY(0);
+            }
+        }
+
+        /* Small phones */
+        @media (max-width: 380px) {
+            .cal-day {
+                min-height: 44px;
+            }
+
+            .day-num {
+                font-size: 0.6rem;
+            }
+
+            .metrics-grid>div {
+                flex: 0 0 55% !important;
             }
         }
     </style>
@@ -343,7 +580,7 @@
             class="glass h-auto min-h-[5rem] flex flex-wrap items-center justify-between px-4 md:px-8 z-20 flex-shrink-0 sticky top-0 border-b border-white/20 py-3 gap-3">
             <div class="flex items-center gap-3">
                 <div
-                    class="w-10 h-10 bg-gradient-to-br from-violet-600 to-indigo-700 rounded-xl flex items-center justify-center text-white shadow-lg">
+                    class="header-icon-box w-10 h-10 bg-gradient-to-br from-violet-600 to-indigo-700 rounded-xl flex items-center justify-center text-white shadow-lg">
                     <i data-lucide="calendar-days" class="w-5 h-5"></i>
                 </div>
                 <div>
@@ -352,7 +589,8 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-2 flex-wrap">
+            <!-- Desktop controls (hidden on mobile via CSS) -->
+            <div class="desktop-controls flex items-center gap-2 flex-wrap">
                 <!-- QCO Search -->
                 <div class="relative">
                     <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
@@ -389,12 +627,41 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Mobile: Search + filter row -->
+            <div class="md:hidden flex items-center gap-2 w-full">
+                <div class="relative flex-1">
+                    <i data-lucide="search"
+                        class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5"></i>
+                    <input type="text" id="qcoSearchInputMobile" placeholder="Search QCO..."
+                        class="w-full pl-9 pr-3 py-2 rounded-lg bg-white border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all"
+                        onkeydown="if(event.key==='Enter') searchQCOMobile()">
+                </div>
+                <button onclick="searchQCOMobile()"
+                    class="p-2 bg-violet-600 text-white rounded-lg active:scale-95 flex items-center justify-center flex-shrink-0"
+                    style="min-height:36px;min-width:36px;">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                </button>
+                <!-- Mobile display mode toggle -->
+                <div class="flex bg-white border border-slate-200 rounded-lg p-0.5 shadow-sm flex-shrink-0">
+                    <button id="btnDisplayQCOMobile" onclick="switchDisplayMode('qco')"
+                        class="px-2.5 py-1 text-[10px] font-bold rounded-md transition-all bg-emerald-600 text-white flex items-center gap-1"
+                        style="min-height:32px;">
+                        <i data-lucide="hash" class="w-3 h-3"></i>#
+                    </button>
+                    <button id="btnDisplayStyleMobile" onclick="switchDisplayMode('style')"
+                        class="px-2.5 py-1 text-[10px] font-bold rounded-md transition-all text-slate-500 flex items-center gap-1"
+                        style="min-height:32px;">
+                        <i data-lucide="shirt" class="w-3 h-3"></i>S
+                    </button>
+                </div>
+            </div>
         </header>
 
         <!-- Scrollable Content -->
         <div id="appContent" class="flex-1 relative overflow-y-auto">
-            <div id="mainApp" class="min-h-full flex flex-col pt-6 pb-32 px-4 md:px-6 opacity-0">
-                <div class="max-w-[1400px] mx-auto w-full">
+            <div id="mainApp" class="flex flex-col pt-6 pb-32 px-4 md:px-6 opacity-0" style="min-height:100%">
+                <div class="max-w-[1400px] mx-auto w-full flex flex-col flex-1">
 
                     <!-- Month Navigation -->
                     <div class="flex items-center justify-center gap-4 mb-6">
@@ -413,18 +680,21 @@
 
                     <!-- Metrics Row -->
                     <div class="metrics-grid grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                        <!-- Total Changeovers -->
+                        <!-- Total -->
                         <div class="glass-card p-5 relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-20 h-20 bg-violet-500/5 rounded-bl-full -mr-4 -mt-4">
                             </div>
                             <div class="flex items-center gap-3 relative z-10">
                                 <div
-                                    class="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-violet-500/20 flex-shrink-0">
+                                    class="metric-icon w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white flex items-center justify-center shadow-lg shadow-violet-500/20 flex-shrink-0">
                                     <i data-lucide="layers" class="w-5 h-5"></i>
                                 </div>
                                 <div>
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total</p>
-                                    <p class="text-2xl font-heading font-bold text-slate-900" id="metricTotal">0</p>
+                                    <p
+                                        class="metric-label text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                        Total</p>
+                                    <p class="metric-value text-2xl font-heading font-bold text-slate-900"
+                                        id="metricTotal">0</p>
                                 </div>
                             </div>
                         </div>
@@ -434,14 +704,17 @@
                             </div>
                             <div class="flex items-center gap-3 relative z-10">
                                 <div
-                                    class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 text-white flex items-center justify-center shadow-lg shadow-rose-500/20 flex-shrink-0">
+                                    class="metric-icon w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 text-white flex items-center justify-center shadow-lg shadow-rose-500/20 flex-shrink-0">
                                     <i data-lucide="flame" class="w-5 h-5"></i>
                                 </div>
                                 <div>
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Busiest
-                                        Day</p>
-                                    <p class="text-lg font-heading font-bold text-slate-900" id="metricBusiestDay">—</p>
-                                    <p class="text-[10px] text-rose-500 font-bold" id="metricBusiestDayCount"></p>
+                                    <p
+                                        class="metric-label text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                        Busiest Day</p>
+                                    <p class="metric-value text-lg font-heading font-bold text-slate-900"
+                                        id="metricBusiestDay">—</p>
+                                    <p class="metric-sub text-[10px] text-rose-500 font-bold"
+                                        id="metricBusiestDayCount"></p>
                                 </div>
                             </div>
                         </div>
@@ -451,40 +724,44 @@
                             </div>
                             <div class="flex items-center gap-3 relative z-10">
                                 <div
-                                    class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-lg shadow-amber-500/20 flex-shrink-0">
+                                    class="metric-icon w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center shadow-lg shadow-amber-500/20 flex-shrink-0">
                                     <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
                                 </div>
                                 <div>
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Busiest
-                                        Week</p>
-                                    <p class="text-lg font-heading font-bold text-slate-900" id="metricBusiestWeek">—
-                                    </p>
-                                    <p class="text-[10px] text-amber-600 font-bold" id="metricBusiestWeekCount"></p>
+                                    <p
+                                        class="metric-label text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                        Busiest Week</p>
+                                    <p class="metric-value text-lg font-heading font-bold text-slate-900"
+                                        id="metricBusiestWeek">—</p>
+                                    <p class="metric-sub text-[10px] text-amber-600 font-bold"
+                                        id="metricBusiestWeekCount"></p>
                                 </div>
                             </div>
                         </div>
-                        <!-- Avg per Working Day -->
+                        <!-- Avg -->
                         <div class="glass-card p-5 relative overflow-hidden">
                             <div class="absolute top-0 right-0 w-20 h-20 bg-emerald-500/5 rounded-bl-full -mr-4 -mt-4">
                             </div>
                             <div class="flex items-center gap-3 relative z-10">
                                 <div
-                                    class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 flex-shrink-0">
+                                    class="metric-icon w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20 flex-shrink-0">
                                     <i data-lucide="trending-up" class="w-5 h-5"></i>
                                 </div>
                                 <div>
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Avg / Day
-                                    </p>
-                                    <p class="text-2xl font-heading font-bold text-slate-900" id="metricAvg">0</p>
-                                    <p class="text-[10px] text-emerald-600 font-bold">excl. Fridays</p>
+                                    <p
+                                        class="metric-label text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                        Avg / Day</p>
+                                    <p class="metric-value text-2xl font-heading font-bold text-slate-900"
+                                        id="metricAvg">0</p>
+                                    <p class="metric-sub text-[10px] text-emerald-600 font-bold">excl. Fridays</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Calendar View -->
-                    <div id="calendarView" class="glass-card p-4 md:p-6 mb-6">
-                        <div class="cal-grid" id="calendarGrid">
+                    <div id="calendarView" class="glass-card p-4 md:p-6 mb-6 flex-1 flex flex-col">
+                        <div class="cal-grid flex-1" id="calendarGrid">
                             <!-- Injected by JS -->
                         </div>
                     </div>
@@ -512,6 +789,30 @@
                 </footer>
             </div>
         </div>
+    </div>
+
+    <!-- Bottom Tab Bar (mobile only) -->
+    <div class="bottom-tabs">
+        <button class="tab-item active" id="tabCalendar" onclick="switchViewMobile('calendar')">
+            <i data-lucide="calendar" class="tab-icon"></i>
+            <span>Calendar</span>
+            <span class="tab-dot"></span>
+        </button>
+        <button class="tab-item" id="tabLinewise" onclick="switchViewMobile('linewise')">
+            <i data-lucide="list-tree" class="tab-icon"></i>
+            <span>Linewise</span>
+            <span class="tab-dot"></span>
+        </button>
+        <button class="tab-item" id="tabSearch" onclick="focusMobileSearch()">
+            <i data-lucide="search" class="tab-icon"></i>
+            <span>Search</span>
+            <span class="tab-dot"></span>
+        </button>
+        <button class="tab-item" id="tabInstall" onclick="installPWA()" style="display:none;">
+            <i data-lucide="download" class="tab-icon"></i>
+            <span>Install</span>
+            <span class="tab-dot"></span>
+        </button>
     </div>
 
     <!-- Day Detail Modal -->
@@ -1001,20 +1302,28 @@
             displayMode = mode;
             const btnQCO = document.getElementById('btnDisplayQCO');
             const btnStyle = document.getElementById('btnDisplayStyle');
+            const btnQCOM = document.getElementById('btnDisplayQCOMobile');
+            const btnStyleM = document.getElementById('btnDisplayStyleMobile');
 
             const activeBtnClass = 'px-4 py-1.5 text-xs font-bold rounded-lg transition-all bg-emerald-600 text-white shadow-sm flex items-center gap-2';
             const inactiveBtnClass = 'px-4 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-100 flex items-center gap-2';
+            const activeMobile = 'px-2.5 py-1 text-[10px] font-bold rounded-md transition-all bg-emerald-600 text-white flex items-center gap-1';
+            const inactiveMobile = 'px-2.5 py-1 text-[10px] font-bold rounded-md transition-all text-slate-500 flex items-center gap-1';
 
             if (mode === 'qco') {
                 btnQCO.className = activeBtnClass;
                 btnQCO.innerHTML = '<i data-lucide="hash" class="w-3.5 h-3.5"></i> QCO #';
                 btnStyle.className = inactiveBtnClass;
                 btnStyle.innerHTML = '<i data-lucide="shirt" class="w-3.5 h-3.5"></i> Style';
+                if (btnQCOM) btnQCOM.className = activeMobile;
+                if (btnStyleM) btnStyleM.className = inactiveMobile;
             } else {
                 btnStyle.className = activeBtnClass;
                 btnStyle.innerHTML = '<i data-lucide="shirt" class="w-3.5 h-3.5"></i> Style';
                 btnQCO.className = inactiveBtnClass;
                 btnQCO.innerHTML = '<i data-lucide="hash" class="w-3.5 h-3.5"></i> QCO #';
+                if (btnStyleM) btnStyleM.className = activeMobile;
+                if (btnQCOM) btnQCOM.className = inactiveMobile;
             }
             renderCalendar();
             renderLinewise();
@@ -1088,6 +1397,7 @@
 
             document.getElementById('dayModal').classList.remove('hidden');
             document.getElementById('dayModal').classList.add('flex');
+            lucide.createIcons();
         }
 
         function closeDayModal() {
@@ -1100,29 +1410,27 @@
             if (e.target === document.getElementById('dayModal')) closeDayModal();
         });
 
-        // ==========================================
-        // QCO SEARCH + HIGHLIGHT
-        // ==========================================
-        async function searchQCO() {
-            const query = document.getElementById('qcoSearchInput').value.trim().toUpperCase();
+        async function searchQCO(inputId) {
+            const el = document.getElementById(inputId || 'qcoSearchInput');
+            const query = el.value.trim().toUpperCase();
             if (!query) return;
 
             // Clear previous highlights
             clearHighlights();
 
-            // First check current month
-            let found = findQCOInCurrentData(query);
+            // First check current month (match QCO or style)
+            let foundCount = findMatchesInCurrentData(query);
 
-            if (!found) {
-                // Search Firestore globally
+            if (foundCount === 0) {
+                // Search Firestore globally — try QCO match first
                 try {
+                    let matchDoc = null;
                     const snapshot = await db.collection('changeovers')
                         .where('qcoNumber', '>=', query)
                         .where('qcoNumber', '<=', query + '\uf8ff')
                         .limit(5)
                         .get();
 
-                    let matchDoc = null;
                     snapshot.forEach(doc => {
                         const data = doc.data();
                         if (!matchDoc && data.scheduledDate && data.status !== 'discarded') {
@@ -1138,6 +1446,21 @@
                         }
                     }
 
+                    if (!matchDoc) {
+                        // Try style-based search: load all and filter client-side
+                        const allSnap = await db.collection('changeovers').get();
+                        allSnap.forEach(doc => {
+                            if (matchDoc) return;
+                            const data = doc.data();
+                            if (data.status === 'discarded' || !data.scheduledDate) return;
+                            const upcoming = (data.upcomingStyle || '').toUpperCase();
+                            const current = (data.currentStyle || '').toUpperCase();
+                            if (upcoming.includes(query) || current.includes(query)) {
+                                matchDoc = { id: doc.id, ...data };
+                            }
+                        });
+                    }
+
                     if (matchDoc) {
                         // Navigate to correct month
                         let dateStr = matchDoc.scheduledDate;
@@ -1146,18 +1469,18 @@
                         currentYear = d.getFullYear();
                         currentMonth = d.getMonth();
                         await loadMonth();
-                        found = findQCOInCurrentData(matchDoc.qcoNumber || matchDoc.id);
+                        foundCount = findMatchesInCurrentData(query);
                     }
                 } catch (e) {
                     console.error("Search error:", e);
                 }
             }
 
-            if (found) {
+            if (foundCount > 0) {
                 Swal.fire({
                     icon: 'success',
                     title: 'Found!',
-                    text: `${query} — highlighted for 10 seconds`,
+                    text: `${foundCount} match${foundCount > 1 ? 'es' : ''} — highlighted for 10 seconds`,
                     timer: 2000,
                     showConfirmButton: false,
                     position: 'top-end',
@@ -1176,49 +1499,164 @@
             }
         }
 
-        function findQCOInCurrentData(query) {
+        // Search matching QCO number OR style number (partial) in current month data
+        function findMatchesInCurrentData(query) {
             const upperQuery = query.toUpperCase();
 
-            // Find the changeover
-            const match = allChangeovers.find(co => {
+            // Find ALL matching changeovers
+            const matches = allChangeovers.filter(co => {
                 const qco = (co.qcoNumber || co.id || '').toUpperCase();
-                return qco.includes(upperQuery);
+                const upcoming = (co.upcomingStyle || '').toUpperCase();
+                const current = (co.currentStyle || '').toUpperCase();
+                return qco.includes(upperQuery) || upcoming.includes(upperQuery) || current.includes(upperQuery);
             });
 
-            if (!match) return false;
+            if (matches.length === 0) return 0;
 
-            const dateKey = getDateKey(match.scheduledDate);
-            const qcoId = match.qcoNumber || match.id;
+            let scrolledToFirst = false;
 
-            if (currentView === 'calendar') {
-                // Highlight date cell
-                const dateCell = document.querySelector(`.cal-day[data-date="${dateKey}"]`);
-                if (dateCell) {
-                    dateCell.classList.add('highlighted');
-                    dateCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            matches.forEach(match => {
+                const dateKey = getDateKey(match.scheduledDate);
+                const qcoId = match.qcoNumber || match.id;
+
+                if (currentView === 'calendar') {
+                    // Highlight date cell
+                    const dateCell = document.querySelector(`.cal-day[data-date="${dateKey}"]`);
+                    if (dateCell) {
+                        dateCell.classList.add('highlighted');
+                        if (!scrolledToFirst) {
+                            dateCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            scrolledToFirst = true;
+                        }
+                    }
+                    // Highlight QCO chip
+                    const chip = document.querySelector(`.qco-chip[data-qco="${qcoId}"]`);
+                    if (chip) chip.classList.add('highlighted');
+                } else {
+                    // Linewise view — highlight all chips matching this QCO
+                    const chips = document.querySelectorAll(`.linewise-cell-chip[data-qco="${qcoId}"]`);
+                    chips.forEach(chip => {
+                        chip.classList.add('highlighted');
+                        if (!scrolledToFirst) {
+                            chip.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                            scrolledToFirst = true;
+                        }
+                    });
                 }
-                // Highlight QCO chip
-                const chip = document.querySelector(`.qco-chip[data-qco="${qcoId}"]`);
-                if (chip) chip.classList.add('highlighted');
-            } else {
-                // Linewise view
-                const chip = document.querySelector(`.linewise-cell-chip[data-qco="${qcoId}"]`);
-                if (chip) {
-                    chip.classList.add('highlighted');
-                    chip.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-                }
-            }
+            });
 
             // Remove highlight after 10 seconds
             if (highlightTimeout) clearTimeout(highlightTimeout);
             highlightTimeout = setTimeout(clearHighlights, 10000);
 
-            return true;
+            return matches.length;
         }
 
         function clearHighlights() {
             document.querySelectorAll('.highlighted').forEach(el => el.classList.remove('highlighted'));
         }
+
+        // ==========================================
+        // MOBILE HANDLERS
+        // ==========================================
+        function searchQCOMobile() {
+            searchQCO('qcoSearchInputMobile');
+        }
+
+        function switchViewMobile(view) {
+            // Sync with desktop switchView
+            switchView(view);
+            // Update bottom tab active states
+            document.getElementById('tabCalendar').classList.toggle('active', view === 'calendar');
+            document.getElementById('tabLinewise').classList.toggle('active', view === 'linewise');
+            document.getElementById('tabSearch').classList.remove('active');
+        }
+
+        function focusMobileSearch() {
+            const input = document.getElementById('qcoSearchInputMobile');
+            if (input) {
+                input.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                setTimeout(() => input.focus(), 300);
+            }
+        }
+    </script>
+
+    <!-- QCO Alert System -->
+    <script src="../assets/js/qco-alert.js"></script>
+
+    <!-- PWA Service Worker & Install Prompt -->
+    <script>
+        // Service Worker Registration (only on HTTP/HTTPS)
+        if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/firebase-messaging-sw.js').then(() => {
+                    console.log('PWA/FCM Service Worker registered');
+                }).catch(err => {
+                    console.log('Service Worker registration failed: ', err);
+                });
+            });
+        }
+
+        // PWA Install Prompt
+        let deferredPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            // Show install tab on mobile
+            const installTab = document.getElementById('tabInstall');
+            if (installTab) installTab.style.display = '';
+            console.log('PWA install prompt ready');
+        });
+
+        function installPWA() {
+            if (!deferredPrompt) {
+                // Already installed or not available — show manual instructions
+                const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+                if (isIOS) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Install on iOS',
+                        html: '<p class="text-sm">Tap the <b>Share</b> button <span style="font-size:1.2em">⎋</span> at the bottom of Safari, then tap <b>"Add to Home Screen"</b>.</p>',
+                        confirmButtonText: 'Got it',
+                        confirmButtonColor: '#7c3aed'
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Already Available',
+                        text: 'App is already installed or your browser doesn\'t support install prompts.',
+                        timer: 3000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                }
+                return;
+            }
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted PWA install');
+                    const installTab = document.getElementById('tabInstall');
+                    if (installTab) installTab.style.display = 'none';
+                }
+                deferredPrompt = null;
+            });
+        }
+
+        // On iOS show install tab always (since beforeinstallprompt doesn't fire)
+        if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone) {
+            const installTab = document.getElementById('tabInstall');
+            if (installTab) installTab.style.display = '';
+        }
+
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA installed');
+            deferredPrompt = null;
+            const installTab = document.getElementById('tabInstall');
+            if (installTab) installTab.style.display = 'none';
+        });
     </script>
 
 </body>
