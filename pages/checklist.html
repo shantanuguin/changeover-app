@@ -821,13 +821,13 @@
                                 <span id="categoryText">--</span>
                             </div>
 
-                            <!-- Email Sent Tracking info -->
+                            <!-- Checklist Alert Email Tracking -->
                             <div id="emailInfoContainer"
                                 class="hidden items-center gap-2 px-4 py-3 bg-white/60 rounded-2xl border border-white/60 text-slate-600 font-semibold shadow-sm transition-all whitespace-nowrap">
-                                <i data-lucide="mail-check" class="w-4 h-4 text-emerald-500"></i>
+                                <i data-lucide="mail-warning" class="w-4 h-4 text-amber-500"></i>
                                 <div class="flex flex-col leading-none">
-                                    <span id="emailSentText" class="text-xs font-bold">No Email Sent</span>
-                                    <span id="emailSentDate" class="text-[10px] text-slate-400 mt-0.5"></span>
+                                    <span id="alertEmailCountText" class="text-xs font-bold">No Alert Emails</span>
+                                    <span id="alertEmailDateText" class="text-[10px] text-slate-400 mt-0.5"></span>
                                 </div>
                             </div>
 
@@ -1853,15 +1853,15 @@
                         catEl.classList.add('hidden');
                     }
 
-                    // Update Email Info Display
+                    // Update Checklist Alert Email Display
                     const emailEl = document.getElementById('emailInfoContainer');
-                    const emailText = document.getElementById('emailSentText');
-                    const emailDate = document.getElementById('emailSentDate');
-                    if (data.emailSentCount && data.emailSentCount > 0) {
-                        emailText.textContent = `Emails Sent: ${data.emailSentCount}`;
-                        if (data.emailSentAt) {
-                            const d = new Date(data.emailSentAt.toDate?.() || data.emailSentAt);
-                            emailDate.textContent = d.toLocaleString('en-US', {
+                    const alertCountText = document.getElementById('alertEmailCountText');
+                    const alertDateText = document.getElementById('alertEmailDateText');
+                    if (data.alertEmailSentCount && data.alertEmailSentCount > 0) {
+                        alertCountText.textContent = `Alert Emails: ${data.alertEmailSentCount}`;
+                        if (data.alertEmailSent) {
+                            const d = new Date(data.alertEmailSent.toDate?.() || data.alertEmailSent);
+                            alertDateText.textContent = d.toLocaleString('en-US', {
                                 month: 'short', day: 'numeric',
                                 hour: 'numeric', minute: '2-digit', hour12: true
                             });
