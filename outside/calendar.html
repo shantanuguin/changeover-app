@@ -365,6 +365,18 @@
                     <i class="fas fa-search text-sm"></i>
                 </button>
 
+                <!-- Display Filter -->
+                <div class="flex bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    <button id="btnDisplayQCO" onclick="switchDisplayMode('qco')"
+                        class="px-3 py-2 text-xs font-bold transition-all bg-emerald-600 text-white">
+                        <i class="fas fa-hashtag mr-1"></i>QCO #
+                    </button>
+                    <button id="btnDisplayStyle" onclick="switchDisplayMode('style')"
+                        class="px-3 py-2 text-xs font-bold transition-all text-slate-500 hover:bg-slate-50">
+                        <i class="fas fa-tshirt mr-1"></i>Style
+                    </button>
+                </div>
+
                 <!-- View Toggle -->
                 <div class="flex bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                     <button id="btnCalView" onclick="switchView('calendar')"
@@ -555,6 +567,46 @@
             "32": { supervisor: "KALU" }
         };
 
+        // Build exploded (split) personnel map — each sub-line gets its own entry
+        function buildExplodedPersonnel() {
+            const exploded = {};
+            for (const [key, val] of Object.entries(personnelData)) {
+                const lineParts = key.split(/[\+\/]/);
+                const supervisors = val.supervisor.split('/');
+                if (lineParts.length > 1) {
+                    lineParts.forEach((lp, i) => {
+                        const lp_trimmed = lp.trim();
+                        if (!exploded[lp_trimmed]) {
+                            exploded[lp_trimmed] = { supervisor: (supervisors[i] || supervisors[0]).trim(), originalKey: key };
+                        }
+                    });
+                } else {
+                    if (!exploded[key]) {
+                        exploded[key] = { supervisor: val.supervisor, originalKey: key };
+                    }
+                }
+            }
+            return exploded;
+        }
+        const explodedPersonnel = buildExplodedPersonnel();
+
+        // Get the display label for a changeover based on display mode
+        function getChipLabel(co) {
+            if (displayMode === 'style') {
+                const from = (co.currentStyle || '').slice(-5);
+                const to = (co.upcomingStyle || '').slice(-5);
+                return `${from}-${to}`;
+            }
+            return co.qcoNumber || co.id;
+        }
+
+        // Resolve which individual sub-lines a changeover belongs to
+        function resolveSubLines(lineNumber) {
+            if (!lineNumber) return ['Unknown'];
+            const parts = lineNumber.split(/[\+\/]/).map(p => p.trim());
+            return parts;
+        }
+
         // ==========================================
         // STATE
         // ==========================================
@@ -562,6 +614,7 @@
         let currentYear, currentMonth; // 0-indexed month
         let allChangeovers = []; // cached for current month
         let currentView = 'calendar';
+        let displayMode = 'qco'; // 'qco' or 'style'
         let highlightTimeout = null;
 
         const DAYS_OF_WEEK = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
@@ -802,7 +855,7 @@
                     const chip = document.createElement('span');
                     chip.className = 'qco-chip';
                     chip.setAttribute('data-qco', co.qcoNumber || co.id);
-                    chip.textContent = co.qcoNumber || co.id;
+                    chip.textContent = getChipLabel(co);
                     cell.appendChild(chip);
                 });
 
@@ -826,30 +879,27 @@
 
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-            // Build line-to-changeovers map
-            const lineMap = {}; // lineKey -> { dateKey -> [changeovers] }
+            // Build EXPLODED line-to-changeovers map
+            // Each complex line (e.g. "8+5") gets split into "8" and "5" rows
+            const lineMap = {}; // singleLineKey -> { dateKey -> [changeovers] }
             allChangeovers.forEach(co => {
-                const lineKey = co.lineNumber || 'Unknown';
+                const subLines = resolveSubLines(co.lineNumber);
                 const dateKey = getDateKey(co.scheduledDate);
                 if (!dateKey) return;
-                if (!lineMap[lineKey]) lineMap[lineKey] = {};
-                if (!lineMap[lineKey][dateKey]) lineMap[lineKey][dateKey] = [];
-                lineMap[lineKey][dateKey].push(co);
+                subLines.forEach(sl => {
+                    if (!lineMap[sl]) lineMap[sl] = {};
+                    if (!lineMap[sl][dateKey]) lineMap[sl][dateKey] = [];
+                    lineMap[sl][dateKey].push(co);
+                });
             });
 
-            // Sort line keys
-            const sortedLines = Object.keys(personnelData).sort((a, b) => {
+            // Build ordered list of individual line numbers from explodedPersonnel
+            const allSingleLines = new Set([...Object.keys(explodedPersonnel), ...Object.keys(lineMap)]);
+            const orderedLines = [...allSingleLines].sort((a, b) => {
                 const numA = parseInt(a.replace(/[^0-9]/g, '')) || 999;
                 const numB = parseInt(b.replace(/[^0-9]/g, '')) || 999;
-                return numA - numB;
-            });
-
-            // Only include lines that have at least one changeover, plus all known lines
-            const allLineKeys = new Set([...sortedLines, ...Object.keys(lineMap)]);
-            const orderedLines = [...allLineKeys].sort((a, b) => {
-                const numA = parseInt(a.replace(/[^0-9]/g, '')) || 999;
-                const numB = parseInt(b.replace(/[^0-9]/g, '')) || 999;
-                return numA - numB;
+                if (numA !== numB) return numA - numB;
+                return a.localeCompare(b);
             });
 
             // Header row
@@ -857,7 +907,7 @@
             const headerRow = document.createElement('tr');
             const lineHeader = document.createElement('th');
             lineHeader.className = 'line-header';
-            lineHeader.textContent = 'Line / Supervisor';
+            lineHeader.textContent = 'Supervisor / Line';
             headerRow.appendChild(lineHeader);
 
             for (let d = 1; d <= daysInMonth; d++) {
@@ -871,16 +921,15 @@
             thead.appendChild(headerRow);
             table.appendChild(thead);
 
-            // Body rows
+            // Body rows — one per individual line
             const tbody = document.createElement('tbody');
-            orderedLines.forEach(lineKey => {
+            orderedLines.forEach(singleLine => {
                 const row = document.createElement('tr');
                 const lineCell = document.createElement('td');
                 lineCell.className = 'line-cell';
-                const supervisor = personnelData[lineKey] ? personnelData[lineKey].supervisor : '—';
-                const parts = lineKey.split(/[\+\/]/);
-                const lineLabel = parts.length > 1 ? `Line ${parts.join(' & ')}` : `Line ${lineKey}`;
-                lineCell.innerHTML = `<span class="text-xs font-bold text-violet-700">${supervisor}</span><br><span class="text-[10px] text-slate-500 font-medium">${lineLabel}</span>`;
+                const info = explodedPersonnel[singleLine];
+                const supervisor = info ? info.supervisor : '—';
+                lineCell.innerHTML = `<span class="text-xs font-bold text-violet-700">${supervisor}</span><br><span class="text-[10px] text-slate-500 font-medium">Line ${singleLine}</span>`;
                 row.appendChild(lineCell);
 
                 for (let d = 1; d <= daysInMonth; d++) {
@@ -890,18 +939,19 @@
                     const td = document.createElement('td');
                     td.className = isFriday ? 'friday-col' : '';
 
-                    const coForCell = (lineMap[lineKey] && lineMap[lineKey][dateKey]) || [];
+                    const coForCell = (lineMap[singleLine] && lineMap[singleLine][dateKey]) || [];
                     coForCell.forEach(co => {
                         const chip = document.createElement('span');
                         chip.className = 'linewise-cell-chip';
                         chip.setAttribute('data-qco', co.qcoNumber || co.id);
-                        // Show short QCO: last segment
-                        const shortId = (co.qcoNumber || co.id).split('-').slice(-2).join('-');
-                        chip.textContent = shortId;
-                        chip.title = co.qcoNumber || co.id;
+                        const label = displayMode === 'style'
+                            ? (co.upcomingStyle || '').slice(-5)
+                            : (co.qcoNumber || co.id).split('-').slice(-2).join('-');
+                        chip.textContent = label;
+                        chip.title = `${co.qcoNumber || co.id} — ${co.currentStyle || '?'} → ${co.upcomingStyle || '?'}`;
                         chip.onclick = (e) => {
                             e.stopPropagation();
-                            openDayModal(dateKey, (lineMap[lineKey] && lineMap[lineKey][dateKey]) || []);
+                            openDayModal(dateKey, coForCell);
                         };
                         td.appendChild(chip);
                     });
@@ -934,6 +984,24 @@
                 lineView.classList.remove('hidden');
                 calView.classList.add('hidden');
             }
+        }
+
+        // ==========================================
+        // DISPLAY MODE TOGGLE
+        // ==========================================
+        function switchDisplayMode(mode) {
+            displayMode = mode;
+            const btnQCO = document.getElementById('btnDisplayQCO');
+            const btnStyle = document.getElementById('btnDisplayStyle');
+            if (mode === 'qco') {
+                btnQCO.className = 'px-3 py-2 text-xs font-bold transition-all bg-emerald-600 text-white';
+                btnStyle.className = 'px-3 py-2 text-xs font-bold transition-all text-slate-500 hover:bg-slate-50';
+            } else {
+                btnStyle.className = 'px-3 py-2 text-xs font-bold transition-all bg-emerald-600 text-white';
+                btnQCO.className = 'px-3 py-2 text-xs font-bold transition-all text-slate-500 hover:bg-slate-50';
+            }
+            renderCalendar();
+            renderLinewise();
         }
 
         // ==========================================
