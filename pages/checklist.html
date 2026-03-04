@@ -2524,7 +2524,7 @@
                 // Update global for risk assessment
                 currentRemainingHours = hoursRemaining;
                 assessRisk();
-                updateAlertEmailButtonVisibility(hoursRemaining);
+                updateAlertEmailButtonVisibility(displayHours);
 
                 if (now - lastUpdate > updateInterval) {
                     console.log("Updating countdown in DB. Remaining:", hoursRemaining);
