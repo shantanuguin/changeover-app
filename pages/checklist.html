@@ -840,9 +840,9 @@
 
                             <!-- Send Alert Email Button (visible only when ≤48 hours remain) -->
                             <button id="alertEmailBtn" onclick="openAlertEmailModal()"
-                                class="hidden items-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-amber-500 text-white rounded-2xl font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all whitespace-nowrap text-sm"
+                                class="hidden items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-2xl font-bold shadow-sm hover:bg-red-100 hover:border-red-300 transition-all whitespace-nowrap text-sm"
                                 title="Send escalation email to departments below 90%">
-                                <i data-lucide="mail-warning" class="w-4 h-4"></i>
+                                <i data-lucide="mail-warning" class="w-4 h-4 text-red-600"></i>
                                 Send Alert Email
                             </button>
 
@@ -2712,19 +2712,20 @@
         class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] hidden items-center justify-center p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
             <!-- Modal Header -->
-            <div class="p-6 border-b border-slate-200 bg-gradient-to-r from-red-500 to-amber-500">
+            <div class="p-6 border-b border-red-200 bg-red-50">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                            <i data-lucide="mail-warning" class="w-5 h-5 text-white"></i>
+                        <div
+                            class="w-10 h-10 bg-red-100/80 rounded-xl flex items-center justify-center border border-red-200/50">
+                            <i data-lucide="mail-warning" class="w-5 h-5 text-red-600"></i>
                         </div>
                         <div>
-                            <h3 class="text-lg font-bold text-white">Checklist Alert Email</h3>
-                            <p class="text-white/80 text-xs">Review and send escalation email</p>
+                            <h3 class="text-lg font-bold text-red-900">Checklist Alert Email</h3>
+                            <p class="text-red-700/80 text-xs">Review and send escalation email</p>
                         </div>
                     </div>
                     <button onclick="closeAlertEmailModal()"
-                        class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors">
+                        class="w-8 h-8 rounded-full bg-red-100/50 flex items-center justify-center text-red-600 hover:bg-red-200 transition-colors">
                         <i data-lucide="x" class="w-4 h-4"></i>
                     </button>
                 </div>
@@ -2775,7 +2776,7 @@
                         <i data-lucide="plug" class="w-4 h-4"></i> Test Server
                     </button>
                     <button onclick="sendAlertEmail()"
-                        class="flex-1 py-3 rounded-xl bg-gradient-to-r from-red-500 to-amber-500 text-white font-bold shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
+                        class="flex-1 py-3 rounded-xl bg-red-600 text-white font-bold shadow-md hover:bg-red-700 hover:shadow-lg transition-all flex items-center justify-center gap-2">
                         <i data-lucide="send" class="w-4 h-4"></i> Send Email
                     </button>
                 </div>
@@ -2815,8 +2816,8 @@
             if (!data) return '';
 
             const qcoNumber = data.qcoNumber || currentQCOId || '—';
-            const supervisor = data.supervisor || '—';
-            const line = data.line || '—';
+            const supervisor = data.supervisorName || data.supervisor || '—';
+            const line = data.lineNumber || data.line || '—';
             const currentStyle = data.currentStyle || '—';
             const upcomingStyle = data.upcomingStyle || '—';
 
@@ -2909,8 +2910,8 @@
             if (!data) return '';
 
             const qcoNumber = data.qcoNumber || currentQCOId || '—';
-            const supervisor = data.supervisor || '—';
-            const line = data.line || '—';
+            const supervisor = data.supervisorName || data.supervisor || '—';
+            const line = data.lineNumber || data.line || '—';
             const currentStyle = data.currentStyle || '—';
             const upcomingStyle = data.upcomingStyle || '—';
 
