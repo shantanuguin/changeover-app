@@ -361,31 +361,31 @@
                         onkeydown="if(event.key==='Enter') searchQCO()">
                 </div>
                 <button onclick="searchQCO()"
-                    class="px-3 py-2.5 bg-violet-600 text-white rounded-xl hover:bg-violet-700 transition-colors shadow-sm">
-                    <i class="fas fa-search text-sm"></i>
+                    class="p-2.5 bg-violet-600 text-white rounded-xl hover:bg-violet-700 transition-all hover:shadow-md active:scale-95 flex items-center justify-center">
+                    <i data-lucide="search" class="w-4 h-4"></i>
                 </button>
 
                 <!-- Display Filter -->
-                <div class="flex bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                <div class="flex bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-xl p-1 shadow-sm">
                     <button id="btnDisplayQCO" onclick="switchDisplayMode('qco')"
-                        class="px-3 py-2 text-xs font-bold transition-all bg-emerald-600 text-white">
-                        <i class="fas fa-hashtag mr-1"></i>QCO #
+                        class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all bg-emerald-600 text-white shadow-sm flex items-center gap-2">
+                        <i data-lucide="hash" class="w-3.5 h-3.5"></i> QCO #
                     </button>
                     <button id="btnDisplayStyle" onclick="switchDisplayMode('style')"
-                        class="px-3 py-2 text-xs font-bold transition-all text-slate-500 hover:bg-slate-50">
-                        <i class="fas fa-tshirt mr-1"></i>Style
+                        class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-100 flex items-center gap-2">
+                        <i data-lucide="shirt" class="w-3.5 h-3.5"></i> Style
                     </button>
                 </div>
 
                 <!-- View Toggle -->
-                <div class="flex bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                <div class="flex bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-xl p-1 shadow-sm">
                     <button id="btnCalView" onclick="switchView('calendar')"
-                        class="px-3 py-2 text-xs font-bold transition-all bg-violet-600 text-white">
-                        <i class="fas fa-calendar-alt mr-1"></i>Calendar
+                        class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all bg-violet-600 text-white shadow-sm flex items-center gap-2">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5"></i> Calendar
                     </button>
                     <button id="btnLineView" onclick="switchView('linewise')"
-                        class="px-3 py-2 text-xs font-bold transition-all text-slate-500 hover:bg-slate-50">
-                        <i class="fas fa-stream mr-1"></i>Linewise
+                        class="px-4 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-100 flex items-center gap-2">
+                        <i data-lucide="list-tree" class="w-3.5 h-3.5"></i> Linewise
                     </button>
                 </div>
             </div>
@@ -523,8 +523,8 @@
                     <p class="text-xs text-slate-400 font-medium" id="modalDateCount">0 changeovers</p>
                 </div>
                 <button onclick="closeDayModal()"
-                    class="w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors">
-                    <i class="fas fa-times text-slate-500"></i>
+                    class="w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 hover:text-slate-800 text-slate-500 flex items-center justify-center transition-all active:scale-95">
+                    <i data-lucide="x" class="w-4 h-4"></i>
                 </button>
             </div>
             <div class="p-5 overflow-y-auto space-y-3 flex-1" id="modalBody">
@@ -973,17 +973,25 @@
             const calView = document.getElementById('calendarView');
             const lineView = document.getElementById('linewiseView');
 
+            const activeBtnClass = 'px-4 py-1.5 text-xs font-bold rounded-lg transition-all bg-violet-600 text-white shadow-sm flex items-center gap-2';
+            const inactiveBtnClass = 'px-4 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-100 flex items-center gap-2';
+
             if (view === 'calendar') {
-                btnCal.className = 'px-3 py-2 text-xs font-bold transition-all bg-violet-600 text-white';
-                btnLine.className = 'px-3 py-2 text-xs font-bold transition-all text-slate-500 hover:bg-slate-50';
+                btnCal.className = activeBtnClass;
+                btnCal.innerHTML = '<i data-lucide="calendar" class="w-3.5 h-3.5"></i> Calendar';
+                btnLine.className = inactiveBtnClass;
+                btnLine.innerHTML = '<i data-lucide="list-tree" class="w-3.5 h-3.5"></i> Linewise';
                 calView.classList.remove('hidden');
                 lineView.classList.add('hidden');
             } else {
-                btnLine.className = 'px-3 py-2 text-xs font-bold transition-all bg-violet-600 text-white';
-                btnCal.className = 'px-3 py-2 text-xs font-bold transition-all text-slate-500 hover:bg-slate-50';
+                btnLine.className = activeBtnClass;
+                btnLine.innerHTML = '<i data-lucide="list-tree" class="w-3.5 h-3.5"></i> Linewise';
+                btnCal.className = inactiveBtnClass;
+                btnCal.innerHTML = '<i data-lucide="calendar" class="w-3.5 h-3.5"></i> Calendar';
                 lineView.classList.remove('hidden');
                 calView.classList.add('hidden');
             }
+            lucide.createIcons();
         }
 
         // ==========================================
@@ -993,15 +1001,24 @@
             displayMode = mode;
             const btnQCO = document.getElementById('btnDisplayQCO');
             const btnStyle = document.getElementById('btnDisplayStyle');
+
+            const activeBtnClass = 'px-4 py-1.5 text-xs font-bold rounded-lg transition-all bg-emerald-600 text-white shadow-sm flex items-center gap-2';
+            const inactiveBtnClass = 'px-4 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-100 flex items-center gap-2';
+
             if (mode === 'qco') {
-                btnQCO.className = 'px-3 py-2 text-xs font-bold transition-all bg-emerald-600 text-white';
-                btnStyle.className = 'px-3 py-2 text-xs font-bold transition-all text-slate-500 hover:bg-slate-50';
+                btnQCO.className = activeBtnClass;
+                btnQCO.innerHTML = '<i data-lucide="hash" class="w-3.5 h-3.5"></i> QCO #';
+                btnStyle.className = inactiveBtnClass;
+                btnStyle.innerHTML = '<i data-lucide="shirt" class="w-3.5 h-3.5"></i> Style';
             } else {
-                btnStyle.className = 'px-3 py-2 text-xs font-bold transition-all bg-emerald-600 text-white';
-                btnQCO.className = 'px-3 py-2 text-xs font-bold transition-all text-slate-500 hover:bg-slate-50';
+                btnStyle.className = activeBtnClass;
+                btnStyle.innerHTML = '<i data-lucide="shirt" class="w-3.5 h-3.5"></i> Style';
+                btnQCO.className = inactiveBtnClass;
+                btnQCO.innerHTML = '<i data-lucide="hash" class="w-3.5 h-3.5"></i> QCO #';
             }
             renderCalendar();
             renderLinewise();
+            lucide.createIcons();
         }
 
         // ==========================================
