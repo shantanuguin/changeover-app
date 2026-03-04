@@ -2811,13 +2811,32 @@
             }).filter(d => d.progress < threshold);
         }
 
+        // Personnel mapping fallback (same as calendar.html / creation.html)
+        const personnelData = {
+            "1": { supervisor: "WASANA" }, "1A": { supervisor: "WASANA" },
+            "2": { supervisor: "SOHORAB" }, "3": { supervisor: "SOHEL" },
+            "6+17": { supervisor: "SHAKIL/MUSUM" }, "7": { supervisor: "NAGENDER" },
+            "7A": { supervisor: "KAMAL" }, "8+5": { supervisor: "BALISTER/FARUK" },
+            "9": { supervisor: "SUMI" }, "10": { supervisor: "RAJ KUMAR" },
+            "11+15": { supervisor: "KAMAL/MUNSAF" }, "12": { supervisor: "DHARAMEDER" },
+            "13/21": { supervisor: "SUMON/DEVRAJ" }, "14": { supervisor: "SHARIF" },
+            "16": { supervisor: "RAHMAN" }, "16A": { supervisor: "RHANIA" },
+            "18": { supervisor: "JAKIR" }, "19": { supervisor: "ALAMGIR" },
+            "20": { supervisor: "GAYANI" }, "22": { supervisor: "ASHRAFUL" },
+            "23": { supervisor: "RUMA" }, "24": { supervisor: "NASIR" },
+            "25": { supervisor: "AKBAR" }, "26/4": { supervisor: "HIMAYIT/AHMAD" },
+            "28": { supervisor: "RUPNANAYAN" }, "29": { supervisor: "SUBA" },
+            "30": { supervisor: "RAZIB" }, "31": { supervisor: "AKESH" },
+            "32": { supervisor: "KALU" }
+        };
+
         function buildAlertEmailHTML() {
             const data = currentQCOData;
             if (!data) return '';
 
             const qcoNumber = data.qcoNumber || currentQCOId || '—';
-            const supervisor = data.supervisorName || data.supervisor || '—';
             const line = data.lineNumber || data.line || '—';
+            const supervisor = data.supervisorName || data.supervisor || (personnelData[line] ? personnelData[line].supervisor : '—');
             const currentStyle = data.currentStyle || '—';
             const upcomingStyle = data.upcomingStyle || '—';
 
@@ -2910,8 +2929,8 @@
             if (!data) return '';
 
             const qcoNumber = data.qcoNumber || currentQCOId || '—';
-            const supervisor = data.supervisorName || data.supervisor || '—';
             const line = data.lineNumber || data.line || '—';
+            const supervisor = data.supervisorName || data.supervisor || (personnelData[line] ? personnelData[line].supervisor : '—');
             const currentStyle = data.currentStyle || '—';
             const upcomingStyle = data.upcomingStyle || '—';
 
