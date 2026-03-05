@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+    <!-- Background rounded square -->
+    <rect width="512" height="512" fill="#4f46e5" rx="112" />
+    
+    <!-- Calendar header block -->
+    <path fill="#ffffff" d="M128 128h256v64H128z" opacity="0.3" />
+    
+    <!-- Calendar body block -->
+    <path fill="#ffffff" d="M128 192h256v192H128z" opacity="0.1" />
+    
+    <!-- Calendar dots -->
+    <rect x="156" y="224" width="48" height="48" rx="12" fill="#ffffff" />
+    <rect x="232" y="224" width="48" height="48" rx="12" fill="#ffffff" />
+    <rect x="308" y="224" width="48" height="48" rx="12" fill="#ffffff" />
+    <rect x="156" y="300" width="48" height="48" rx="12" fill="#ffffff" opacity="0.5" />
+    <rect x="232" y="300" width="48" height="48" rx="12" fill="#ffffff" opacity="0.5" />
+    <rect x="308" y="300" width="48" height="48" rx="12" fill="#ffffff" opacity="0.5" />
+    
+    <!-- Calendar loops/rings -->
+    <rect x="164" y="96" width="24" height="48" rx="12" fill="#c7d2fe" />
+    <rect x="324" y="96" width="24" height="48" rx="12" fill="#c7d2fe" />
+</svg>
