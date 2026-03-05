@@ -639,6 +639,12 @@
                         <i data-lucide="list-tree" class="w-3.5 h-3.5"></i> Linewise
                     </button>
                 </div>
+
+                <!-- Desktop Install PWA Button (Hidden by default, shown if install prompt available) -->
+                <button id="btnInstallDesktop" onclick="installPWA()" style="display:none;"
+                    class="px-4 py-2 text-xs font-bold rounded-xl transition-all bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm hover:shadow-md active:scale-95 flex items-center gap-2 border border-emerald-400">
+                    <i data-lucide="download" class="w-4 h-4 text-white"></i> Install App
+                </button>
             </div>
 
             <!-- Mobile Row 2: Search bar (full width, own line) -->
@@ -1618,9 +1624,12 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            // Show install tab on mobile
+            // Show install tab on mobile and desktop install button
             const installTab = document.getElementById('tabInstall');
             if (installTab) installTab.style.display = '';
+
+            const desktopInstallBtn = document.getElementById('btnInstallDesktop');
+            if (desktopInstallBtn) desktopInstallBtn.style.display = 'flex';
             console.log('PWA install prompt ready');
         });
 
@@ -1655,6 +1664,8 @@
                     console.log('User accepted PWA install');
                     const installTab = document.getElementById('tabInstall');
                     if (installTab) installTab.style.display = 'none';
+                    const desktopInstallBtn = document.getElementById('btnInstallDesktop');
+                    if (desktopInstallBtn) desktopInstallBtn.style.display = 'none';
                 }
                 deferredPrompt = null;
             });
@@ -1664,6 +1675,9 @@
         if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !window.navigator.standalone) {
             const installTab = document.getElementById('tabInstall');
             if (installTab) installTab.style.display = '';
+            const desktopInstallBtn = document.getElementById('btnInstallDesktop');
+            // iOS desktop doesn't really exist for this, but just in case for iPad
+            if (desktopInstallBtn) desktopInstallBtn.style.display = 'flex';
         }
 
         window.addEventListener('appinstalled', () => {
@@ -1671,6 +1685,8 @@
             deferredPrompt = null;
             const installTab = document.getElementById('tabInstall');
             if (installTab) installTab.style.display = 'none';
+            const desktopInstallBtn = document.getElementById('btnInstallDesktop');
+            if (desktopInstallBtn) desktopInstallBtn.style.display = 'none';
         });
     </script>
 

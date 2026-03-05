@@ -1,7 +1,9 @@
 {
     "name": "Changeover Calendar",
     "short_name": "QCO Calendar",
+    "id": "/calendar-app",
     "start_url": "/outside/calendar.html",
+    "scope": "/outside/calendar.html",
     "display": "standalone",
     "background_color": "#f8fafc",
     "theme_color": "#4f46e5",
