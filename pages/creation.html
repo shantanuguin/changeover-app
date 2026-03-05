@@ -2686,6 +2686,9 @@
                 selectElementId: 'existingQCOSelect',
                 statusElId: 'existingQCOSearchStatus',
                 clearBtnId: 'existingQCOClearSearch',
+                onSelect: (qcoId) => {
+                    handleExistingQCOSelect(qcoId);
+                },
                 onQCOLsLoaded: (qcos) => {
                     // Custom formatting for creation page dropdown
                     const selector = document.getElementById('existingQCOSelect');
