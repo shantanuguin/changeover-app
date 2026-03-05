@@ -374,12 +374,16 @@
                 padding-top: 0.5rem !important;
             }
 
-            /* --- Header: compact, single row, native feel --- */
+            /* --- Header: compact, native feel with safe-area --- */
             #appHeader {
-                min-height: 3.5rem !important;
-                padding: 0 0.75rem !important;
+                min-height: auto !important;
+                padding-left: 0.75rem !important;
+                padding-right: 0.75rem !important;
+                padding-bottom: 0.5rem !important;
+                padding-top: calc(env(safe-area-inset-top, 12px) + 0.5rem) !important;
                 gap: 0.5rem !important;
-                padding-top: env(safe-area-inset-top, 0) !important;
+                flex-direction: column !important;
+                align-items: stretch !important;
             }
 
             #appHeader h1 {
@@ -404,6 +408,14 @@
             /* hide desktop toggles on mobile */
             .desktop-controls {
                 display: none !important;
+            }
+
+            /* Mobile header: brand row */
+            .mobile-header-brand {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
             }
 
             /* show bottom tabs */
@@ -531,12 +543,6 @@
             footer {
                 display: none !important;
             }
-
-            /* --- Header Spacing for Mobile (Safe Area) --- */
-            #appHeader {
-                padding-top: max(2rem, env(safe-area-inset-top));
-                padding-bottom: 1rem;
-            }
         }
 
         @keyframes slideUp {
@@ -584,6 +590,7 @@
         <!-- Header -->
         <header id="appHeader"
             class="glass h-auto min-h-[5rem] flex flex-wrap items-center justify-between px-4 md:px-8 z-20 flex-shrink-0 sticky top-0 border-b border-white/20 py-3 gap-3">
+            <!-- Row 1: Brand -->
             <div class="flex items-center gap-3">
                 <div
                     class="header-icon-box w-10 h-10 bg-gradient-to-br from-violet-600 to-indigo-700 rounded-xl flex items-center justify-center text-white shadow-lg">
@@ -634,35 +641,32 @@
                 </div>
             </div>
 
-            <!-- Mobile: Search + filter row -->
-            <div class="md:hidden flex flex-col gap-3 w-full mt-2">
-                <!-- Row 1: Search -->
-                <div class="flex items-center gap-2 w-full">
-                    <div class="relative flex-1">
-                        <i data-lucide="search"
-                            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5"></i>
-                        <input type="text" id="qcoSearchInputMobile" placeholder="Search QCO..."
-                            class="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all shadow-sm"
-                            onkeydown="if(event.key==='Enter') searchQCOMobile()">
-                    </div>
-                    <button onclick="searchQCOMobile()"
-                        class="p-2.5 bg-violet-600 text-white rounded-xl active:scale-95 flex items-center justify-center flex-shrink-0 shadow-sm"
-                        style="min-height:40px;min-width:40px;">
-                        <i data-lucide="search" class="w-4 h-4"></i>
-                    </button>
+            <!-- Mobile Row 2: Search bar (full width, own line) -->
+            <div class="md:hidden flex items-center gap-2 w-full">
+                <div class="relative flex-1">
+                    <i data-lucide="search"
+                        class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5"></i>
+                    <input type="text" id="qcoSearchInputMobile" placeholder="Search QCO..."
+                        class="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all"
+                        onkeydown="if(event.key==='Enter') searchQCOMobile()">
                 </div>
+                <button onclick="searchQCOMobile()"
+                    class="p-2.5 bg-violet-600 text-white rounded-xl active:scale-95 flex items-center justify-center flex-shrink-0 shadow-sm"
+                    style="min-height:40px;min-width:40px;">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                </button>
+            </div>
 
-                <!-- Row 2: Display Mode Toggle -->
-                <div
-                    class="flex bg-white/90 backdrop-blur-sm border border-slate-200/80 rounded-xl p-1 shadow-sm w-full">
+            <!-- Mobile Row 3: Filter toggles (own line, spaced out) -->
+            <div class="md:hidden flex items-center gap-2 w-full">
+                <!-- Display mode toggle -->
+                <div class="flex flex-1 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
                     <button id="btnDisplayQCOMobile" onclick="switchDisplayMode('qco')"
-                        class="flex-1 px-3 py-2 text-xs font-bold rounded-lg transition-all bg-emerald-600 text-white flex items-center justify-center gap-2"
-                        style="min-height:36px;">
+                        class="flex-1 px-3 py-1.5 text-xs font-bold rounded-lg transition-all bg-emerald-600 text-white flex items-center justify-center gap-1.5">
                         <i data-lucide="hash" class="w-3.5 h-3.5"></i> QCO #
                     </button>
                     <button id="btnDisplayStyleMobile" onclick="switchDisplayMode('style')"
-                        class="flex-1 px-3 py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800 hover:bg-slate-50 flex items-center justify-center gap-2"
-                        style="min-height:36px;">
+                        class="flex-1 px-3 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 flex items-center justify-center gap-1.5">
                         <i data-lucide="shirt" class="w-3.5 h-3.5"></i> Style
                     </button>
                 </div>
