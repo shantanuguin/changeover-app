@@ -1321,8 +1321,7 @@
                             <div class="relative">
                                 <i data-lucide="search"
                                     class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
-                                <input type="text" id="searchInput" 
-                                    placeholder="Search QCO..."
+                                <input type="text" id="searchInput" placeholder="Search QCO..."
                                     class="pl-10 pr-10 py-2 rounded-xl bg-white/60 border border-white/60 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64 transition-all">
                                 <button onclick="clearSearch()" id="clearSearchBtn"
                                     class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors hidden">
@@ -2046,7 +2045,11 @@
 
                     container.innerHTML = active.map(qco => {
                         // Calculate progress
-                        const ops = qco.operationsList || [];
+                        let ops = qco.operationsList || [];
+                        const timings = qco.operationTimings || {};
+                        if (!ops.length && Object.keys(timings).length > 0) {
+                            ops = Object.keys(timings);
+                        }
                         const timings = qco.operationTimings || {};
                         const completedOps = ops.filter(op => {
                             const opName = typeof op === 'string' ? op : op.name;
@@ -3078,9 +3081,14 @@
                     }
 
                     list.innerHTML = activeQCOs.map(qco => {
-                        const ops = (qco.operationsList || []).length;
+                        let opsList = qco.operationsList || [];
                         const timings = qco.operationTimings || {};
-                        const completedOps = (qco.operationsList || []).filter(op => {
+                        if (!opsList.length && Object.keys(timings).length > 0) {
+                            opsList = Object.keys(timings);
+                        }
+
+                        const ops = opsList.length;
+                        const completedOps = opsList.filter(op => {
                             const opName = typeof op === 'string' ? op : op.name;
                             return timings[opName] && timings[opName].end;
                         }).length;
@@ -3228,7 +3236,11 @@
                     // 1. If explicitly completed, trust it
                     if (qco.status === 'completed') return 'completed';
 
-                    const ops = qco.operationsList || [];
+                    let ops = qco.operationsList || [];
+                    const timings = qco.operationTimings || {};
+                    if (!ops.length && Object.keys(timings).length > 0) {
+                        ops = Object.keys(timings);
+                    }
                     const timings = qco.operationTimings || {};
 
                     // 2. Check operation progress
