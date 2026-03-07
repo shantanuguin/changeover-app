@@ -827,7 +827,8 @@
                     allotedWP: parseInt(mp) || 0,
                     supervisor: supervisor,
                     status: 'in-progress',
-                    operationTimings: buildTimingsMap()
+                    operationTimings: buildTimingsMap(),
+                    operationsList: buildOperationsList()
                 };
                 // Only set source and creation metadata for new changeovers
                 if (currentMode === 'new') {
@@ -870,10 +871,17 @@
         // ============================================================
         //  FIREBASE SYNC HELPERS
         // ============================================================
+        function buildOperationsList() {
+            return operations.map(op => op.name);
+        }
+
         async function syncToFirebase() {
             if (!currentQCONumber) return;
             try {
-                await db.collection('changeovers').doc(currentQCONumber).update({ operationTimings: buildTimingsMap() });
+                await db.collection('changeovers').doc(currentQCONumber).update({
+                    operationTimings: buildTimingsMap(),
+                    operationsList: buildOperationsList()
+                });
             } catch (e) { console.warn('Sync failed:', e); }
         }
 
@@ -1030,6 +1038,7 @@
                                 <p class="text-sm font-bold text-slate-900 truncate">${op.name}</p>
                                 <div class="flex items-center gap-2 mt-0.5 flex-wrap">
                                     <span class="text-[10px] font-bold ${hasEnd ? 'text-emerald-600' : hasStart ? 'text-amber-600' : 'text-slate-400'}">${statusText}</span>
+                                    ${hasEnd && timeTaken ? (() => { const smv = parseFloat(el('upcomingSMV').value) || 0; return smv > 0 ? `<span class="text-[10px] font-bold text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded">${(parseFloat(timeTaken) / smv).toFixed(1)}× SMV</span>` : ''; })() : ''}
                                     ${hasEnd ? `<span class="text-[10px] text-slate-400">FBO: ${fbo}</span>` : ''}
                                 </div>
                             </div>

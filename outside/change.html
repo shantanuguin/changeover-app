@@ -412,7 +412,7 @@
                 <!-- QCO Search -->
                 <div class="relative hidden sm:block">
                     <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4"></i>
-                    <input type="text" id="qcoSearch"  placeholder="Search QCO..."
+                    <input type="text" id="qcoSearch" placeholder="Search QCO..."
                         class="pl-10 pr-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 w-40 transition-all hover:border-slate-300">
                 </div>
                 <!-- QCO Selector -->
@@ -939,8 +939,14 @@
         function renderOperations(data) {
             const section = document.getElementById('operationsSection');
             const list = document.getElementById('operationsList');
-            const operations = data.operationsList || [];
+            let operations = data.operationsList || [];
             const timings = data.operationTimings || {};
+
+            // Fallback: if operationsList is empty but timings exist (instant recorder),
+            // derive the list from the timings keys
+            if (!operations.length && Object.keys(timings).length > 0) {
+                operations = Object.keys(timings);
+            }
 
             if (!operations.length) {
                 section.classList.add('hidden');
@@ -978,7 +984,7 @@
                 }
 
                 const actualTime = (startTime && endTime)
-                    ? ((new Date(endTime) - new Date(startTime)) / 60000).toFixed(2)
+                    ? calculateWorkingHoursOnly(startTime, endTime).toFixed(2)
                     : null;
 
                 const formatTS = (iso) => {
@@ -1064,8 +1070,13 @@
         function renderTimeline(data) {
             const section = document.getElementById('timelineSection');
             const track = document.getElementById('timelineTrack');
-            const operations = data.operationsList || [];
+            let operations = data.operationsList || [];
             const timings = data.operationTimings || {};
+
+            // Fallback for instant recorder
+            if (!operations.length && Object.keys(timings).length > 0) {
+                operations = Object.keys(timings);
+            }
 
             if (!operations.length) {
                 section.classList.add('hidden');
@@ -1143,7 +1154,7 @@
 
                 let timeLabel = '';
                 if (hasEnd) {
-                    const actualMin = ((new Date(timing.end) - new Date(timing.start)) / 60000).toFixed(1);
+                    const actualMin = calculateWorkingHoursOnly(timing.start, timing.end).toFixed(1);
                     timeLabel = `${actualMin}m`;
                 } else if (hasStart) {
                     timeLabel = 'Running';
@@ -1191,8 +1202,13 @@
         //  PROGRESS
         // =====================================================
         function renderProgress(data) {
-            const ops = data.operationsList || [];
+            let ops = data.operationsList || [];
             const timings = data.operationTimings || {};
+
+            // Fallback for instant recorder
+            if (!ops.length && Object.keys(timings).length > 0) {
+                ops = Object.keys(timings);
+            }
 
             const completed = ops.filter(op => {
                 const opName = typeof op === 'string' ? op : op.name;
@@ -1248,6 +1264,12 @@
             currentDay.setHours(0, 0, 0, 0);
 
             while (currentDay <= end) {
+                // Skip Fridays (day off)
+                if (currentDay.getDay() === 5) {
+                    currentDay.setDate(currentDay.getDate() + 1);
+                    continue;
+                }
+
                 const shiftStart = new Date(currentDay);
                 shiftStart.setHours(SHIFT_START_HOUR, SHIFT_START_MINUTE, 0, 0);
                 const shiftEnd = new Date(currentDay);
