@@ -974,7 +974,7 @@
                 inputValidator: v => { if (!v) return 'Please enter a name'; }
             }).then(result => {
                 if (result.isConfirmed && result.value) {
-                    operations.unshift({
+                    operations.push({
                         id: Date.now().toString(36) + Math.random().toString(36).substring(2, 6),
                         name: result.value.trim(),
                         operatorId: '',
@@ -1005,7 +1005,7 @@
                 return;
             }
 
-            container.innerHTML = operations.map((op, idx) => {
+            container.innerHTML = [...operations].reverse().map((op, idx) => {
                 const hasStart = !!op.start;
                 const hasEnd = !!op.end;
                 const timeTaken = (hasStart && hasEnd) ? calculateWorkingHoursOnly(op.start, op.end).toFixed(2) : null;
