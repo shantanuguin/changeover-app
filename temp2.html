@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -914,18 +914,6 @@
                                     </p>
                                 </div>
 
-                                <!-- Supervisor Selector -->
-                                <div class="relative group w-full sm:w-auto flex-1 sm:flex-none">
-                                    <select id="supervisorSelect"
-                                        class="appearance-none w-full bg-white border border-slate-200 text-slate-700 font-bold py-2.5 pl-4 pr-10 rounded-xl hover:border-violet-400 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer text-sm min-w-[150px]">
-                                        <option value="">All Lines</option>
-                                    </select>
-                                    <i data-lucide="users"
-                                        class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none group-hover:text-violet-500 transition-colors"></i>
-                                    <i data-lucide="chevron-down"
-                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 pointer-events-none group-hover:text-violet-500 transition-colors"></i>
-                                </div>
-
                                 <!-- Style Selector -->
                                 <div class="relative group w-full sm:w-auto flex-1 sm:flex-none">
                                     <select id="styleSelector" onchange="loadOperationsForStyle(this.value)"
@@ -996,7 +984,7 @@
                 <footer
                     class="mt-auto py-8 px-8 border-t border-slate-200/30 relative z-10 bg-white/30 backdrop-blur-md -mx-8 -mb-32">
                     <div class="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-                        <p class="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase">© 2026 MANUFACTURING
+                        <p class="text-[10px] font-bold text-slate-400 tracking-[0.3em] uppercase">┬® 2026 MANUFACTURING
                             EXCELLENCE SYSTEM</p>
                         <div class="flex gap-6">
                             <a href="#" class="text-slate-400 hover:text-slate-600 transition-colors"><i
@@ -1179,7 +1167,6 @@
                         db: db,
                         searchInputId: 'styleSearch',
                         selectElementId: 'styleSelector',
-                        supervisorSelectId: 'supervisorSelect',
                         statusElId: 'searchStatus',
                         clearBtnId: 'clearSearchBtn',
                         onQCOLsLoaded: (qcos) => {
@@ -1306,73 +1293,6 @@
         }
 
         // Search/Select Logic is handled by QCOLoader class now
-
-        // --- Core Load Logic ---
-        async function loadOperationsForStyle(qcoId) {
-            currentQCOId = qcoId;
-            const changeover = allChangeovers.find(c => c.id === qcoId);
-
-            if (!changeover) {
-                showToast('Changeover not found', 'error');
-                return;
-            }
-
-            // Try to load from sub-collection first, fallback to operationsList
-            let operations = [];
-
-            try {
-                const opsSnapshot = await db.collection('changeovers').doc(qcoId).collection('operations').orderBy('order').get();
-                if (!opsSnapshot.empty) {
-                    opsSnapshot.forEach(doc => {
-                        operations.push({ id: doc.id, ...doc.data() });
-                    });
-                }
-            } catch (e) {
-                console.log('No operations sub-collection, using operationsList');
-            }
-
-            // Fallback to operationsList from main document
-            if (operations.length === 0 && changeover.operationsList) {
-                operations = changeover.operationsList.map((op, index) => ({
-                    id: `op-${index}`,
-                    serialNumber: op.serialNumber || (index + 1).toString(),
-                    name: op.name || 'Unknown',
-                    smv: op.smv || 0,
-                    machineType: op.machineType || 'MANUAL',
-                    allocatedWP: op.allocatedWP || 0,
-                    allocatedDirect: op.allocatedDirect || 0,
-                    order: index,
-                    isCombined: false
-                }));
-            }
-
-            currentOperations = operations;
-            selectedOperationIds.clear();
-            hasUnsavedChanges = false;
-            updateSaveButton();
-            renderOperations();
-            updateStyleInfo(changeover, operations);
-        }
-
-        function updateStyleInfo(changeover, operations) {
-            const upcomingStyle = changeover.upcomingStyle || changeover.newStyle || 'Unknown';
-
-            if (!uiCache.infoStyleNumber) uiCache.infoStyleNumber = document.getElementById('infoStyleNumber');
-            if (!uiCache.infoTotalOps) uiCache.infoTotalOps = document.getElementById('infoTotalOps');
-            if (!uiCache.infoTotalWP) uiCache.infoTotalWP = document.getElementById('infoTotalWP');
-            if (!uiCache.infoTotalDirect) uiCache.infoTotalDirect = document.getElementById('infoTotalDirect');
-            if (!uiCache.styleInfo) uiCache.styleInfo = document.getElementById('styleInfo');
-
-            uiCache.infoStyleNumber.textContent = upcomingStyle;
-            uiCache.infoTotalOps.textContent = operations.length;
-
-            const totalWP = operations.reduce((sum, op) => sum + (parseFloat(op.allocatedWP) || 0), 0);
-            const totalDirect = operations.reduce((sum, op) => sum + (parseFloat(op.allocatedDirect) || 0), 0);
-
-            uiCache.infoTotalWP.textContent = totalWP.toFixed(2);
-            uiCache.infoTotalDirect.textContent = totalDirect.toFixed(2);
-            uiCache.styleInfo.classList.remove('hidden');
-        }
 
         // --- Render Operations ---
         function renderOperations() {

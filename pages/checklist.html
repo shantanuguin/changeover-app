@@ -781,7 +781,7 @@
                 <div class="max-w-[1400px] mx-auto w-full">
 
                     <!-- Header Section -->
-                    <div class="flex flex-col md:flex-row justify-between items-end mb-10 gap-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start mb-10 gap-6">
                         <div>
                             <div class="flex items-center gap-3 mb-2">
                                 <h1 class="text-4xl md:text-5xl font-heading font-bold text-slate-900 tracking-tight">
@@ -800,7 +800,7 @@
                             </p>
                         </div>
 
-                        <div class="flex gap-3 mb-2" id="headerActions">
+                        <div class="flex flex-wrap gap-4 mb-2" id="headerActions">
                             <div id="scheduledDateContainer"
                                 class="hidden items-center gap-2 px-4 py-3 bg-white/60 rounded-2xl border border-white/60 text-slate-600 font-semibold shadow-sm transition-all whitespace-nowrap">
                                 <i data-lucide="calendar" class="w-4 h-4 text-violet-500"></i>
@@ -864,6 +864,15 @@
                                     <p id="searchStatus"
                                         class="absolute top-full right-0 mt-1 text-xs text-slate-500 hidden z-10 bg-white/90 p-1 rounded shadow-sm">
                                     </p>
+                                </div>
+                                <!-- Supervisor Filter -->
+                                <div class="relative group flex-1 min-w-[180px]">
+                                    <select id="supervisorFilter"
+                                        class="appearance-none w-full bg-amber-50 border border-amber-200 text-amber-800 font-bold py-3 pl-4 pr-10 rounded-2xl hover:border-amber-400 hover:shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer text-sm">
+                                        <option value="">All Lines</option>
+                                    </select>
+                                    <i data-lucide="users"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-amber-400 pointer-events-none"></i>
                                 </div>
                                 <div class="relative group flex-1 min-w-[200px]">
                                     <select id="qcoSelector" onchange="handleQCOChange(this.value)"
@@ -1710,6 +1719,7 @@
             window.qcoLoader = new QCOLoader({
                 selectElementId: 'qcoSelector',
                 searchInputId: 'qcoSearch',
+                supervisorSelectId: 'supervisorFilter',
                 pageSize: 10,
                 onSelect: (qcoId) => {
                     handleQCOChange(qcoId);

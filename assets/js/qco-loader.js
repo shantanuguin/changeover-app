@@ -1,8 +1,9 @@
-// Shared QCO Loader with Pagination & Full-Database Search
+// Shared QCO Loader with Pagination, Full-Database Search & Supervisor Filter
 class QCOLoader {
     constructor(config) {
         this.selectElementId = config.selectElementId || 'qcoSelector';
         this.searchInputId = config.searchInputId || 'qcoSearch';
+        this.supervisorSelectId = config.supervisorSelectId || null;
         this.onSelect = config.onSelect || (() => { });
         this.pageSize = config.pageSize || 30;
         this.lastVisible = null;
@@ -11,13 +12,52 @@ class QCOLoader {
         this.allLoadedIds = new Set(); // track IDs already in the dropdown
         this.searchTerm = '';
         this.searchTimeout = null;
+        this.filterLine = null; // active supervisor/line filter
 
         this.init();
     }
 
+    // ==========================================
+    // PERSONNEL DATA (synced with creation.html)
+    // ==========================================
+    static PERSONNEL_DATA = {
+        "1": { supervisor: "WASANA" },
+        "1A": { supervisor: "WASANA" },
+        "2": { supervisor: "SOHORAB" },
+        "3": { supervisor: "SOHEL" },
+        "6+17": { supervisor: "SHAKIL/MUSUM" },
+        "7": { supervisor: "NAGENDER" },
+        "7A": { supervisor: "KAMAL" },
+        "8+5": { supervisor: "BALISTER/FARUK" },
+        "9": { supervisor: "SUMI" },
+        "10": { supervisor: "RAJ KUMAR" },
+        "11+15": { supervisor: "KAMAL/MUNSAF" },
+        "12": { supervisor: "DHARAMEDER" },
+        "13/21": { supervisor: "SUMON/DEVRAJ" },
+        "14": { supervisor: "SHARIF" },
+        "16": { supervisor: "RAHMAN" },
+        "16A": { supervisor: "RHANIA" },
+        "18": { supervisor: "JAKIR" },
+        "19": { supervisor: "ALAMGIR" },
+        "20": { supervisor: "GAYANI" },
+        "22": { supervisor: "ASHRAFUL" },
+        "23": { supervisor: "RUMA" },
+        "24": { supervisor: "NASIR" },
+        "25": { supervisor: "AKBAR" },
+        "26/4": { supervisor: "HIMAYIT/AHMAD" },
+        "28": { supervisor: "RUPNANAYAN" },
+        "29": { supervisor: "SUBA" },
+        "30": { supervisor: "RAZIB" },
+        "31": { supervisor: "AKESH" },
+        "32": { supervisor: "KALU" }
+    };
+
     async init() {
         this.selectElement = document.getElementById(this.selectElementId);
         this.searchInput = document.getElementById(this.searchInputId);
+        this.supervisorSelect = this.supervisorSelectId
+            ? document.getElementById(this.supervisorSelectId)
+            : null;
 
         if (!this.selectElement) return;
 
@@ -31,17 +71,75 @@ class QCOLoader {
             this.searchInput.addEventListener('input', (e) => this.handleSearch(e));
         }
 
+        // Populate and wire supervisor dropdown
+        if (this.supervisorSelect) {
+            this._populateSupervisorDropdown();
+            this.supervisorSelect.addEventListener('change', (e) => this._handleSupervisorChange(e));
+        }
+
         await this.loadMore();
     }
 
+    // ==========================================
+    // SUPERVISOR DROPDOWN
+    // ==========================================
+    _populateSupervisorDropdown() {
+        if (!this.supervisorSelect) return;
+
+        this.supervisorSelect.innerHTML = '<option value="">All Lines</option>';
+
+        const pd = QCOLoader.PERSONNEL_DATA;
+        const sortedKeys = Object.keys(pd).sort((a, b) => {
+            const numA = parseInt(a.replace(/[^0-9]/g, '')) || 999;
+            const numB = parseInt(b.replace(/[^0-9]/g, '')) || 999;
+            return numA - numB;
+        });
+
+        sortedKeys.forEach(key => {
+            const opt = document.createElement('option');
+            opt.value = key;
+            const parts = key.split(/[+\/]/);
+            if (parts.length > 1) {
+                opt.textContent = `Lines ${parts.join(' & ')} — ${pd[key].supervisor}`;
+            } else {
+                opt.textContent = `Line ${key} — ${pd[key].supervisor}`;
+            }
+            this.supervisorSelect.appendChild(opt);
+        });
+    }
+
+    _handleSupervisorChange(event) {
+        const val = event.target.value;
+        this.filterLine = val || null;
+        // Reset and reload with filter
+        this.selectElement.innerHTML = '<option value="">Select QCO...</option>';
+        this.allLoadedIds.clear();
+        this.lastVisible = null;
+        this.hasMore = true;
+        this.loadMore();
+    }
+
+    // ==========================================
+    // LOAD MORE (with optional line filter)
+    // ==========================================
     async loadMore() {
         if (this.isLoading || !this.hasMore || typeof db === 'undefined' || !db) return;
         this.isLoading = true;
 
         try {
-            let query = db.collection('changeovers')
-                .orderBy('createdAt', 'desc')
-                .limit(this.pageSize);
+            let query;
+
+            if (this.filterLine) {
+                // When filtering by line, we can't combine orderBy on a different field
+                // with a where on lineNumber easily, so we fetch by lineNumber
+                query = db.collection('changeovers')
+                    .where('lineNumber', '==', this.filterLine)
+                    .limit(this.pageSize);
+            } else {
+                query = db.collection('changeovers')
+                    .orderBy('createdAt', 'desc')
+                    .limit(this.pageSize);
+            }
 
             if (this.lastVisible) {
                 query = query.startAfter(this.lastVisible);
@@ -147,6 +245,8 @@ class QCOLoader {
                         if (!allMatches.has(doc.id)) {
                             const data = doc.data();
                             if (data.status !== 'discarded') {
+                                // If supervisor filter is active, only include matching lines
+                                if (this.filterLine && data.lineNumber !== this.filterLine) return;
                                 allMatches.set(doc.id, { id: doc.id, ...data });
                             }
                         }
@@ -206,6 +306,7 @@ class QCOLoader {
                             const data = doc.data();
                             const upcoming = (data.upcomingStyle || '').toUpperCase();
                             if (upcoming.startsWith(comboParts.upcoming) && data.status !== 'discarded') {
+                                if (this.filterLine && data.lineNumber !== this.filterLine) return;
                                 allMatches.set(doc.id, { id: doc.id, ...data });
                             }
                         }
@@ -218,6 +319,7 @@ class QCOLoader {
                     snap.forEach(doc => {
                         const data = doc.data();
                         if (data.status === 'discarded') return;
+                        if (this.filterLine && data.lineNumber !== this.filterLine) return;
                         const qco = (data.qcoNumber || '').toUpperCase();
                         const cur = (data.currentStyle || '').toUpperCase();
                         const up = (data.upcomingStyle || '').toUpperCase();
@@ -283,6 +385,16 @@ class QCOLoader {
 
         this.selectElement.value = docId;
         this.onSelect(docId);
+
+        // Also auto-set the supervisor filter to match if present
+        if (this.supervisorSelect && data.lineNumber) {
+            const lineNum = data.lineNumber;
+            if (QCOLoader.PERSONNEL_DATA[lineNum]) {
+                this.supervisorSelect.value = lineNum;
+                // Don't trigger a reload, just sync the visual
+                this.filterLine = lineNum;
+            }
+        }
 
         if (typeof Swal !== 'undefined') {
             const last4 = (data.upcomingStyle || '').slice(-4);
