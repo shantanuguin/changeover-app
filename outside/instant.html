@@ -688,7 +688,7 @@
         document.addEventListener('DOMContentLoaded', async () => {
             gsap.to("#mainApp", { opacity: 1, duration: 0.4, ease: "power2.out" });
             lucide.createIcons();
-            await loadSession();
+            // Always start with a clean form — no auto-load from localStorage
             renderOperations();
             recalcSummary();
         });
@@ -709,6 +709,21 @@
                 el('supervisorDisplay').classList.add('hidden');
                 el('supervisorName').textContent = '';
                 return;
+            }
+
+            // In "new" mode, changing the line means starting a fresh changeover
+            if (currentMode === 'new' && currentQCONumber) {
+                currentQCONumber = null;
+                operations = [];
+                el('qcoBadge').classList.add('hidden');
+                el('finishBtn').classList.add('hidden');
+                el('currentStyle').value = '';
+                el('upcomingStyle').value = '';
+                el('upcomingSMV').value = '';
+                el('upcomingTarget').value = '';
+                el('totalManpower').value = '';
+                renderOperations();
+                recalcSummary();
             }
 
             const data = personnelData[line];
@@ -842,7 +857,6 @@
                     docData.instantRecorderUsed = true;
                 }
                 await db.collection('changeovers').doc(currentQCONumber).set(docData, { merge: true });
-                localStorage.setItem('instantQCOId', currentQCONumber);
                 el('qcoBadge').classList.remove('hidden');
                 el('qcoDisplay').textContent = currentQCONumber;
                 el('finishBtn').classList.remove('hidden');
@@ -933,7 +947,6 @@
             el('qcoBadge').classList.remove('hidden');
             el('qcoDisplay').textContent = currentQCONumber;
             el('finishBtn').classList.remove('hidden');
-            localStorage.setItem('instantQCOId', currentQCONumber);
 
             // Restore operations from operationTimings
             if (data.operationTimings) {
@@ -1366,8 +1379,76 @@
         }
 
         // ============================================================
-        //  EXPORT & RESET
+        //  FINISH, EXPORT & RESET
         // ============================================================
+        async function finishChangeover() {
+            if (!currentQCONumber) {
+                Swal.fire('No Changeover', 'Please save or load a changeover first.', 'warning');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Finish Changeover?',
+                text: 'This will mark the changeover as completed.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, finish it!',
+                confirmButtonColor: '#10b981'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const btn = el('finishBtn');
+                    const originalContent = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '<div class="spinner" style="display:inline-block; vertical-align:middle; margin-right:8px;"></div> Finishing...';
+
+                    try {
+                        let finalEndTimeMs = 0;
+                        const completedOps = operations.filter(o => o.end);
+                        if (completedOps.length > 0) {
+                            finalEndTimeMs = completedOps.reduce((max, o) => {
+                                const t = new Date(o.end).getTime();
+                                return t > max ? t : max;
+                            }, 0);
+                        }
+
+                        let completedAtVal = firebase.firestore.FieldValue.serverTimestamp();
+                        if (finalEndTimeMs > 0) {
+                            completedAtVal = new Date(finalEndTimeMs);
+                        }
+
+                        const currentUserStr = localStorage.getItem('qcoCurrentUser');
+                        const currentUser = currentUserStr ? JSON.parse(currentUserStr) : {};
+                        const uid = currentUser.uid || 'unknown';
+
+                        await db.collection('changeovers').doc(currentQCONumber).update({
+                            status: 'completed',
+                            completedAt: completedAtVal,
+                            completedBy: uid
+                        });
+
+                        // Clear the local instance memory so it doesn't immediately load as active on next open
+                        localStorage.removeItem('instantQCOId');
+
+                        Swal.fire({
+                            title: 'Completed!',
+                            text: 'The changeover has been marked as finished.',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = `../pages/summary.html?qco=${currentQCONumber}`;
+                        });
+
+                    } catch (error) {
+                        console.error('Error completing changeover:', error);
+                        Swal.fire('Error', 'Failed to complete: ' + error.message, 'error');
+                        btn.disabled = false;
+                        btn.innerHTML = originalContent;
+                    }
+                }
+            });
+        }
+
         function exportSession() {
             const data = {
                 setup: {
