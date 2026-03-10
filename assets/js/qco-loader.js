@@ -214,10 +214,7 @@ class QCOLoader {
 
                 // 5. If still nothing found, try partial/contains matching via broader load
                 if (allMatches.size === 0) {
-                    snap = await db.collection('changeovers')
-                        .orderBy('createdAt', 'desc')
-                        .limit(300)
-                        .get();
+                    snap = await db.collection('changeovers').get();
                     snap.forEach(doc => {
                         const data = doc.data();
                         if (data.status === 'discarded') return;
