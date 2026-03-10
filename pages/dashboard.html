@@ -2050,7 +2050,6 @@
                         if (!ops.length && Object.keys(timings).length > 0) {
                             ops = Object.keys(timings);
                         }
-                        const timings = qco.operationTimings || {};
                         const completedOps = ops.filter(op => {
                             const opName = typeof op === 'string' ? op : op.name;
                             return timings[opName] && timings[opName].end;
@@ -3241,7 +3240,6 @@
                     if (!ops.length && Object.keys(timings).length > 0) {
                         ops = Object.keys(timings);
                     }
-                    const timings = qco.operationTimings || {};
 
                     // 2. Check operation progress
                     if (ops.length > 0) {
