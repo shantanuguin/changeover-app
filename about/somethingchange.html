@@ -205,29 +205,59 @@
             <p class="max-w-3xl mx-auto text-slate-400 text-lg">Before the portal, changeovers were chaotic. We faced systemic communication gaps that led directly to wasted time and lost production capacity.</p>
         </div>
 
-        <div class="grid md:grid-cols-3 gap-8">
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Problem 1: Planning -->
             <div class="glass-card p-8" data-aos="fade-up" data-aos-delay="100">
                 <div class="w-14 h-14 bg-red-500/10 text-red-400 rounded-2xl flex items-center justify-center mb-6">
                     <i data-lucide="calendar-off" class="w-7 h-7"></i>
                 </div>
-                <h4 class="text-xl font-bold mb-3 text-white">Static Timelines</h4>
-                <p class="text-slate-400 leading-relaxed">We relied entirely on a 3-month physical plan. It took hours to update and circulate, meaning critical day-to-day shifts in schedule were invisible to most departments.</p>
+                <h4 class="text-xl font-bold mb-3 text-white">Static Planning Timelines</h4>
+                <p class="text-slate-400 leading-relaxed">We relied entirely on a physical 3-month plan. Updates took too long to circulate, leaving departments entirely dependent on an outdated schedule when changes occurred.</p>
             </div>
 
+            <!-- Problem 2: Checklists -->
             <div class="glass-card p-8" data-aos="fade-up" data-aos-delay="200">
                 <div class="w-14 h-14 bg-orange-500/10 text-orange-400 rounded-2xl flex items-center justify-center mb-6">
-                    <i data-lucide="file-x-2" class="w-7 h-7"></i>
+                    <i data-lucide="list-x" class="w-7 h-7"></i>
                 </div>
-                <h4 class="text-xl font-bold mb-3 text-white">Manual Paperwork</h4>
-                <p class="text-slate-400 leading-relaxed">Signatures for pilot runs and approvals required physical hunting across the factory floor. The resulting delay in sign-offs cascaded into delayed production ramps.</p>
+                <h4 class="text-xl font-bold mb-3 text-white">Uncoordinated Prerequisites</h4>
+                <p class="text-slate-400 leading-relaxed">Critical prerequisites required from multiple departments were frequently missed due to a lack of shared monitoring, which directly resulted in delayed changeover executions.</p>
             </div>
 
+            <!-- Problem 3: Machine / IE Prep -->
             <div class="glass-card p-8" data-aos="fade-up" data-aos-delay="300">
-                <div class="w-14 h-14 bg-purple-500/10 text-purple-400 rounded-2xl flex items-center justify-center mb-6">
-                    <i data-lucide="eye-off" class="w-7 h-7"></i>
+                <div class="w-14 h-14 bg-yellow-500/10 text-yellow-500 rounded-2xl flex items-center justify-center mb-6">
+                    <i data-lucide="wrench" class="w-7 h-7"></i>
                 </div>
-                <h4 class="text-xl font-bold mb-3 text-white">Zero Visibility</h4>
-                <p class="text-slate-400 leading-relaxed">Management had no real-time way to know which line was doing what. Analyzing historical bottlenecks required digging through filing cabinets of old checklists.</p>
+                <h4 class="text-xl font-bold mb-3 text-white">Inaccurate Machine Planning</h4>
+                <p class="text-slate-400 leading-relaxed">Because costing Operation Bulletins rarely reflected actual floor configurations, requested machines were often inaccurate, leading to missing equipment or unused excess machines.</p>
+            </div>
+
+            <!-- Problem 4: Recording System -->
+            <div class="glass-card p-8" data-aos="fade-up" data-aos-delay="400">
+                <div class="w-14 h-14 bg-blue-500/10 text-blue-400 rounded-2xl flex items-center justify-center mb-6">
+                    <i data-lucide="clipboard-x" class="w-7 h-7"></i>
+                </div>
+                <h4 class="text-xl font-bold mb-3 text-white">Manual & Isolated Tracking</h4>
+                <p class="text-slate-400 leading-relaxed">Recorded via pen and paper by a single executive, changeover visibility remained stubbornly restricted. We could not properly track break times or reliably identify which department caused delays.</p>
+            </div>
+
+            <!-- Problem 5: Reporting System -->
+            <div class="glass-card p-8" data-aos="fade-up" data-aos-delay="500">
+                <div class="w-14 h-14 bg-purple-500/10 text-purple-400 rounded-2xl flex items-center justify-center mb-6">
+                    <i data-lucide="bar-chart-2" class="w-7 h-7"></i>
+                </div>
+                <h4 class="text-xl font-bold mb-3 text-white">Scattered & Siloed Data</h4>
+                <p class="text-slate-400 leading-relaxed">Reporting lived inside disconnected Excel sheets. Cross-line visibility was non-existent. Without a centralized view, analyzing broader performance trends across units was impossible.</p>
+            </div>
+
+            <!-- Problem 6: Knowledge Base -->
+            <div class="glass-card p-8" data-aos="fade-up" data-aos-delay="600">
+                <div class="w-14 h-14 bg-pink-500/10 text-pink-400 rounded-2xl flex items-center justify-center mb-6">
+                    <i data-lucide="history" class="w-7 h-7"></i>
+                </div>
+                <h4 class="text-xl font-bold mb-3 text-white">Loss of Historical Insight</h4>
+                <p class="text-slate-400 leading-relaxed">Because we failed to build a centralized style repository, operational knowledge from past changeovers was routinely lost, making it difficult to learn from recurring bottlenecks.</p>
             </div>
         </div>
     </section>
@@ -282,13 +312,13 @@
             <div class="grid lg:grid-cols-2 gap-12 items-center flex-col-reverse lg:flex-row mb-24" data-aos="fade-left">
                 <div class="order-2 lg:order-1">
                     <div class="inline-block px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-sm mb-4">Section 2</div>
-                    <h4 class="text-3xl font-bold mb-6 text-white">Department-Wise Checklists</h4>
+                    <h4 class="text-3xl font-bold mb-6 text-white">Changeover Checklist System</h4>
                     
                     <div class="space-y-4 text-slate-300 leading-relaxed mb-8">
-                        <p>In addition to the master monitoring system, <strong class="text-white">department-wise checklists</strong> are provided to each department through a secure login with department-specific credentials. Departments can identify their upcoming changeovers either through the automated email notifications or by referring to the <strong class="text-white">Changeover Calendar</strong> within the system. Once identified, departments can access the relevant checklist and update the status of individual checklist items. They also have the option to include <strong class="text-white">remarks or observations</strong> for specific items, which can later be referenced during the changeover review discussions.</p>
-                        <p>This cross-department checklist framework ensures continuous visibility of preparation status and reinforces the responsibility of each department to complete their prerequisites in advance, thereby minimizing the risk of delays during the changeover process.</p>
-                        <p>Furthermore, the checklist data serves as the foundation for a <strong class="text-white">Changeover Review Meeting conducted one day prior to the scheduled changeover</strong>. During this meeting, representatives from relevant departments review the checklist completion status and discuss operational aspects such as production logistics, quality-critical points, special machine requirements, line WIP status for the outgoing style, and the anticipated ramp-up for the new style.</p>
-                        <p>Based on the status and comments in the checklist, a <strong class="text-white">Changeover Status Report</strong> is compiled. This report highlights any pending tasks or outstanding issues that require immediate action to ensure a smooth transition. This mechanism helps to proactively identify and resolve bottlenecks before the actual changeover begins.</p>
+                        <p>After a changeover is scheduled by the Planning Department, it is essential to ensure that all prerequisite requirements across departments are completed before the changeover begins. If critical prerequisites are missing, the changeover process may face delays during execution. To address this issue, a structured <strong class="text-white">Changeover Checklist System</strong> was developed to monitor and ensure preparedness across all departments.</p>
+                        <p>The system consists of two types of checklists: a <strong class="text-white">Master Checklist</strong> and <strong class="text-white">Department-wise Checklists</strong>.</p>
+                        <p>The Master Checklist is managed by the Manufacturing Excellence (MEX) team. If the cumulative completion status falls below 90%, the system records the progress of each department and automatically generates an alert email 42 hours before the scheduled changeover. This email summarizes the overall completion percentage and highlights the progress status of each department.</p>
+                        <p>In addition to the master monitoring system, department-wise checklists are provided to each department through a secure login with department-specific credentials. Departments can access the relevant checklist and update the status of individual checklist items. The checklist data also serves as the foundation for a <strong class="text-white">Changeover Review Meeting</strong> conducted one day prior to the scheduled changeover.</p>
                     </div>
 
                     <div class="glass-card p-6 bg-slate-800/80 border-slate-700/50 relative overflow-hidden">
@@ -370,15 +400,13 @@
                 </div>
                 <div>
                     <div class="inline-block px-4 py-1.5 rounded-full bg-pink-500/20 text-pink-300 font-bold text-sm mb-4">Section 3</div>
-                    <h4 class="text-3xl font-bold mb-6 text-white">Digital Signature System</h4>
+                    <h4 class="text-3xl font-bold mb-6 text-white">IE Preparations & Machine Requirement List</h4>
                     
                     <div class="space-y-4 text-slate-300 leading-relaxed mb-8">
-                        <p>A <strong class="text-white">Digital Signature system</strong> has been developed to enable key personnel from various departments to sign off on specific process stages during a production changeover. This system eliminates the need for manual paperwork and physical handoffs, reducing delays and enhancing process transparency.</p>
-                        <p>The digital signature workflow is implemented for several critical stages of the changeover process, including:</p>
-                        <ol class="list-decimal list-inside space-y-2 text-slate-300 ml-2">
-                            <li><strong class="text-white">Pilot Run Approval:</strong> Signature from the Technical, Quality, and Production departments to signify that the pilot run has been completed and that the quality and production parameters meet the required standards.</li>
-                            <li><strong class="text-white">First Output Quality Check:</strong> Signature from the Quality, Technical, and Production departments confirming that the first production output from the line, following the changeover, meets the required quality specifications.</li>
-                        </ol>
+                        <p>Parallel to the completion of departmental checklists, the Industrial Engineering (IE) department prepares for the upcoming changeover by uploading the <strong class="text-white">Operation Bulletins (OBs)</strong> of both the current style and the upcoming style into the creation portal. The system extracts key parameters from the OB, including the list of operations, standard minute values, machines allocated, and the number of operators and machines required.</p>
+                        <p>Using this information, the system performs a comparative analysis to generate a <strong class="text-white">machine requirement list</strong> for the changeover. This identifies which machines are already present on the line and which additional machines will be required.</p>
+                        <p>Initially, the costing OB was used to estimate machine requirements. However, costing OBs often do not reflect the latest production-level modifications. By shifting to the updated production OB, the system ensures a more accurate representation of the actual operations being executed on the line.</p>
+                        <p>Once the machine comparison analysis is generated, the IE department circulates the machine requirement report via email to all stakeholders. This preparation reduces the time required for machine setup on the production line and helps minimize delays during the transition.</p>
                     </div>
 
                     <div class="glass-card p-6 bg-slate-800/80 border-slate-700/50 relative overflow-hidden">
@@ -387,9 +415,9 @@
                             <i data-lucide="wrench" class="w-4 h-4"></i> Technical Implementation
                         </h5>
                         <ul class="space-y-3 text-sm text-slate-400">
-                            <li class="flex gap-3"><i data-lucide="fingerprint" class="w-4 h-4 mt-0.5 text-pink-400 shrink-0"></i> <span><strong class="text-slate-200">Signature Capture Flow:</strong> Implemented transparently within both Recorder APIs and Portal Creation pages. Actions capture the signer's context role, precise UTC timestamp, and decision flag—strictly enforcing rule constraints against repetitive signatures from the same authorized groups.</span></li>
-                            <li class="flex gap-3"><i data-lucide="database" class="w-4 h-4 mt-0.5 text-pink-400 shrink-0"></i> <span><strong class="text-slate-200">State Persistence:</strong> Stored immutably as highly nested object fields attached directly to respective changeover instances inside Firestore (e.g. <code>signatures.firstOutput.production</code>), enforcing an unalterable chain-of-custody.</span></li>
-                            <li class="flex gap-3"><i data-lucide="monitor" class="w-4 h-4 mt-0.5 text-pink-400 shrink-0"></i> <span><strong class="text-slate-200">Real-Time Visibility:</strong> A universal Live Monitor propagates these immutable transactions immediately to management dashboards in milliseconds without page refreshes.</span></li>
+                            <li class="flex gap-3"><i data-lucide="file-spreadsheet" class="w-4 h-4 mt-0.5 text-pink-400 shrink-0"></i> <span><strong class="text-slate-200">CSV Parsing:</strong> Operation Bulletins (OBs) are parsed client-side using the <code>PapaParse</code> library for robust handling of standard data grids.</span></li>
+                            <li class="flex gap-3"><i data-lucide="cpu" class="w-4 h-4 mt-0.5 text-pink-400 shrink-0"></i> <span><strong class="text-slate-200">Comparison Logic:</strong> Custom JavaScript iterates through required machines per operation, mapping them against the active line's equipment to compute the net delta (shortage/surplus).</span></li>
+                            <li class="flex gap-3"><i data-lucide="save" class="w-4 h-4 mt-0.5 text-pink-400 shrink-0"></i> <span><strong class="text-slate-200">Data Storage:</strong> The computed machine requirement dataset is saved immutably directly to the specific QCO document inside the Firestore database.</span></li>
                         </ul>
                     </div>
                 </div>
@@ -399,16 +427,19 @@
             <div class="grid lg:grid-cols-2 gap-12 items-center flex-col-reverse lg:flex-row mb-24" data-aos="fade-left">
                 <div class="order-2 lg:order-1">
                     <div class="inline-block px-4 py-1.5 rounded-full bg-amber-500/20 text-amber-300 font-bold text-sm mb-4">Section 4</div>
-                    <h4 class="text-3xl font-bold mb-6 text-white">Reporting System</h4>
+                    <h4 class="text-3xl font-bold mb-6 text-white">Digital Changeover Recording System</h4>
                     
                     <div class="space-y-4 text-slate-300 leading-relaxed mb-8">
-                        <p>A <strong class="text-white">Reporting System</strong> has been developed within the Production Changeover Portal to enable consistent monitoring and evaluation of changeover performance. This system provides visibility into the overall prep and sign-off status of changeovers, helping all departments identify areas for improvement and optimize the changeover process.</p>
-                        <p>The portal generates a variety of reports, including:</p>
-                        <ol class="list-decimal list-inside space-y-2 text-slate-300 ml-2">
-                            <li><strong class="text-white">Pilot Run Approval Status:</strong> A summary of all changeovers where the pilot run has been approved, which helps the Management identify and address any bottlenecks in the pilot run process.</li>
-                            <li><strong class="text-white">First Output Quality Check Status:</strong> A summary of all changeovers where the first output quality check has been approved. This report helps management identify and address any quality-related issues during the changeover process.</li>
-                        </ol>
-                        <p>By leveraging these reports, management can identify trends, monitor performance against targets, and make informed decisions regarding process improvements. The Portal's reporting system ensures that all stakeholders have access to real-time information.</p>
+                        <p>After the changeover is scheduled, the relevant OBs are uploaded, and departmental checklists are followed up, the next stage involves recording and monitoring the changeover process during execution.</p>
+                        <p>Previously, changeovers were recorded manually. This approach created limitations. The visibility of the changeover was restricted, and it was difficult to accurately track which department contributed to delays, the duration of each activity, or the financial impact of the lost time.</p>
+                        <p>To overcome these limitations, a <strong class="text-white">digital changeover recording system</strong> was developed within the PWA. The system allows changeovers to be recorded through a simplified interface consisting of four primary inputs: Start, Stop, Department Responsible, and Remarks.</p>
+                        <p>The system includes three different recording modes to accommodate various operational scenarios:</p>
+                        <ul class="list-disc list-inside space-y-2 text-slate-300 ml-2">
+                            <li><strong class="text-white">Admin Recorder:</strong> Includes the standard recording interface with editing capabilities.</li>
+                            <li><strong class="text-white">Field Recorder:</strong> Same recording interface without editing permissions.</li>
+                            <li><strong class="text-white">Instant Recorder:</strong> Designed for unplanned or unscheduled changeovers.</li>
+                        </ul>
+                        <p>The system also features a <strong class="text-white">Live Changeover Monitor</strong>, which securely manages and relays real-time process states to all corresponding dashboards simultaneously.</p>
                     </div>
 
                     <div class="glass-card p-6 bg-slate-800/80 border-slate-700/50 relative overflow-hidden">
@@ -417,9 +448,9 @@
                             <i data-lucide="wrench" class="w-4 h-4"></i> Technical Implementation
                         </h5>
                         <ul class="space-y-3 text-sm text-slate-400">
-                            <li class="flex gap-3"><i data-lucide="terminal" class="w-4 h-4 mt-0.5 text-amber-400 shrink-0"></i> <span><strong class="text-slate-200">Reports DOM Engine:</strong> Features a tiny footprint (101KB payload) that filters complex NoSQL query streams, iterating client-side variables logically rather than employing slow server queries. Provides tabular HTML DOM manipulation intuitively.</span></li>
-                            <li class="flex gap-3"><i data-lucide="filter" class="w-4 h-4 mt-0.5 text-amber-400 shrink-0"></i> <span><strong class="text-slate-200">Smart Filtering algorithms:</strong> Highlights overdue occurrences specifically using condition mapping (<code>signatures.*</code> exists boolean parameters) alerting delays visually immediately depending on predefined system tolerances.</span></li>
-                            <li class="flex gap-3"><i data-lucide="send" class="w-4 h-4 mt-0.5 text-amber-400 shrink-0"></i> <span><strong class="text-slate-200">Email & Export Options:</strong> Self-referencing the client UI HTML generation as a scalable string that dynamically pipes over REST endpoints straight into structured automated Nodemailer PDFs / Spreadsheets.</span></li>
+                            <li class="flex gap-3"><i data-lucide="users" class="w-4 h-4 mt-0.5 text-amber-400 shrink-0"></i> <span><strong class="text-slate-200">Role-Based Access Control (RBAC):</strong> The three recording modes (Admin, Field, Instant) are securely gated via frontend application states ensuring correct data provenance.</span></li>
+                            <li class="flex gap-3"><i data-lucide="clock" class="w-4 h-4 mt-0.5 text-amber-400 shrink-0"></i> <span><strong class="text-slate-200">Synchronized Timing:</strong> Timestamps are captured via <code>Date.now()</code> and synced precisely with <code>firebase.firestore.FieldValue.serverTimestamp()</code> to prevent local clock manipulation.</span></li>
+                            <li class="flex gap-3"><i data-lucide="radio" class="w-4 h-4 mt-0.5 text-amber-400 shrink-0"></i> <span><strong class="text-slate-200">Event Transmissions:</strong> Intercept listeners bind to active Firebase documents pushing micro-updates as arrays without overriding complete data structures concurrently.</span></li>
                         </ul>
                     </div>
                 </div>
@@ -479,18 +510,13 @@
                 </div>
                 <div>
                     <div class="inline-block px-4 py-1.5 rounded-full bg-cyan-500/20 text-cyan-300 font-bold text-sm mb-4">Section 5</div>
-                    <h4 class="text-3xl font-bold mb-6 text-white">Continuous Improvement & Analytics</h4>
+                    <h4 class="text-3xl font-bold mb-6 text-white">Centralized Reporting System</h4>
                     
                     <div class="space-y-4 text-slate-300 leading-relaxed mb-8">
-                        <p>A <strong class="text-white">Continuous Improvement and Analytics Dashboard</strong> has been integrated into the changeover system to provide high-level insights into operational efficiency. This dashboard allows the Management team and Department Heads to visualize trends and identify persistent issues across multiple changeovers.</p>
-                        <p>Key metrics tracked in the dashboard include:</p>
-                        <ul class="list-disc list-inside space-y-2 text-slate-300 ml-2">
-                            <li><strong class="text-white">Total Preparation Lead Time:</strong> The time between the start of preparation (triggered by the planning update) and the actual changeover commencement.</li>
-                            <li><strong class="text-white">Checklist Compliance:</strong> The percentage of pre-required items completed by each department before the deadline.</li>
-                            <li><strong class="text-white">Ramp-up Efficiency:</strong> A comparison between planned and actual production rates during the initial hours of a new style.</li>
-                            <li><strong class="text-white">Delay Attribution:</strong> Analysis of reasons for changeover delays (e.g., machine downtime, material shortage, pilot run delay), categorized by department and style category.</li>
-                        </ul>
-                        <p>These analytics enable data-driven discussions during monthly review meetings, fostering a culture of accountability and continuous process refinement.</p>
+                        <p>Earlier, the reporting system relied on individual Excel sheets that primarily generated Loss Time Breakdown and Department-wise Loss Analysis for each recorded changeover. While these reports provided useful insights, they were limited to the specific Excel file. This meant there was no centralized view of changeover performance across multiple lines.</p>
+                        <p>To address this limitation, a <strong class="text-white">centralized reporting system</strong> was developed within the digital changeover management platform. This system consolidates data from all recorded changeovers and generates comprehensive analytical reports that provide both operational and financial insights.</p>
+                        <p>The centralized dashboard enables users to view and analyze multiple parameters, including <strong class="text-white">Loss Time Breakdown</strong>, <strong class="text-white">Department-wise Loss Distribution</strong>, <strong class="text-white">Total Cost Impact</strong> with cost component breakdowns, <strong class="text-white">SMV Multiple Analysis</strong>, and <strong class="text-white">Cost Parameters</strong> associated with changeover delays.</p>
+                        <p>In addition, the system highlights <strong class="text-white">Top 5 Loss Time Contributors</strong>, allowing management to quickly identify the most significant sources of inefficiency. By consolidating all changeover data into a single reporting interface, the system enables management to track performance trends, compare line efficiencies, and make more informed decisions.</p>
                     </div>
 
                     <div class="glass-card p-6 bg-slate-800/80 border-slate-700/50 relative overflow-hidden">
@@ -499,9 +525,9 @@
                             <i data-lucide="wrench" class="w-4 h-4"></i> Technical Implementation
                         </h5>
                         <ul class="space-y-3 text-sm text-slate-400">
-                            <li class="flex gap-3"><i data-lucide="calculator" class="w-4 h-4 mt-0.5 text-cyan-400 shrink-0"></i> <span><strong class="text-slate-200">Dashboard Metrics Engine:</strong> Connects to Firestore to compute complex metrics in real-time on the client side without throttling the primary UI. Computes metrics (like Compliance and Lead Time distributions) gracefully against customized date buckets.</span></li>
-                            <li class="flex gap-3"><i data-lucide="activity" class="w-4 h-4 mt-0.5 text-cyan-400 shrink-0"></i> <span><strong class="text-slate-200">Ramp-up Data Layer:</strong> Recipient Recorder Pages aggregate high-frequency bi-hourly operations records and correlates these raw integers directly to standard capacity models stored within the global Style Repository arrays.</span></li>
-                            <li class="flex gap-3"><i data-lucide="code-2" class="w-4 h-4 mt-0.5 text-cyan-400 shrink-0"></i> <span><strong class="text-slate-200">Planning Logic Module:</strong> Implements an incredibly dense 98KB functional code module governing dynamic schedule constraints and overlap prevention math, rendering natively into the Live Monitors to flag pipeline issues prior to them resulting in losses.</span></li>
+                            <li class="flex gap-3"><i data-lucide="pie-chart" class="w-4 h-4 mt-0.5 text-cyan-400 shrink-0"></i> <span><strong class="text-slate-200">Data Visualization:</strong> Analytics are rendered using <code>Chart.js</code> for visual data representation (Loss Time Breakdown, Department Loss) inside responsive Glassmorphic dashboard containers.</span></li>
+                            <li class="flex gap-3"><i data-lucide="calculator" class="w-4 h-4 mt-0.5 text-cyan-400 shrink-0"></i> <span><strong class="text-slate-200">Real-time Computation:</strong> The SMV Multiple and cost calculations are computed dynamically in JavaScript by factoring the total recorded time against the Target SMV and the user-input Cost/Manpower parameters.</span></li>
+                            <li class="flex gap-3"><i data-lucide="database" class="w-4 h-4 mt-0.5 text-cyan-400 shrink-0"></i> <span><strong class="text-slate-200">Cross-collection Queries:</strong> Queries aggregate multi-line data effortlessly utilizing Firestore's powerful compound capabilities to filter across periods and lines simultaneously.</span></li>
                         </ul>
                     </div>
                 </div>
@@ -511,16 +537,13 @@
             <div class="grid lg:grid-cols-2 gap-12 items-center flex-col-reverse lg:flex-row mb-12" data-aos="fade-left">
                 <div class="order-2 lg:order-1">
                     <div class="inline-block px-4 py-1.5 rounded-full bg-fuchsia-500/20 text-fuchsia-300 font-bold text-sm mb-4">Section 6</div>
-                    <h4 class="text-3xl font-bold mb-6 text-white">Historical Knowledge Base</h4>
+                    <h4 class="text-3xl font-bold mb-6 text-white">Style Repository & Planning Sheet Module</h4>
                     
                     <div class="space-y-4 text-slate-300 leading-relaxed mb-8">
-                        <p>A <strong class="text-white">Historical Knowledge Base</strong> has been created to store all information related to previous changeovers. This knowledge base serves as a valuable resource for departments, allowing them to:</p>
-                        <ul class="list-disc list-inside space-y-2 text-slate-300 ml-2">
-                            <li><strong class="text-white">Reference past checklist items and remarks:</strong> Identify recurring issues and best practices from previous changeovers of the same style or department.</li>
-                            <li><strong class="text-white">Review historical changeover schedules:</strong> Gain insights into typical changeover durations and identify areas for potential optimization.</li>
-                            <li><strong class="text-white">Access past changeover reports and status reports:</strong> Review historical performance and identify trends over time.</li>
-                        </ul>
-                        <p>By leveraging this historical data, departments can proactively address potential challenges, optimize their changeover preparations, and contribute to the overall efficiency of the production process. The knowledge base is accessible through the Changeover Portal, ensuring all relevant stakeholders have access to the information they need.</p>
+                        <p>In addition to the operational modules, the system also includes a <strong class="text-white">Style Repository</strong> and a <strong class="text-white">Planning Sheet Module</strong> to support data organization and future reference.</p>
+                        <p>The <strong class="text-white">Style Repository</strong> functions as a centralized database where every unique style handled by the factory is recorded. This repository allows users to retrieve historical information related to past changeovers, including changeover overviews, style comparisons, daily efficiency data, and machine analysis reports. By maintaining a structured archive, the system enables departments to review previous transitions and use these insights to better plan future changeovers.</p>
+                        <p>Complementing this repository is the <strong class="text-white">Planning Sheet Module</strong>, which integrates the factory’s 90-day production planning sheet into the system. Based on this planning data, the module analyzes the production sequence and provides automated suggestions on the Schedule Page regarding potential changeover timings. The Planning Department can then review these recommendations and either proceed with the suggested schedule or manually create a changeover.</p>
+                        <p>This integration between the planning sheet and the scheduling interface helps streamline the transition from long-term production planning to actionable changeover scheduling, improving planning accuracy across departments.</p>
                     </div>
 
                     <div class="glass-card p-6 bg-slate-800/80 border-slate-700/50 relative overflow-hidden">
@@ -529,9 +552,9 @@
                             <i data-lucide="wrench" class="w-4 h-4"></i> Technical Implementation
                         </h5>
                         <ul class="space-y-3 text-sm text-slate-400">
-                            <li class="flex gap-3"><i data-lucide="hard-drive" class="w-4 h-4 mt-0.5 text-fuchsia-400 shrink-0"></i> <span><strong class="text-slate-200">NoSQL Knowledge Architecture:</strong> Because Firestore leverages non-relational Document parameters, individual occurrences map flawlessly natively retaining contextual signatures, dates, timestamps, checklist checks, and associated style arrays permanently into a single scalable object wrapper.</span></li>
-                            <li class="flex gap-3"><i data-lucide="shirt" class="w-4 h-4 mt-0.5 text-fuchsia-400 shrink-0"></i> <span><strong class="text-slate-200">Style Repository Implementation:</strong> Houses isolated Style definitions specifying garment complexities, efficiency variables, handling attributes mapping directly backwards generating references per each QCO history, populating "Unique Style" tracking.</span></li>
-                            <li class="flex gap-3"><i data-lucide="book-open" class="w-4 h-4 mt-0.5 text-fuchsia-400 shrink-0"></i> <span><strong class="text-slate-200">Remark Architcture:</strong> Natural language "Remarks" and Observations submitted ad-hoc coexist alongside strict boolean values, indexing successfully across historical timeframe queries enabling pattern analyses natively.</span></li>
+                            <li class="flex gap-3"><i data-lucide="table" class="w-4 h-4 mt-0.5 text-fuchsia-400 shrink-0"></i> <span><strong class="text-slate-200">Integration Mechanism:</strong> The Planning Sheet integration reads from an exported data file (often Excel/CSV transformed into JSON) and populates a Select2 dropdown interface to reduce typing overhead.</span></li>
+                            <li class="flex gap-3"><i data-lucide="search" class="w-4 h-4 mt-0.5 text-fuchsia-400 shrink-0"></i> <span><strong class="text-slate-200">Index-Based Search:</strong> The style archival system querying relies on structured Firestore indices (e.g., <code>qcoNumber</code>, <code>currentStyle</code>, <code>upcomingStyle</code>) executing fast prefix and combination searches globally.</span></li>
+                            <li class="flex gap-3"><i data-lucide="box" class="w-4 h-4 mt-0.5 text-fuchsia-400 shrink-0"></i> <span><strong class="text-slate-200">Data Architecture:</strong> Natural language remarks and relational mappings are stored within scalable document blocks, isolating complex nested parameters to circumvent the typical constraints of NoSQL document scaling.</span></li>
                         </ul>
                     </div>
                 </div>
@@ -574,70 +597,155 @@
     </section>
 
     <!-- ==============================================
-         4. CROSS-CUTTING ENGINEERING SECTION (How Technical Summary)
+         IMPACT & RESULTS SECTION
+         ============================================== -->
+    <section class="container mx-auto px-6 py-12 relative">
+        <div class="glass-card p-12 text-center relative overflow-hidden" data-aos="zoom-in">
+            <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-sky-500/10"></div>
+            <div class="relative z-10">
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800 border border-slate-700 text-emerald-400 text-sm font-bold mb-6">
+                    <i data-lucide="zap" class="w-4 h-4"></i> Measured Performance Impact
+                </div>
+                <h3 class="text-3xl md:text-5xl font-bold mb-8 text-white">From 63× to 29× SMV Multiples</h3>
+                <p class="max-w-3xl mx-auto text-slate-300 text-lg leading-relaxed mb-8">
+                    Prior to implementation, changeovers averaged <strong>63× SMV multiples</strong> in duration due to manual tracking and communication silos. With the new digital framework, structured monitoring, and real-time coordination, changeover time has been reduced to as low as <strong>29× SMV multiples</strong>—representing nearly a <strong class="text-emerald-400">50% reduction</strong>.
+                </p>
+                <div class="flex justify-center flex-wrap gap-4">
+                    <div class="bg-slate-800/80 px-6 py-4 rounded-xl border border-slate-700 w-48 text-left">
+                        <div class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Before</div>
+                        <div class="text-3xl font-black text-rose-400">63×</div>
+                    </div>
+                    <div class="bg-emerald-500/20 px-6 py-4 rounded-xl border border-emerald-500/30 w-48 text-left flex flex-col justify-center relative overflow-hidden">
+                        <div class="absolute -right-4 -bottom-4 opacity-20"><i data-lucide="trending-up" class="w-16 h-16 text-emerald-400"></i></div>
+                        <div class="text-emerald-200 text-xs font-bold uppercase tracking-wider mb-1">After System</div>
+                        <div class="text-3xl font-black text-emerald-400">29×</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==============================================
+         NEW TECHNICAL ARCHITECTURE SECTION
          ============================================== -->
     <section id="how" class="container mx-auto px-6 py-24 relative">
         <div class="text-center mb-16" data-aos="fade-up">
-            <h2 class="text-sm font-bold tracking-widest text-[#10b981] uppercase mb-3 text-center">Under the Hood Architecture</h2>
-            <h3 class="text-4xl md:text-5xl font-bold mb-6 text-center">Cross-Cutting Engineering</h3>
-            <p class="max-w-3xl mx-auto text-slate-400 text-lg">Underlying infrastructure powering real-time workflows and secure distribution across the global Production Changeover framework.</p>
+            <h2 class="text-sm font-bold tracking-widest text-[#10b981] uppercase mb-3 text-center">Technical Implementation</h2>
+            <h3 class="text-4xl md:text-5xl font-bold mb-6 text-center text-white">Application Architecture</h3>
+            <p class="max-w-3xl mx-auto text-slate-400 text-lg">A decoupled web ecosystem optimized for strict real-time syncing, complex temporal logic, and resilient data processing.</p>
         </div>
 
-        <!-- Arch Diagram Visual -->
-        <div class="w-full bg-[#0f172a] border border-[#334155] rounded-3xl overflow-hidden shadow-2xl mb-12" data-aos="zoom-in">
-            <div class="bg-[#1e293b] py-3 px-6 border-b border-[#334155] flex items-center gap-2">
-                <div class="flex gap-2 text-white/50 text-sm font-mono items-center"><i data-lucide="terminal" class="w-4 h-4 text-emerald-400"></i> architecture.yml</div>
-            </div>
-            <div class="p-8 text-sm md:text-base font-mono overflow-x-auto text-slate-300 leading-loose">
-                <span class="text-sky-400">frontend:</span><br/>
-                &nbsp;&nbsp;- <span class="text-pink-400">client_type:</span> "PWA, TWA (Android APK)"<br/>
-                &nbsp;&nbsp;- <span class="text-pink-400">ui_ux:</span> "Glassmorphism, TailwindCSS, GSAP scroll reveals, Lenis scrolling"<br/>
-                &nbsp;&nbsp;- <span class="text-pink-400">cache:</span> "Stale-while-revalidate via Service Workers"<br/><br/>
-
-                <span class="text-sky-400">backend_layer:</span><br/>
-                &nbsp;&nbsp;- <span class="text-pink-400">host:</span> "Vercel (Serverless Functions API routing)"<br/>
-                &nbsp;&nbsp;- <span class="text-pink-400">framework:</span> "Node.js + Express"<br/>
-                &nbsp;&nbsp;- <span class="text-pink-400">security:</span> ["CORS whitelist enforcement", "express-rate-limit (10req/15min)"]<br/><br/>
-
-                <span class="text-sky-400">data_tier:</span><br/>
-                &nbsp;&nbsp;- <span class="text-pink-400">provider:</span> "Firebase Firestore"<br/>
-                &nbsp;&nbsp;- <span class="text-pink-400">pattern:</span> "WebSocket-based real-time onSnapshot sync"<br/>
-                &nbsp;&nbsp;- <span class="text-pink-400">auth:</span> "Firebase Auth API mapped to departmental credentials"<br/><br/>
-
-                <span class="text-sky-400">communications:</span><br/>
-                &nbsp;&nbsp;- <span class="text-pink-400">emails:</span> "Nodemailer SMTP (w/ Multer 25MB attachment buffering block limits)"<br/>
-                &nbsp;&nbsp;- <span class="text-pink-400">push:</span> "Firebase Cloud Messaging (FCM) Admin SDK translating payloads to device tokens directly"<br/>
-            </div>
-        </div>
-
-        <!-- Cross cutting tech cards -->
-        <div class="grid md:grid-cols-3 gap-8">
-            <div class="glass-card p-8" data-aos="fade-up" data-aos-delay="100">
-                <div class="w-14 h-14 bg-rose-500/10 rounded-2xl flex items-center justify-center mb-6">
-                    <i data-lucide="shield-check" class="text-rose-400 w-7 h-7"></i>
+        <!-- Tech Stack Split -->
+        <div class="grid lg:grid-cols-2 gap-8 mb-16">
+            <!-- Frontend Stack -->
+            <div class="glass-card p-8 border border-sky-500/20 relative overflow-hidden" data-aos="fade-right">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 blur-3xl rounded-full"></div>
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 bg-sky-500/20 text-sky-400 rounded-xl flex items-center justify-center">
+                        <i data-lucide="smartphone" class="w-6 h-6"></i>
+                    </div>
+                    <h4 class="text-2xl font-bold text-white">Frontend Client</h4>
                 </div>
-                <h4 class="text-xl font-bold mb-3 text-white">Security & Access Control</h4>
-                <p class="text-slate-400 leading-relaxed mb-4 text-sm">The Express backend enforces a dynamic CORS whitelist, permitting operations only explicitly inside configured Vercel origins mapping to production servers.</p>
-                <p class="text-slate-400 leading-relaxed text-sm">Email vectors are rate-limited utilizing <code>express-rate-limit</code> preventing spam abuse. Firebase SDK Rules enforce role mapping restricting untrusted mutations on critical Firestore paths seamlessly.</p>
+                <ul class="space-y-4 text-slate-300 relative z-10">
+                    <li class="flex gap-3">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-sky-400 shrink-0 mt-0.5"></i>
+                        <span><strong>Data Ingestion Engine:</strong> Employs <code>SheetJS (XLSX)</code> and <code>PapaParse</code> for complex client-side parsing of Operation Bulletins, extracting metadata via regex and mapping structural markers like <code>EOL-TB</code>.</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-sky-400 shrink-0 mt-0.5"></i>
+                        <span><strong>Progressive Web App (PWA):</strong> Fully installable via <code>manifest.json</code>, utilizing Service Workers for stale-while-revalidate caching and a Trusted Web Activity (TWA) wrapper.</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-sky-400 shrink-0 mt-0.5"></i>
+                        <span><strong>Responsive Glassmorphism:</strong> Constructed with Vanilla JS and TailwindCSS, featuring <code>backdrop-filter</code>, <code>touch-action</code> manipulations, and GSAP timelines for an app-like experience.</span>
+                    </li>
+                </ul>
             </div>
+
+            <!-- Backend Stack -->
+            <div class="glass-card p-8 border border-emerald-500/20 relative overflow-hidden" data-aos="fade-left">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-3xl rounded-full"></div>
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center">
+                        <i data-lucide="server" class="w-6 h-6"></i>
+                    </div>
+                    <h4 class="text-2xl font-bold text-white">Backend Serverless</h4>
+                </div>
+                <ul class="space-y-4 text-slate-300 relative z-10">
+                    <li class="flex gap-3">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5"></i>
+                        <span><strong>Real-Time Data Sync:</strong> Leverages Firebase Firestore's native WebSockets for instant state replication with built-in document locking and migration logic during schedule updates.</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5"></i>
+                        <span><strong>Communications Stack:</strong> Features a specialized Dual-SMTP failover system using Nodemailer for automated HTML emails, and FCM (Firebase Cloud Messaging) for real-time mobile push notifications.</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400 shrink-0 mt-0.5"></i>
+                        <span><strong>Vercel & Express:</strong> The Node.js application is shipped on Vercel, protected by <code>express-rate-limit</code> and custom CORS mapping, handling robust API endpoints.</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Module Feature Breakdown Matrix -->
+        <h3 class="text-2xl font-bold mb-8 text-center text-white" data-aos="fade-up">Application Module Ecosystem</h3>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             
-            <div class="glass-card p-8" data-aos="fade-up" data-aos-delay="200">
-                <div class="w-14 h-14 bg-sky-500/10 rounded-2xl flex items-center justify-center mb-6">
-                    <i data-lucide="brush" class="text-sky-400 w-7 h-7"></i>
-                </div>
-                <h4 class="text-xl font-bold mb-3 text-white">UI/UX & Glassmorphism</h4>
-                <p class="text-slate-400 leading-relaxed mb-4 text-sm">Implemented extensively with frosted glass layers utilizing TailwindCSS backdrop filters cascading against animated ambient backgrounds mapped carefully under high z-indexes.</p>
-                <p class="text-slate-400 leading-relaxed text-sm">Components are strictly mobile-first responsive handling interactions via minimum hit areas mapping. Render cycles optimize for touch via dynamic CSS <code>safe-area-insets</code> ensuring notched screens respond correctly.</p>
+            <!-- Module: Creation/Planning -->
+            <div class="glass-card p-6 border-t-2 border-t-purple-500" data-aos="zoom-in" data-aos-delay="50">
+                <h4 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                    <i data-lucide="file-plus" class="w-4 h-4 text-purple-400"></i> Data Ingestion
+                </h4>
+                <p class="text-xs text-slate-500 mb-3 font-mono">creation.html | planning.html</p>
+                <p class="text-sm text-slate-400">Integrates <code>SheetJS</code> to parse Excel files, applying recursive regex to extract Style/SMV/Target data while intelligently walking rows to map machine lists and standard times dynamically.</p>
             </div>
 
-            <div class="glass-card p-8" data-aos="fade-up" data-aos-delay="300">
-                <div class="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center mb-6">
-                    <i data-lucide="wifi-off" class="text-emerald-400 w-7 h-7"></i>
-                </div>
-                <h4 class="text-xl font-bold mb-3 text-white">PWA & Offline Capability</h4>
-                <p class="text-slate-400 leading-relaxed mb-4 text-sm">The native layout ships a comprehensive <code>manifest.json</code> alongside maskable icons providing standard Standalone display models pushing users into OS-level application behaviors instantly upon installation flags.</p>
-                <p class="text-slate-400 leading-relaxed text-sm">Service workers map strictly separated offline configurations, rendering cached UI layers via stale-while-revalidate protocols intercepting APIs purely for background notifications exclusively instead of blocking standard data cycles.</p>
+            <!-- Module: Schedule -->
+            <div class="glass-card p-6 border-t-2 border-t-blue-500" data-aos="zoom-in" data-aos-delay="100">
+                <h4 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                    <i data-lucide="calendar" class="w-4 h-4 text-blue-400"></i> Live Schedule
+                </h4>
+                <p class="text-xs text-slate-500 mb-3 font-mono">schedule.html</p>
+                <p class="text-sm text-slate-400">The global master view. Relies on real-time Firestore listeners to sync timelines across devices instantly, handling complex document locking and data migrations during schedule shifting.</p>
             </div>
+
+            <!-- Module: Checklist -->
+            <div class="glass-card p-6 border-t-2 border-t-orange-500" data-aos="zoom-in" data-aos-delay="150">
+                <h4 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                    <i data-lucide="check-square" class="w-4 h-4 text-orange-400"></i> Phase Checks
+                </h4>
+                <p class="text-xs text-slate-500 mb-3 font-mono">checklist.html | outlist.html</p>
+                <p class="text-sm text-slate-400">Role-based interfaces with client-side password gating. Dynamic JavaScript binds direct boolean sign-offs to specific Firebase user tokens for immutable auditing and role segregation.</p>
+            </div>
+
+            <!-- Module: Recorder -->
+            <div class="glass-card p-6 border-t-2 border-t-red-500" data-aos="zoom-in" data-aos-delay="200">
+                <h4 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                    <i data-lucide="clock" class="w-4 h-4 text-red-500"></i> Event Recorder
+                </h4>
+                <p class="text-xs text-slate-500 mb-3 font-mono">recorder.html</p>
+                <p class="text-sm text-slate-400">The chronological tracking engine. Executes the sophisticated <code>getNetDuration</code> algorithm to accurately track time by meticulously deducting defined break windows, shift limits, and Friday downtime.</p>
+            </div>
+
+            <!-- Module: Dashboard -->
+            <div class="glass-card p-6 border-t-2 border-t-emerald-500" data-aos="zoom-in" data-aos-delay="250">
+                <h4 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                    <i data-lucide="monitor" class="w-4 h-4 text-emerald-400"></i> Hub Monitor
+                </h4>
+                <p class="text-xs text-slate-500 mb-3 font-mono">dashboard.html</p>
+                <p class="text-sm text-slate-400">Computes "Target COPT" using dynamic complexity multipliers (Category A/B/C) mapped against incoming SMVs, broadcasting real-time efficiency variations using <code>Chart.js</code> canvases.</p>
+            </div>
+
+            <!-- Module: Summary -->
+            <div class="glass-card p-6 border-t-2 border-t-yellow-500" data-aos="zoom-in" data-aos-delay="300">
+                <h4 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+                    <i data-lucide="pie-chart" class="w-4 h-4 text-yellow-500"></i> Analytics AI
+                </h4>
+                <p class="text-xs text-slate-500 mb-3 font-mono">summary.html | style.html</p>
+                <p class="text-sm text-slate-400">Renders historical subset matrices utilizing compound Firestore queries. Facilitates automated HTML-to-PDF generation via serverless endpoints and Node.js <code>multer</code> memory storage.</p>
+            </div>
+
         </div>
     </section>
 

@@ -419,7 +419,7 @@ app.post('/api/send-email', emailLimiter, async (req, res) => {
             replyTo: replyTo || from || authenticatedSender,
             headers: {
                 'X-Application': 'Changeover Meeting Initiator',
-                'X-Priority': '1',
+                'X-Priority': '3',
                 'X-Attachments-Count': attachments ? attachments.length : 0
             }
         };

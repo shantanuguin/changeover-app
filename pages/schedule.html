@@ -1353,6 +1353,9 @@
                     // Setup auto-save listeners
                     setupAutoSave();
 
+                    // Check for scheduled emails that need to be sent
+                    setTimeout(() => checkAndSendScheduledEmails(), 3000);
+
                     // URL params
                     const urlParams = new URLSearchParams(window.location.search);
                     const query = urlParams.get('q');
@@ -1762,8 +1765,26 @@
         }
 
         // ==========================================
-        // SECTION II: SAVE DATE
+        // SECTION II: SAVE DATE (with auto-email scheduling)
         // ==========================================
+
+        /**
+         * Calculate the email send date: 3 days before changeover, skipping Fridays.
+         * @param {Date} changeoverDate - The changeover execution date
+         * @returns {Date} The date the email should be sent
+         */
+        function calculateEmailScheduleDate(changeoverDate) {
+            const emailDate = new Date(changeoverDate);
+            emailDate.setDate(emailDate.getDate() - 3);
+            // If the calculated date is a Friday (day 5), move it back to Thursday
+            if (emailDate.getDay() === 5) {
+                emailDate.setDate(emailDate.getDate() - 1);
+            }
+            // Normalize to start of day for comparison
+            emailDate.setHours(0, 0, 0, 0);
+            return emailDate;
+        }
+
         async function saveScheduleDate() {
             if (!currentQCOId) {
                 Swal.fire({ icon: 'warning', title: 'No QCO', text: 'Generate or select a changeover first', confirmButtonColor: '#7c3aed' });
@@ -1773,6 +1794,55 @@
             if (!dateVal) {
                 Swal.fire({ icon: 'warning', title: 'Date Required', text: 'Please select a date and time', confirmButtonColor: '#7c3aed' });
                 return;
+            }
+
+            const newDate = new Date(dateVal);
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            // Determine if this is a date change (not initial scheduling)
+            const currentCount = (currentQCOData && currentQCOData.dateChangeCount) || 0;
+            const isDateChange = currentQCOData && currentQCOData.scheduledDate && currentQCOData.scheduledDate !== dateVal;
+            const isInitialSchedule = !currentQCOData || !currentQCOData.scheduledDate;
+
+            // Calculate email schedule date
+            const emailScheduleDate = calculateEmailScheduleDate(newDate);
+            const emailIsDueNow = emailScheduleDate <= today;
+
+            // For date changes where the new date is < 3 days away, show a warning modal
+            if (isDateChange && emailIsDueNow && currentCount >= 1) {
+                const result = await Swal.fire({
+                    title: 'Immediate Email Required',
+                    html: `<div style="text-align:left;font-size:14px;line-height:1.7">
+                        <p>The new changeover date is <strong>less than 3 days away</strong>.</p>
+                        <p style="margin-top:8px">Saving this date will <strong>immediately send the updated invite email</strong> to all recipients for this line.</p>
+                        <div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:12px;margin-top:12px;border-radius:0 8px 8px 0">
+                            <strong style="color:#92400e">New Date:</strong> ${newDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </div>
+                    </div>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#7c3aed',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Confirm & Send Email',
+                    cancelButtonText: 'Cancel'
+                });
+
+                if (!result.isConfirmed) {
+                    // User cancelled - revert the date input to the original value
+                    if (currentQCOData && currentQCOData.scheduledDate) {
+                        const origDate = currentQCOData.scheduledDate;
+                        if (typeof origDate === 'string') {
+                            document.getElementById('scheduleDate').value = origDate;
+                        } else if (origDate.toDate) {
+                            const d = origDate.toDate();
+                            const pad = (n) => n < 10 ? '0' + n : n;
+                            document.getElementById('scheduleDate').value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                        }
+                    }
+                    // Do NOT increment dateChangeCount, do NOT save
+                    return;
+                }
             }
 
             const btn = document.getElementById('saveDateBtn');
@@ -1785,15 +1855,15 @@
                     scheduledDate: dateVal,
                     hasSchedule: true,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    updatedBy: 'schedule_system'
+                    updatedBy: 'schedule_system',
+                    emailScheduledFor: emailScheduleDate.toISOString()
                 };
 
                 // Track date changes
-                const currentCount = (currentQCOData && currentQCOData.dateChangeCount) || 0;
-                if (currentQCOData && currentQCOData.scheduledDate && currentQCOData.scheduledDate !== dateVal) {
+                if (isDateChange) {
                     updateData.previousScheduledDate = currentQCOData.scheduledDate;
                     updateData.dateChangeCount = currentCount + 1;
-                } else if (!currentQCOData || !currentQCOData.scheduledDate) {
+                } else if (isInitialSchedule) {
                     updateData.dateChangeCount = currentCount > 0 ? currentCount : 1;
                 }
 
@@ -1812,7 +1882,28 @@
 
                 if (typeof updateStyleProgression === 'function') updateStyleProgression();
 
-                Swal.fire({ icon: 'success', title: 'Date Saved!', text: 'Changeover date has been updated', timer: 2000, showConfirmButton: false, position: 'top-end', toast: true });
+                // AUTO-EMAIL LOGIC
+                if (emailIsDueNow) {
+                    // Email needs to go out now (date is within 3 days)
+                    const templateType = (isDateChange && currentCount >= 1) ? 'updated' : 'initial';
+                    Swal.fire({
+                        title: 'Sending Email...',
+                        text: 'Automatically sending the invite email',
+                        allowOutsideClick: false,
+                        didOpen: () => { Swal.showLoading(); }
+                    });
+                    try {
+                        await sendAutoEmail(currentQCOId, templateType);
+                        Swal.fire({ icon: 'success', title: 'Date Saved & Email Sent!', text: 'The invite email was sent automatically.', timer: 3000, showConfirmButton: false, position: 'top-end', toast: true });
+                    } catch (emailErr) {
+                        console.error('Auto email error:', emailErr);
+                        Swal.fire({ icon: 'warning', title: 'Date Saved', text: 'Date was saved, but the auto-email failed: ' + emailErr.message + '. You can send it manually.', confirmButtonColor: '#7c3aed' });
+                    }
+                } else {
+                    // Email will be sent automatically later
+                    const emailDateStr = emailScheduleDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                    Swal.fire({ icon: 'success', title: 'Date Saved!', html: `Email invite will be auto-sent on <strong>${emailDateStr}</strong>`, timer: 3000, showConfirmButton: false, position: 'top-end', toast: true });
+                }
             } catch (error) {
                 console.error('Save date error:', error);
                 Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to save date: ' + error.message, confirmButtonColor: '#7c3aed' });
@@ -2448,6 +2539,213 @@ Sidney Apparels QCO Portal`;
                 statusDiv.classList.add('bg-red-50', 'text-red-700');
                 statusDiv.innerHTML = `<i class="fas fa-exclamation-circle"></i> Failed: ${error.message}`;
                 sendBtn.disabled = false;
+            }
+        }
+
+        // ==========================================
+        // AUTO EMAIL SEND (without modal)
+        // ==========================================
+        /**
+         * Programmatically send an email without opening the modal.
+         * Reuses the same template generation and recipient logic as openEmailModal().
+         * @param {string} qcoId - The QCO document ID
+         * @param {string} templateType - 'initial' or 'updated'
+         */
+        async function sendAutoEmail(qcoId, templateType) {
+            // Load the QCO data if not already loaded
+            let qco = currentQCOData;
+            if (!qco || currentQCOId !== qcoId) {
+                const doc = await db.collection('changeovers').doc(qcoId).get();
+                if (!doc.exists) throw new Error('QCO not found: ' + qcoId);
+                qco = doc.data();
+            }
+
+            // Resolve line
+            let rawLine = qco.lineNumber || qco.line_number || qco.line || '';
+            if (!rawLine && qcoId.startsWith('S-')) {
+                const match = qcoId.match(/^S-(\w+)-/);
+                if (match) rawLine = match[1];
+            }
+            const line = (rawLine !== null && rawLine !== undefined) ? String(rawLine).trim() : 'Unknown';
+            let lookupLine = line.replace(/^Line\s*/i, '');
+
+            if (!personnelData[lookupLine]) {
+                const foundKey = Object.keys(personnelData).find(key =>
+                    key.split(/[\+\/]/).map(p => p.trim()).includes(lookupLine));
+                if (foundKey) lookupLine = foundKey;
+            }
+
+            const linePsnl = personnelData[lookupLine] || {
+                supervisor: "TBD", rqc: "TBD", ie: "TBD", lineIncharge: "TBD",
+                qam: "TBD", mechIncharge: "TBD", technical: "TBD"
+            };
+
+            // Ensure emailData is loaded
+            if (Object.keys(emailData).length === 0) {
+                try {
+                    const edDoc = await db.collection('emailData').doc('lines').get();
+                    if (edDoc.exists) emailData = edDoc.data();
+                } catch (e) { console.warn('Could not load emailData for auto-send:', e); }
+            }
+            const lineEmails = emailData[lookupLine] || {};
+
+            // Dates
+            let meetDateStr = "TBD", changeoverDateStr = "TBD", prevDateStr = "TBD";
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+            if (qco.scheduledDate) {
+                try {
+                    const execDate = (typeof qco.scheduledDate.toDate === 'function') ? qco.scheduledDate.toDate() : new Date(qco.scheduledDate);
+                    changeoverDateStr = `${execDate.getDate().toString().padStart(2, '0')}-${months[execDate.getMonth()]}-${execDate.getFullYear()}`;
+                    const meetDate = new Date(execDate);
+                    meetDate.setDate(execDate.getDate() - 1);
+                    if (meetDate.getDay() === 5) meetDate.setDate(meetDate.getDate() - 1);
+                    meetDateStr = `${meetDate.getDate().toString().padStart(2, '0')}-${months[meetDate.getMonth()]}-${meetDate.getFullYear()}`;
+                } catch (e) { console.error("Auto-email date parse error", e); }
+            }
+
+            if (qco.previousScheduledDate) {
+                try {
+                    const prevDate = new Date(qco.previousScheduledDate);
+                    prevDateStr = `${prevDate.getDate().toString().padStart(2, '0')}-${months[prevDate.getMonth()]}-${prevDate.getFullYear()}`;
+                } catch (e) { }
+            }
+
+            const category = qco.changeoverCategory || 'C';
+            const style = qco.upcomingStyle || '???';
+
+            const templateData = {
+                qcoNumber: qco.qcoNumber || qcoId, line, style, meetDate: meetDateStr,
+                changeoverDate: changeoverDateStr, category, location: "Conference Room",
+                personnel: linePsnl, emails: lineEmails,
+                checklistLink: "https://changeover-app.vercel.app/outside/outlist.html",
+                templateType, prevDate: prevDateStr,
+                dateChangeCount: qco.dateChangeCount || 0
+            };
+
+            const { html, text } = generateMeetingEmail(templateData);
+
+            // Build recipients
+            const recipients = [];
+            const addRecip = (email) => { if (email && typeof email === 'string' && email.includes('@')) recipients.push(email.trim()); };
+            ['supervisor', 'rqc', 'ie', 'lineIncharge', 'qam', 'mechIncharge', 'technical', 'planning', 'production', 'fabric', 'cutting', 'maintenance'].forEach(role => {
+                if (lineEmails[role]) addRecip(lineEmails[role]);
+            });
+            const defaultCC = "tharun.raj@sidneyapparels.com, Mubashir.Ali@SIDNEYAPPARELS.COM, shantanu.guin281203@gmail.com, sampreeti6404@gmail.com, IE.SA@SIDNEYAPPARELS.COM, IEexecutive.SA@SIDNEYAPPARELS.COM, Yash.Mhetre@SIDNEYAPPARELS.COM, Rawan.mazen@SIDNEYAPPARELS.COM, Sam.Nishith@SIDNEYAPPARELS.COM, Planner.SA@SIDNEYAPPARELS.COM, Srinivasan.Perumal@SIDNEYAPPARELS.COM, Sherin.Samuel@SIDNEYAPPARELS.COM";
+            defaultCC.split(',').forEach(email => addRecip(email));
+
+            if (recipients.length === 0) throw new Error('No recipients found for auto-email');
+
+            const subjectPrefix = templateType === 'updated' ? 'UPDATED: ' : '';
+            const subject = `${subjectPrefix}Pre-Meeting Invite: Line ${line} - Style ${style} (Cat: ${category})`;
+
+            // Send via backend
+            const payload = {
+                from: 'planner.SA@sidneyapparels.com',
+                to: recipients,
+                subject,
+                text,
+                html,
+                accountType: 'schedule'
+            };
+
+            const response = await fetch(`${backendUrl}/api/send-email`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || data.error || 'Email send failed');
+
+            // Record in Firebase
+            const prevCount = (qco.emailSentCount) || 0;
+            const emailTrackData = {
+                emailSentAt: firebase.firestore.FieldValue.serverTimestamp(),
+                emailSentCount: prevCount + 1,
+                lastEmailSubject: subject,
+                lastEmailType: templateType,
+                emailAutoSentAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            await db.collection('changeovers').doc(qcoId).set(emailTrackData, { merge: true });
+
+            // Update local state if this is the currently loaded QCO
+            if (currentQCOData && currentQCOId === qcoId) {
+                currentQCOData.emailSentCount = prevCount + 1;
+                currentQCOData.emailSentAt = new Date().toISOString();
+                currentQCOData.emailAutoSentAt = new Date().toISOString();
+            }
+
+            console.log(`Auto-email sent for ${qcoId} (${templateType}), recipients: ${recipients.length}`);
+            return data;
+        }
+
+        // ==========================================
+        // AUTO-CHECK: Send scheduled emails on page load
+        // ==========================================
+        let emailAutoSending = false;
+
+        async function checkAndSendScheduledEmails() {
+            if (emailAutoSending) return;
+            emailAutoSending = true;
+
+            try {
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const todayISO = today.toISOString();
+
+                // Query all changeovers that have an emailScheduledFor date
+                const snapshot = await db.collection('changeovers')
+                    .where('hasSchedule', '==', true)
+                    .orderBy('emailScheduledFor', 'asc')
+                    .limit(50)
+                    .get();
+
+                let sentCount = 0;
+
+                for (const doc of snapshot.docs) {
+                    const qco = doc.data();
+                    const qcoId = doc.id;
+
+                    // Skip completed, discarded, or already auto-sent
+                    if (qco.status === 'completed' || qco.status === 'discarded') continue;
+                    if (!qco.emailScheduledFor) continue;
+
+                    const emailScheduleDate = new Date(qco.emailScheduledFor);
+                    emailScheduleDate.setHours(0, 0, 0, 0);
+
+                    // Check if email is due (schedule date is today or past)
+                    if (emailScheduleDate > today) continue;
+
+                    // Check if already auto-sent after the latest schedule
+                    if (qco.emailAutoSentAt) {
+                        const lastAutoSent = qco.emailAutoSentAt.toDate ? qco.emailAutoSentAt.toDate() : new Date(qco.emailAutoSentAt);
+                        const scheduledFor = new Date(qco.emailScheduledFor);
+                        // If auto-sent after the scheduled date was set, skip
+                        if (lastAutoSent >= scheduledFor) continue;
+                    }
+
+                    // Determine template type
+                    const dateChangeCount = qco.dateChangeCount || 0;
+                    const emailSentCount = qco.emailSentCount || 0;
+                    const templateType = (dateChangeCount > 1 || emailSentCount > 0) ? 'updated' : 'initial';
+
+                    try {
+                        console.log(`Auto-sending email for ${qcoId} (due: ${emailScheduleDate.toDateString()})`);
+                        await sendAutoEmail(qcoId, templateType);
+                        sentCount++;
+                    } catch (err) {
+                        console.error(`Failed to auto-send email for ${qcoId}:`, err);
+                    }
+                }
+
+                if (sentCount > 0) {
+                    console.log(`Auto-email check complete: ${sentCount} email(s) sent`);
+                }
+            } catch (error) {
+                console.error('checkAndSendScheduledEmails error:', error);
+            } finally {
+                emailAutoSending = false;
             }
         }
 
